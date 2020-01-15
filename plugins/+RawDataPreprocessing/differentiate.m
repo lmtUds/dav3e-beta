@@ -18,9 +18,9 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = convolution()
+function info = differentiate()
     info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'convolution';
+    info.caption = 'differentiate';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
@@ -33,10 +33,10 @@ end
 
 function [data,paramOut] = apply(data,params)
     paramOut = struct();
-    m = (params.framlength-1)/2;
+    m = (params.framelength-1)/2;
     t = params.timebase;
     tm = ((1:size(data,1))-1)*t;
-    h = [ones(m,1)',0,-ones(m,1)']/m/t;
+    h = [ones(m,1)',0,-ones(m,1)']/double(m)/t;
     temp = nan(size(data));
     temp((m+1):end-(m),:) = convn(data',h,'valid')'./mean(conv(tm',h,'valid'));
     data = temp;

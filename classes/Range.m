@@ -253,6 +253,7 @@ classdef Range < DataSelector
                 ranges(end+1) = r;
             end
             fromStruct@DataSelector(s,ranges)
+            updateSubRanges(ranges);
         end
         
         function ranges = jsonload(json)

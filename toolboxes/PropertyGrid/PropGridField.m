@@ -224,6 +224,8 @@ methods
                 else
                     val = char(val);
                 end
+            case 'string'
+                %
             case 'color'
                 %
             otherwise
@@ -738,7 +740,7 @@ methods (Static)
         
         selType = '';
         switch class(value)
-            case {'char','double','int32','logical'}
+            case {'char','double','int32','logical','string'}
                 type = class(value);
             case 'cell'
                 type = 'char';

@@ -34,19 +34,24 @@ end
 
 function populateGui(elements,project,dataprocessingblock)
     cla(elements.hAx,'reset');
+    if ~dataprocessingblock.parameters.getByCaption('trained').value
+        return
+    end
     coeffs = dataprocessingblock.parameters.getByCaption('beta0').getValue();
     coeffs = coeffs(:,end);
     if isempty(coeffs)
         return
     end
-    % get features from annotation block (should always be the first one)
-    featCap = dataprocessingblock.getFirstBlock().parameters.getByCaption('features').getValue();
+    featCap = project.currentModel.fullModelData.featureCaptions;
     [~,idx] = sort(abs(coeffs),'descend');
     coeffs = coeffs(idx);
     featCap = cellstr(featCap(idx));
-    bar(elements.hAx,coeffs);
+    X = categorical(featCap);
+    X = reordercats(X,featCap);
+    bar(elements.hAx,X,coeffs);
     set(elements.hAx,'TickLabelInterpreter','none');
-    set(elements.hAx,'XTickLabel',featCap);
+    
+    %set(elements.hAx,'XTickLabel',featCap);
     xtickangle(elements.hAx,20);
     xlabel('feature');
     ylabel('coefficient / a.u.')

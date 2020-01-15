@@ -70,6 +70,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             r = obj.getProject().ranges;
             cPos = r.getCyclePosition(obj.getCurrentCluster());
             r.setCyclePosition(cPos + [startVal -endVal],obj.getCurrentCluster());
+            obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
         end
         
         function onClickImport(obj)
@@ -131,6 +132,9 @@ classdef CycleRanges < Gui.Modules.GuiModule
             end
             if obj.sensorHasChanged()
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
+            end
+            if ~isequal(obj.getProject().ranges, obj.ranges)
+                obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
             obj.ranges.updateYLimits();
             set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
@@ -202,22 +206,23 @@ classdef CycleRanges < Gui.Modules.GuiModule
             if ~isempty(gRanges)
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
+                time_positions = num2cell(gRanges.getTimePosition());
                 colors = num2cell(gRanges.getRange().getJavaColor());
-                data = [captions, positions, colors];
+                data = [captions, positions, time_positions, colors];
             else
                 data = {};
             end
 
             t = obj.rangeTable;
-            t.setData(data,{'caption','begin','end','color'});
+            t.setData(data,{'caption','begin','end','time begin in s','time end in s','color'});
             t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','int','int','clr'});
-            t.setColumnsEditable([true true true true]);
+            t.setColumnClasses({'str','int','int','double','double','clr'});
+            t.setColumnsEditable([true true true true true true]);
             t.setSortingEnabled(false)
             t.setFilteringEnabled(false);
             t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
-
+            t.jTable.sortColumn(4);
+            t.jTable.setAutoResort(false)
             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
         end
@@ -227,8 +232,11 @@ classdef CycleRanges < Gui.Modules.GuiModule
             % update the position in the table when the point is dragged
             row = obj.rangeTable.getRowObjectRow(gRange);
             pos = gRange.getPosition();
+            time_pos = gRange.getTimePosition();
             obj.rangeTable.setValue(pos(1),row,2);
             obj.rangeTable.setValue(pos(2),row,3);
+            obj.rangeTable.setValue(time_pos(1),row,4);
+            obj.rangeTable.setValue(time_pos(2),row,5);
         end
         
         function cycleRangeDragStartCallback(obj,gObj)
@@ -250,6 +258,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             objRow = obj.rangeTable.getRowObjectRow(gObj);
             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
             obj.rangeTable.setCallbacksActive(true);
+            obj.rangeTable.jTable.sortColumn(4);
         end
         
         function rangeTableDataChangeCallback(obj,rc,v)
@@ -265,9 +274,20 @@ classdef CycleRanges < Gui.Modules.GuiModule
                     case 3
                         o.setPosition([nan v{i}],obj.getProject().getCurrentSensor());
                     case 4
+                        o.setTimePosition([v{i} nan]);
+                    case 5
+                        o.setTimePosition([nan v{i}]);
+                    case 6
                         o.setColor(v{i});
                 end
+                pos = o.getPosition();
+                time_pos = o.getTimePosition();
+                obj.rangeTable.setValue(pos(1),rc(i,1),2);
+                obj.rangeTable.setValue(pos(2),rc(i,1),3);
+                obj.rangeTable.setValue(time_pos(1),rc(i,1),4);
+                obj.rangeTable.setValue(time_pos(2),rc(i,1),5);
             end
+            obj.rangeTable.jTable.sortColumn(4);
         end
                 
         function rangeTableMouseClickedCallback(obj,visRC,actRC)

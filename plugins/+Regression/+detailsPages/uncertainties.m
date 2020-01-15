@@ -38,6 +38,10 @@ function populateGui(elements,project,dataprocessingblock)
     if isempty(dataParam)
         return
     end
+    dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
+    if ~dataprocessingblock.parameters.getByCaption('trained').value
+        return
+    end
     groupingCaption = project.currentModel.fullModelData.groupingCaption;
 %     groupingCaption = '';
     groupingObj = project.getGroupingByCaption(groupingCaption);

@@ -87,7 +87,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             panel = uiextras.Panel();
             
             menu = uimenu('Label','Preprocessing');
-            obj.globalYLimitsMenu = uimenu(menu,'Label','global y-limits', 'Checked','on', getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
+            obj.globalYLimitsMenu = uimenu(menu,'Label','global y-limits', 'Checked','off', getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
             
             layout = uiextras.HBox('Parent',panel);
             leftLayout = uiextras.VBox('Parent',layout);
@@ -676,19 +676,20 @@ classdef Preprocessing < Gui.Modules.GuiModule
             gPoints = obj.cyclePoints;
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
+            time_positions = num2cell(gPoints.getTimePosition());
             colors = num2cell(gPoints.getPoint().getJavaColor());
-            data = [captions, positions, colors];
+            data = [captions, positions, time_positions, colors];
 
             t = obj.cyclePointTable;
-            t.setData(data,{'caption','cycle','color'});
+            t.setData(data,{'caption','cycle','time in s','color'});
             t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','int','clr'});
-            t.setColumnsEditable([true true true]);
+            t.setColumnClasses({'str','int','double', 'clr'});
+            t.setColumnsEditable([true true true true]);
             t.setSortingEnabled(false)
             t.setFilteringEnabled(false);
             t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
-
+            t.jTable.sortColumn(3);
+            t.jTable.setAutoResort(false)
             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
         end
@@ -705,12 +706,12 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t = obj.indexPointTable;
             t.setData(data,{'caption','point','color'});
             t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','int','clr'});
+            t.setColumnClasses({'str','double','clr'});
             t.setColumnsEditable([true true true]);
             t.setSortingEnabled(false)
             t.setFilteringEnabled(false);
             t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
+            t.jTable.sortColumn(3);
             
             obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
             obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
@@ -721,6 +722,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % update the position in the table when the point is dragged
             row = obj.cyclePointTable.getRowObjectRow(gPoint);
             obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
+            obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
         end
         
         function indexPointDraggedCallback(obj,gPoint)
@@ -812,13 +814,18 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         o.getObject().setCaption(v{i});
                     case 2
                         o.setPosition(v{i},obj.getProject().getCurrentSensor());
+                        obj.cyclePointTable.setValue(o.getTimePosition(),rc(i,1),3);
                     case 3
+                        o.setTimePosition(v{i});
+                        obj.cyclePointTable.setValue(o.getPosition(),rc(i,1),2);
+                    case 4
                         o.setColor(v{i});
                         idx = ismember(obj.cyclePoints,o);
                         obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
                         obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
                 end
             end
+            obj.cyclePointTable.jTable.sortColumn(3);
         end
         
         function indexPointTableDataChange(obj,rc,v)
@@ -845,10 +852,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % update the corresponding lines in cyclic plot when a
             % point selector in the quasistatic plot has moved
             idx = ismember(obj.cyclePoints.getPoint(),point);
-            d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster));
-            obj.hLines.current.raw.cycle(idx).YData = d;
-            d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster),true);
-            obj.hLines.current.pp.cycle(idx).YData = d;
+            cycle_point = point.getCyclePosition(point.currentCluster);
+            if ~isnan(cycle_point)
+                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster));
+                obj.hLines.current.raw.cycle(idx).YData = d;
+                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster),true);
+                obj.hLines.current.pp.cycle(idx).YData = d;
+            end
 %             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster));
 %             obj.hLines.compare.raw.cycle(idx).YData = d;
 %             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster),true);
@@ -942,13 +952,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 return
             end
             obj.getCurrentCluster().samplingPeriod = newNum;
+            obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
             obj.updatePlotsInPlace();
-            for i = 1:numel(obj.indexPoints)
-                obj.indexPoints(i).updatePosition(obj.getCurrentSensor());
-            end
-            for i = 1:numel(obj.cyclePoints)
-                obj.cyclePoints(i).updatePosition(obj.getCurrentSensor());
-            end
             obj.populateCyclePointsTable();
             obj.populateIndexPointsTable();
         end
@@ -965,6 +970,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.getProject().getCurrentCluster().indexOffset = iOffset;
             obj.hCompareWith.hVirtualOffsetEdit.String = num2str(iOffset);
             obj.updatePlotsInPlace();
+            obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
+            for i = 1:numel(obj.cyclePoints)
+                id = obj.cyclePointTable.getRowObjectRow(obj.cyclePoints(i));
+                gPoint = obj.cyclePoints(i);
+                obj.cyclePointTable.setValue(gPoint.getTimePosition(),id,3);
+                obj.cyclePointTable.setValue(gPoint.getPosition(),id,2);
+            end
         end
         
         function virtualOffsetEditCallback(obj,~,~)
@@ -1142,8 +1154,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
 
         function addPreprocessing(obj)
-            pp = PreprocessingChain.getAvailableMethods(true);
-            s = keys(pp);
+            pp = PreprocessingChain.getAvailableMethods(true)
+            s = keys(pp)
             [sel,ok] = listdlg('ListString',s);
             if ~ok
                 return

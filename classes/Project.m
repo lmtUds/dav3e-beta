@@ -169,9 +169,10 @@ classdef Project < handle
         
         function removeCluster(obj,clusters)
             found = ismember(obj.clusters,clusters);
-            
             for i = 1:numel(found)
-                obj.clusters(found(i)).project = [];
+                if found(i)
+                    obj.clusters(found(i)).project = [];
+                end
             end
             
             obj.clusters(found) = [];
@@ -794,6 +795,19 @@ classdef Project < handle
         end
         
         function importGasmixerFile(obj,filename)
+            [~, ~, ext] = fileparts(filename);
+            switch lower(ext)
+              case '.json'
+                importGasmixerFileJSON(obj, filename)
+              case '.h5'
+                importGasmixerFileH5(obj, filename)
+              otherwise  % Under all circumstances SWITCH gets an OTHERWISE!
+                error('Unexpected file extension: %s', ext);
+            end
+            
+        end
+        
+        function importGasmixerFileJSON(obj,filename)
             json = fileread(filename);
             data = jsondecode(json);
 
@@ -835,6 +849,190 @@ classdef Project < handle
                 g.setGroup(categorical(vals),cr);
                 g.updateColors();
             end
+        end
+        
+        function importCycleRangesAndGroupings(obj, time, groupings, groupnames, deleteOldRanges)
+            nRanges = numel(obj.ranges);
+            nGroupings = numel(obj.groupings);
+            if deleteOldRanges
+                for i=nRanges:-1:1
+                    obj.removeCycleRange(obj.ranges(i))
+                end
+                for i=nGroupings:-1:1
+                    obj.removeGrouping(obj.groupings(i))
+                end 
+            end
+            
+            cr = Range.empty;
+            for i = 1:size(time,1)
+                cr(i) = Range(time(i,:));
+            end
+            obj.addCycleRange(cr);
+            
+            for i = 1:numel(groupnames)
+                g = obj.getGroupingByCaption(groupnames{i});
+                if isempty(g)
+                    g = Grouping();
+                    g.setCaption(groupnames{i});
+                    obj.addGrouping(g);
+                end
+                vals = vertcat(cellstr(num2str(groupings(:,i),'%-0.5g')));
+                g.setGroup(categorical(vals),cr);
+                g.updateColors();
+            end
+
+        end
+        
+        function importGasmixerFileH5(obj,filename)
+            
+            states = h5read(filename,'/statesequence');
+            names = fieldnames(states);
+            hw_setpoints = h5read(filename,'/hardware_setpoints');
+            hw_names = fieldnames(hw_setpoints);
+            states_mat = [];
+            states_names = {};
+            for i=1:length(names)
+                if strcmp(names{i},'time')
+                    continue
+                end
+                if strcmp(names{i},'state')
+                    continue
+                end
+                if any(strcmp(hw_names,names{i}))
+                    states.(names{i}) = hw_setpoints.(names{i});
+                end
+                states_mat = [states_mat; states.(names{i})];
+                states_names = [states_names ,names(i)];
+            end
+            
+            time = double([states.time(1:end-1)', states.time(2:end)'])/1000;
+            time = time + obj.getCurrentCluster().offset;
+            if numel(obj.ranges) > 0
+                answer = questdlg('Retain or delete existing cycle ranges and groups ?', ...
+                    'Cycle ranges and groups', ...
+                    'Retain', 'Delete','Delete');
+                % Handle response
+                nRanges = numel(obj.ranges);
+                nGroupings = numel(obj.groupings);
+                switch answer
+                    case 'Delete'
+                        for i=nRanges:-1:1
+                            obj.removeCycleRange(obj.ranges(i))
+                        end
+                        for i=nGroupings:-1:1
+                            obj.removeGrouping(obj.groupings(i))
+                        end
+                    case 'Retain'
+
+                end
+            end
+            cr = Range.empty;
+            for i = 1:size(time,1)
+                cr(i) = Range(time(i,:));
+            end
+            obj.addCycleRange(cr);
+            
+            setpoints = states_mat;
+            for i = 1:numel(states_names)
+                g = obj.getGroupingByCaption(states_names{i});
+                if isempty(g)
+                    g = Grouping();
+                    g.setCaption(states_names{i});
+                    obj.addGrouping(g);
+                end
+                vals = vertcat(cellstr(num2str(states.(states_names{i})','%-0.5g')));
+                g.setGroup(categorical(vals(1:end-1)),cr);
+                g.updateColors();
+            end
+        end
+        
+        function importCycleRangesAndGroups(obj,filename)
+            t = readtable(filename, 'Delimiter','tab','Filetype', 'text');
+            
+            beginTime = t.beginTime;
+            endTime = t.endTime;
+            caption = string(t.caption);
+            
+            if numel(obj.ranges) > 0
+                answer = questdlg('Retain or delete existing cycle ranges and groups ?', ...
+                    'Cycle ranges and groups', ...
+                    'Retain', 'Delete','Delete');
+                % Handle response
+                nRanges = numel(obj.ranges);
+                nGroupings = numel(obj.groupings);
+                switch answer
+                    case 'Delete'
+                        for i=nRanges:-1:1
+                            obj.removeCycleRange(obj.ranges(i))
+                        end
+                        for i=nGroupings:-1:1
+                            obj.removeGrouping(obj.groupings(i))
+                        end
+                    case 'Retain'
+
+                end
+            end
+            
+            cr = Range.empty;
+            for i = 1:size(t,1)
+                cr(i) = Range([beginTime(i), endTime(i)]);
+                if ~ismissing(caption(i))
+                    cr(i).setCaption(caption(i))
+                end
+            end
+            obj.addCycleRange(cr);
+
+            [groupsVarName, id] = setdiff(t.Properties.VariableNames, {'beginTime', 'endTime', 'caption','color'},'stable');
+            groupCaptions = string.empty;
+            colorCaptions = string.empty;
+            for i=1:numel(id)
+                groupCaptions(i) = '';
+                colorCaptions(i) = '';
+                varDesription = t.Properties.VariableDescriptions{id(i)};
+                if ~isempty(varDesription)
+                    if contains(varDesription, 'Original column heading: ')
+                        newStr = erase(varDesription,"'");
+                        strSpl = strsplit(newStr, 'Original column heading: label:');
+                        if numel(strSpl) == 2
+                            groupCaptions(i) = strSpl{2}; 
+                        end
+                        strSpl = strsplit(newStr, 'Original column heading: color:');
+                        if numel(strSpl) == 2
+                            colorCaptions(i) = strSpl{2};
+                        end
+                    end
+                end
+            end
+            
+            for i = 1:numel(groupCaptions)
+                if ~strcmp(groupCaptions(i),'')
+                    gCaption = groupCaptions(i);
+                    g = obj.getGroupingByCaption(gCaption);
+                    if isempty(g)
+                        g = Grouping();
+                        g.setCaption(gCaption);
+                        obj.addGrouping(g);
+                    end
+                    vals = string(vertcat(t.(groupsVarName{i})));
+                    g.setGroup(categorical(vals),cr);
+                    idColor = strcmp(colorCaptions, groupCaptions(i));
+                    if any(idColor)
+                        color = cellfun(@(x) str2double(strsplit(x,',')), t.(groupsVarName{idColor}),'UniformOutput', false);
+                        for j=1:numel(color)
+                            if ~isnan(color{j})
+                                g.setColor(vals{j}, color{j} / 255);
+                            end
+                        end
+                    end
+                    g.updateColors();
+                end
+            end
+            
+            if numel(obj.groupings)==0 
+                g = Grouping();
+                obj.addGrouping(g);
+            end
+        
         end
     end
     

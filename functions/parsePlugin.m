@@ -20,7 +20,7 @@
 
 function fe = parsePlugin(name)
     if isdeployed
-        path = [ctfroot '\plugins\+' name];
+        path = [ctfroot '\DAVE\plugins\+' name];
     else
         path = ['plugins\+' name];
     end

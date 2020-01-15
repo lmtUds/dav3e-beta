@@ -110,19 +110,7 @@ classdef Cluster < Descriptions
         end
         
         function set.samplingPeriod(obj,samplingPeriod)
-            cyclePoints = Point.empty;
-            indexPoints = Point.empty;
-            for i = 1:numel(obj.sensors)
-                cyclePoints = [cyclePoints,obj.sensors(i).cyclePointSet.getPoints()];
-                indexPoints = [indexPoints,obj.sensors(i).indexPointSet.getPoints()];
-            end
-            cyclePoints = unique(cyclePoints);
-            indexPoints = unique(indexPoints);
-            cyclePos = cyclePoints.getCyclePosition(obj);
-            indexPos = indexPoints.getIndexPosition(obj);
             obj.samplingPeriod = samplingPeriod;
-            cyclePoints.setCyclePosition(cyclePos,obj);
-            indexPoints.setIndexPosition(indexPos,obj);
             obj.modified();
         end
         

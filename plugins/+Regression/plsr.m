@@ -33,6 +33,7 @@ function info = plsr()
         ];
     info.apply = @apply;
     info.train = @train;
+    info.reset = @reset;
     info.detailsPages = {'calibration','predictionOverTime','coefficients'};
     info.requiresNumericTarget = true;
 end
@@ -101,5 +102,11 @@ function params = train(data,params)
     params.beta0 = b;
     params.offset = o;
     params.trained = true;
+end
+
+function params = reset(params)
+    params.trained = false;
+    params.beta0 = [];
+    params.offset = [];
 end
 

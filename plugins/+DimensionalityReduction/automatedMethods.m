@@ -26,12 +26,13 @@ function info = automatedMethods()
     
 %start by providing information and parameters
     info.type = DataProcessingBlockTypes.DimensionalityReduction;
-    info.caption = 'auto Methods';
+    info.caption = 'automated methods';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true),...    
         Parameter('shortCaption','ranks', 'internal',true),... 
+        Parameter('shortCaption','featureCaptions', 'internal',true),... 
         Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:3), 'selectionType','multiple'),...
         Parameter('shortCaption','autoNumFeat','value',true),...
         Parameter('shortCaption','numFeat', 'value',int32(3), 'enum',int32(1:50), 'selectionType','multiple'),...
@@ -48,7 +49,7 @@ function info = automatedMethods()
     info.apply = @apply;
     info.train = @train;
     info.updateParameters = @updateParameters;
-    info.detailsPages = {'scatter'};
+    info.detailsPages = {'scatter', 'ranking'};
 end
 
 function [data,params] = apply(data,params)
@@ -82,6 +83,10 @@ function params = train(data,params)
     %set parameters after training
     params.ranks = ranks;
     params.trained = true;
+    %accquire unselected feature captions
+    selFeat = data.selectedFeatures();
+    %select the best numFeat Captions matching the ranking
+    params.featureCaptions = selFeat(ranks(1:params.numFeat));
 end
 
 function updateParameters(params,project)

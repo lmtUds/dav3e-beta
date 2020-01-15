@@ -45,6 +45,8 @@ classdef Model < Descriptions
         trainedIndexSet
         fullModelData
         datas
+        
+        trained = false;
     end
     
     properties(Hidden)
@@ -59,6 +61,32 @@ classdef Model < Descriptions
             end
             obj.processingChain = chain;
             obj.setCaption('model');
+        end
+        
+        function reset(obj)
+            obj.processingChain.resetChain()
+            obj.trained = false;
+            obj.fullModelData = [];
+            obj.datas = [];
+            obj.hyperParameterCaptions = [];
+            obj.hyperParameterIndices = [];
+            obj.hyperParameterValues = [];
+            
+            obj.trainingErrors = [];
+            obj.validationErrors = [];
+            obj.testingErrors = [];
+            obj.trainingErrorStds = [];
+            obj.validationErrorStds = [];
+            obj.testingErrorStds = [];
+            
+            obj.trainingCorrs = [];
+            obj.validationCorrs = [];
+            obj.testingCorrs = [];
+            obj.trainingCorrStds = [];
+            obj.validationCorrStds = [];
+            obj.testingCorrStds = [];
+            
+            obj.trainedIndexSet = [];
         end
 
         function pgf = makePropGridFields(obj)
@@ -174,6 +202,7 @@ classdef Model < Descriptions
             traindata.testingPrediction = b.revertChain(traindata.testingPrediction);
             traindata.target = b.revertChain(traindata.target);
             obj.fullModelData = traindata;
+            obj.trained = true;
         end
         
         function data = getValidatedDataForTrainedIndexSet(obj)

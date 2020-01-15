@@ -304,18 +304,17 @@ classdef Data < Descriptions
 %             data = data(sel,:);
         end
         
-        function setSelectedData(obj,data)
+        function setSelectedData(obj, data, varargin)
+            p = inputParser();
+            p.addParameter('captions', cellstr("f" + num2str((1:size(data,2))')));
+            p.parse(varargin{:});
+            p = p.Results;
             sel = obj.getCurrentCycleSelection();
-            if size(data,2) == sum(obj.featureSelection)
-                obj.data(sel,obj.featureSelection) = data;
-            else
-                obj.irreversibleChangeWasMade = true;
-                obj.data(sel,:) = nan;
-                obj.data(sel,1:size(data,2)) = data;
-                obj.data(:,size(data,2)+1:end) = [];
-                obj.featureSelection = true(1,size(data,2));
-                obj.featureCaptions = cell(1,size(data,2));
-            end
+            obj.irreversibleChangeWasMade = true;
+            obj.data = nan(size(obj.data, 1), size(data, 2));
+            obj.data(sel,1:size(data,2)) = data;
+            obj.featureSelection = true(1,size(data,2));
+            obj.featureCaptions = p.captions;    
         end
 
         function target = getSelectedTarget(obj,mode)
@@ -611,9 +610,6 @@ classdef Data < Descriptions
             
             obj.testingSteps = p.folds;
             obj.testingIterations = p.iterations;
-            
-%             obj.testingSteps = 1;
-%             obj.testingIterations = 1;
             obj.testingSelection = false(numel(obj.target),1,1);
             
             switch p.type
