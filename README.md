@@ -3,10 +3,16 @@ This repository was moved here from https://gitlab.com/manuel.bastuck/dav3e-beta
 # Quick Start
 * Download DAV³E and install the [GUI Layout Toolbox](https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox).
 * Open [this example project](https://www.dropbox.com/s/p1ybuayfz6aw3mr/project_UST.zip?dl=0) in DAV³E to see how the [data described here](http://doi.org/10.5281/zenodo.1411209) have been evaluated.
-* Import and evaluate your own cyclic data. In case of problems, consult the [readme](#readme) or the [author](http://www.lmt.uni-saarland.de/index.php/de/?option=com_content&view=article&id=944:bastuck&catid=53:mitarbeiter-wissenschaftliche-mitarbeiter).
-
+* Import and evaluate your own cyclic data. 
+* In case of problems, consult the [readme](#readme) or the [developers](mailto:dev@lmt.uni-saarland.de).
+# Compatibility
+MATLAB 2016b+ with Toolboxes:
+* Image Processing Toolbox
+* Statistics and Machine Learning Toolbox
+* Deep Learning Toolbox (former Neural Network Toolbox)
+* Signal Processing Toolbox
+* Wavelet Toolbox (only if you want to use the feature extraction method: best daubechies wavelets)
 # Readme
-
 DAV³E stands for "Data Analysis and Verification/Visualization/Validation Environment". It is a MATLAB-based toolbox for the evaluation of, mainly, cyclic sensor signals. It focuses on cycle-based raw data preprocessing, graphical feature extraction, and data annotation, but also provides commonly used machine learning methods (with cycle-specific extensions) to develop data-driven models. This allows for a sleek workflow from start to finish without having to change to third-party tools.
 
 If you publish results obtained with DAV³E, please cite:
