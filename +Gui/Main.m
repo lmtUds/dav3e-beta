@@ -96,6 +96,14 @@ classdef Main < handle
                 callback, []);
             uimenu(m,'Label','Data to workspace',...
                 callback, @obj.exportDataToWorkspace);
+            uimenu(m,'Label','Full model data',...
+                callback, @obj.exportFullModelData);
+            uimenu(m,'Label','Full model data to workspace',...
+                callback, @obj.exportFullModelDataToWorkspace);
+            uimenu(m,'Label','Merged Features',...
+                callback, @obj.exportMergedFeature);
+            uimenu(m,'Label','Merged Features to workspace',...
+                callback, @obj.exportMergedFeatureToWorkspace);
             uimenu(m,'Label','CRG (ranges/groups) files',...
                 callback, @obj.exportCycleRangesAndGroups);
             m = uimenu(mh,'Label','Import');
@@ -339,6 +347,36 @@ classdef Main < handle
                 s = matlab.lang.makeValidName(char(sensors(sel(i)).getCaption('cluster')));
                 assignin('base',s,sensors(sel(i)).data);
             end
+        end
+        
+        function exportFullModelDataToWorkspace(obj,varargin)
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            assignin('base', 'fullModelData',fullModelData);
+        end
+        
+        function exportFullModelData(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save full model data');
+            if file == 0
+                return
+            end
+            filename = fullfile(path, file);
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            save(filename,'fullModelData')
+        end
+        
+        function exportMergedFeatureToWorkspace(obj,varargin)
+            mergeFeature = struct(obj.project.mergeFeatures);
+            assignin('base', 'mergeFeature',mergeFeature);
+        end
+        
+        function exportMergedFeature(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save full model data');
+            if file == 0
+                return
+            end
+            filename = fullfile(path, file);
+            mergeFeature = struct(obj.project.mergeFeatures);
+            save(filename,'mergeFeature')
         end
         
         function selectVisibleSensors(obj,varargin)

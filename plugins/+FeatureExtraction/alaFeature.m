@@ -79,7 +79,7 @@ function [data,params] = apply(data,params)
     
     valueLabels = string.empty;
     if ~params.autoSplits
-        for i=1:params.numSplits
+        for i=1:(maxFeatLength/2)
            valueLabels(end+1) = string(['alaMean#' num2str(i)]); 
            valueLabels(end+1) = string(['alaSlope#' num2str(i)]);
         end
