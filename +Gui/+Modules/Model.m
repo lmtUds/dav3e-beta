@@ -387,8 +387,20 @@ classdef Model < Gui.Modules.GuiModule
                 obj.tabGroup = uitabgroup(obj.tabLayout,'SelectionChangedFcn',@obj.updateChildrenTab);
             else
                 tabs = obj.tabGroup.Children;
+                obj.tabLayout.Visible = 'off';
                 delete(tabs);
+                delete(obj.parametersDropdownGrid.Children);
+                obj.parameterPopups = [];
+                obj.parametersDropdownPanel.Visible = 'off';
             end
+            
+            % if model not trained -> return
+            if ~obj.getModel().trained
+               return 
+            end
+           
+            % activate tab layout to create tabs
+            obj.tabLayout.Visible = 'on';
             
             % create tabs
             blocks = obj.getModel().processingChain.getBlocksInOrder();
@@ -446,6 +458,8 @@ classdef Model < Gui.Modules.GuiModule
                 if strcmp(q,'Yes')
                     try
                         allowed = obj.computeFeatures();
+                        obj.currentModel.reset();
+                        obj.makeModelTabs()
                     catch ME
                         errordlg(sprintf('Error during feature computation.\n %s', ME.message),'I''m afraid I can''t do that.');
                     end

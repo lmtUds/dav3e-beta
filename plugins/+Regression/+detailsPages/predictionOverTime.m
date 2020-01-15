@@ -38,6 +38,9 @@ function populateGui(elements,project,dataprocessingblock)
     if isempty(dataParam)
         return
     end
+    if ~dataprocessingblock.parameters.getByCaption('trained').value
+        return
+    end
     trainOffsets = project.currentModel.fullModelData.getSelectedCycleOffsets('training');
     testOffsets = project.currentModel.fullModelData.getSelectedCycleOffsets('testing');
     

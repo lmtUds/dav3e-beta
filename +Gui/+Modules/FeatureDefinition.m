@@ -429,6 +429,21 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.populateRangeTable(obj.ranges);
             obj.updateFeaturePreview();
         end
+        
+        function removeRange(obj)
+            selectedRangeIDs = obj.rangeTable.jTable.getSelectedRows() + 1;
+            gObjects = {};
+            for i=1:numel(selectedRangeIDs)
+                selectedRangeID = selectedRangeIDs(i);
+                if selectedRangeID == 0
+                    return
+                end
+                gObjects{i} = obj.rangeTable.getRowObjectsAt(selectedRangeID);
+            end
+            for i=1:numel(gObjects)
+                deleteRangeCallback(obj,gObjects{i})
+            end
+        end
 
         function deleteRangeCallback(obj,gObject)
             %% Called upon right-click on a range to delete it.
@@ -650,13 +665,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             t.setData(data,{'caption','begin','end','divs','form'});
             t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','int','int','int',{'lin','log','invlog'}});
+            t.setColumnClasses({'str','double','double','int',{'lin','log','invlog'}});
             t.setColumnsEditable([true true true true true true]);
             t.setSortingEnabled(false)
             t.setFilteringEnabled(false);
             t.setColumnReorderingAllowed(false);
             t.jTable.sortColumn(2);
-
+            t.jTable.setAutoResort(false);
             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
         end
@@ -745,7 +760,6 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                     case 3
                         o.setPosition([nan v{i}]);
                     case 4
-%                         o.setColor(v{i});
                         o.getObject().setSubRangeNum(v{i});
                         o.updateSubRanges();
                         obj.updateFeaturePreview();
@@ -754,6 +768,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                         o.updateSubRanges();
                         obj.updateFeaturePreview();
                 end
+                pos = o.getPosition();
+                obj.rangeTable.setValue(pos(1),rc(i,1),2);
+                obj.rangeTable.setValue(pos(2),rc(i,1),3);
+                obj.rangeTable.jTable.sortColumn(2);
             end
         end
                 

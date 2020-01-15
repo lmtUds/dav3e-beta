@@ -18,7 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = coefficients(parent,project,dataprocessingblock)
+function [panel,updateFun] = ranking(parent,project,dataprocessingblock)
     [panel,elements] = makeGui(parent);
     populateGui(elements,project,dataprocessingblock);
     updateFun = @()populateGui(elements,project,dataprocessingblock);
@@ -26,33 +26,26 @@ end
 
 function [panel,elements] = makeGui(parent)
     panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
+    layout = uiextras.VBox('Parent',panel);
+    panel2 = uipanel(layout,'BorderType','none');
+    %hAx = axes(panel2); title('');
+    %xlabel('DF1'); ylabel('DF2');
+    %box on,
+    %set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
+    %elements.hAx = hAx;
+       
+    elements.table = uitable(panel2,'ColumnName',{'rank', 'id', 'feature'},...
+        'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+    set(elements.table,'ColumnWidth',{40, 40, 450});
+    
+    %spinButton = uicontrol(layout, 'String','spin','Callback',@(varargin)spinAxes(hAx));
+    %elements.spinButton = spinButton;
+    %layout.Sizes = [-1,20];
 end
 
 function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
-    if ~dataprocessingblock.parameters.getByCaption('trained').value
-        return
-    end
-    coeffs = dataprocessingblock.parameters.getByCaption('beta0').getValue();
-    coeffs = coeffs(:,end);
-    if isempty(coeffs)
-        return
-    end
-    featCap = project.currentModel.fullModelData.featureCaptions;
-    [~,idx] = sort(abs(coeffs),'descend');
-    coeffs = coeffs(idx);
-    featCap = cellstr(featCap(idx));
-    X = categorical(featCap);
-    X = reordercats(X,featCap);
-    bar(elements.hAx,X,coeffs);
-    set(elements.hAx,'TickLabelInterpreter','none');
-    
-    %set(elements.hAx,'XTickLabel',featCap);
-    xtickangle(elements.hAx,20);
-    xlabel('feature');
-    ylabel('coefficient / a.u.')
+    ranks = dataprocessingblock.parameters.getByCaption('ranks').value(:);
+    features = dataprocessingblock.parameters.getByCaption('featureCaptions').value;
+    T = table((1:numel(features))', ranks(1:numel(features)), features');
+    elements.table.Data = cellstr(T{:,:});
 end

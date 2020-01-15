@@ -18,14 +18,14 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = addition()
+function info = division()
     info.type = DataProcessingBlockTypes.VirtualSensor;
-    info.caption = 'addition';
+    info.caption = 'division';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','caption','value',''),
-        Parameter('shortCaption','description','value','= sensor 1 + sensor 2','editable', false),
+        Parameter('shortCaption','description','value','= sensor 1 / sensor 2','editable', false),
         Parameter('shortCaption','virtual_sensor','value','','internal',true),
         Parameter('shortCaption','sensor1_caption', 'value','', 'enum',{''}, 'caption', 'sensor 1'),
         Parameter('shortCaption','sensor1', 'value',[], 'internal', true),
@@ -37,7 +37,7 @@ function info = addition()
 end
 
 function [data,params] = apply(data,params)
-    data = params.sensor1.data + params.sensor2.data;
+    data = params.sensor1.data ./ params.sensor2.data;
 end
 
 function updateParameters(params,project)

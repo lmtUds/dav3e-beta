@@ -52,7 +52,11 @@ function [data,params] = apply(data,params)
         case 'testing'
             params.projectedData.testing = projectedData;
     end
-    data.setSelectedData(projectedData);
+    captions = string.empty;
+    for i=1:nPC
+        captions(i) = ['pca_coeff_',num2str(i)];
+    end
+    data.setSelectedData(projectedData, 'captions', captions);
 end
 
 function params = train(data,params)

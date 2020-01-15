@@ -96,11 +96,23 @@ classdef Main < handle
                 callback, []);
             uimenu(m,'Label','Data to workspace',...
                 callback, @obj.exportDataToWorkspace);
+            uimenu(m,'Label','Full model data',...
+                callback, @obj.exportFullModelData);
+            uimenu(m,'Label','Full model data to workspace',...
+                callback, @obj.exportFullModelDataToWorkspace);
+            uimenu(m,'Label','Merged Features',...
+                callback, @obj.exportMergedFeature);
+            uimenu(m,'Label','Merged Features to workspace',...
+                callback, @obj.exportMergedFeatureToWorkspace);
+            uimenu(m,'Label','CRG (ranges/groups) files',...
+                callback, @obj.exportCycleRangesAndGroups);
             m = uimenu(mh,'Label','Import');
             uimenu(m,'Label','Data from workspace...',...
                 callback,@obj.importDataFromWorkspace);
-            uimenu(m,'Label','gasmixer file',...
+            uimenu(m,'Label','GRUPY (gasmixer) files',...
                 callback,@obj.importGasmixerFile);
+            uimenu(m,'Label','CRG (ranges/groups) files',...
+                callback,@obj.importCycleRangesAndGroups);
             uimenu(mh,'Label','Sensor properties', 'Separator','on',...
                 callback,@obj.showSensorProperties);
             uimenu(mh,'Label','Cluster properties',...
@@ -187,11 +199,72 @@ classdef Main < handle
         end
  
         function importGasmixerFile(obj,varargin)
-            [file,path] = uigetfile({'*.json','JSON file'},'Choose gasmixer file');
+            sb = statusbar(obj.hFigure,'Import cycle ranges and groupings...');
+            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            output = Gui.Dialogs.DataExchange();
+            waitfor(Gui.Dialogs.LoadGRUPY(output));
+            if isempty(output.data)
+                return
+            end
+            time = output.data.time;
+            groupings = output.data.data;
+            groupnames = output.data.captions;
+            deleteOldRanges = output.data.deleteOldRanges; 
+            obj.project.importCycleRangesAndGroupings(time, groupings, groupnames, deleteOldRanges)
+            if any(contains(obj.moduleNames, 'Gui.Modules.CycleRanges'))
+               obj.modules(contains(obj.moduleNames, 'Gui.Modules.CycleRanges')).onOpen()
+            end
+            if any(contains(obj.moduleNames, 'Gui.Modules.Grouping'))
+               obj.modules(contains(obj.moduleNames, 'Gui.Modules.Grouping')).onOpen()
+            end
+            sb = statusbar(obj.hFigure,'Ready.');
+            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+        end
+        
+        function importCycleRangesAndGroups(obj,varargin)
+            [file,path] = uigetfile({'*.crg','CRG file'},'Choose Cycle Ranges and groupings file');
             if file == 0
                 return
             end
-            obj.project.importGasmixerFile(fullfile(path,file));
+            obj.project.importCycleRangesAndGroups(fullfile(path,file));
+            if any(contains(obj.moduleNames, 'Gui.Modules.CycleRanges'))
+               obj.modules(contains(obj.moduleNames, 'Gui.Modules.CycleRanges')).onOpen()
+            end
+            if any(contains(obj.moduleNames, 'Gui.Modules.Grouping'))
+               obj.modules(contains(obj.moduleNames, 'Gui.Modules.Grouping')).onOpen()
+            end
+        end
+        
+        function exportCycleRangesAndGroups(obj,varargin)
+            [file, path] = uiputfile({'*.crg','CRG file'},'Choose Cycle Ranges and groupings file');
+            if file == 0
+                return
+            end
+            filename = fullfile(path,file);
+            fid = fopen(filename,'wt');
+            
+            ranges = obj.project.ranges;
+            groupings = obj.project.groupings;
+            header = ['beginTime', 'endTime', 'caption',...
+                'label: '+horzcat(groupings.caption), ...
+                'color: '+horzcat(groupings.caption)];
+
+            out = [string(vertcat(ranges.timePosition)), vertcat(ranges.caption), ...
+                string(horzcat(groupings.vals))];
+
+            for i=1:numel(groupings)
+                color = cell2mat(cellfun(@(x) groupings(1).colors(x)*255,...
+                    cellstr(groupings(1).vals),'UniformOutput', false));
+                out = [out, join(string(color),',')];
+            end
+
+            out = join(out, '\t');
+            out = [join(header,'\t'); out];
+            out = join(out, '\n');
+
+            
+            fprintf(fid, out);
+            fclose(fid);
         end
         
         function openDefaultPlot(obj,varargin)
@@ -274,6 +347,36 @@ classdef Main < handle
                 s = matlab.lang.makeValidName(char(sensors(sel(i)).getCaption('cluster')));
                 assignin('base',s,sensors(sel(i)).data);
             end
+        end
+        
+        function exportFullModelDataToWorkspace(obj,varargin)
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            assignin('base', 'fullModelData',fullModelData);
+        end
+        
+        function exportFullModelData(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save full model data');
+            if file == 0
+                return
+            end
+            filename = fullfile(path, file);
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            save(filename,'fullModelData')
+        end
+        
+        function exportMergedFeatureToWorkspace(obj,varargin)
+            mergeFeature = struct(obj.project.mergeFeatures);
+            assignin('base', 'mergeFeature',mergeFeature);
+        end
+        
+        function exportMergedFeature(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save full model data');
+            if file == 0
+                return
+            end
+            filename = fullfile(path, file);
+            mergeFeature = struct(obj.project.mergeFeatures);
+            save(filename,'mergeFeature')
         end
         
         function selectVisibleSensors(obj,varargin)
@@ -375,20 +478,32 @@ classdef Main < handle
                             sensor.setCaption(v{j});
                         case 4
                             idx = obj.project.poolCyclePointSets.getCaption() == string(v{j});
-                            obj.project.currentCyclePointSet = obj.project.poolCyclePointSets(idx);
-                            obj.getActiveModule().onCurrentCyclePointSetChanged(obj.project.poolCyclePointSets(idx));
+                            sensor.cyclePointSet = obj.project.poolCyclePointSets(idx);
+                            if obj.project.getCurrentSensor() == sensor
+                                obj.project.currentCyclePointSet = obj.project.poolCyclePointSets(idx);
+                                obj.getActiveModule().onCurrentCyclePointSetChanged(obj.project.poolCyclePointSets(idx));
+                            end
                         case 5
                             idx = obj.project.poolIndexPointSets.getCaption() == string(v{j});
-                            obj.project.currentIndexPointSet = obj.project.poolIndexPointSets(idx);
-                            obj.getActiveModule().onCurrentIndexPointSetChanged(obj.project.poolIndexPointSets(idx));
+                            sensor.indexPointSet = obj.project.poolIndexPointSets(idx);
+                            if obj.project.getCurrentSensor() == sensor
+                                obj.project.currentIndexPointSet = obj.project.poolIndexPointSets(idx);
+                                obj.getActiveModule().onCurrentIndexPointSetChanged(obj.project.poolIndexPointSets(idx));
+                            end
                         case 6
                             idx = obj.project.poolPreprocessingChains.getCaption() == string(v{j});
-                            obj.project.currentPreprocessingChain = obj.project.poolPreprocessingChains(idx);
-                            obj.getActiveModule().onCurrentPreprocessingChainChanged(obj.project.poolPreprocessingChains(idx));
+                            sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
+                            if obj.project.getCurrentSensor() == sensor
+                                obj.project.currentPreprocessingChain = obj.project.poolPreprocessingChains(idx);
+                                obj.getActiveModule().onCurrentPreprocessingChainChanged(obj.project.poolPreprocessingChains(idx));
+                            end
                         case 7
                             idx = obj.project.poolFeatureDefinitionSets.getCaption() == string(v{j});
-                            obj.project.currentFeatureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
-                            obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(obj.project.poolFeatureDefinitionSets(idx));
+                            sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
+                            if obj.project.getCurrentSensor() == sensor
+                                obj.project.currentFeatureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
+                                obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(obj.project.poolFeatureDefinitionSets(idx));  
+                            end
                     end
                 end
                 if redoCluster

@@ -48,9 +48,12 @@ classdef VirtualSensors < handle
             if ~ok
                 return
             end
-            virtualSensor = Sensor(DataProcessingBlock(vs(s{sel})),...
-                'caption',s{sel});
-            obj.main.project.getCurrentCluster().addSensor(virtualSensor);
+            for i=1:numel(sel)
+                virtualSensor = Sensor(DataProcessingBlock(vs(s{sel(i)})),...
+                    'caption',s{sel(i)});
+                virtualSensor.dataProcessingBlock.parameters.getByCaption('virtual_sensor').value = virtualSensor;
+                obj.main.project.getCurrentCluster().addSensor(virtualSensor);
+            end
             obj.refreshPropGrid();
         end
         
@@ -60,7 +63,10 @@ classdef VirtualSensors < handle
                 return
             end
             block = prop.getMatlabObj();
-            obj.main.project.getCurrentCluster().removeSensor(block.getCaption());
+            id = [obj.main.project.getCurrentCluster().sensors.dataProcessingBlock]==block;
+            virtual_sensors = obj.main.project.getCurrentCluster().sensors([obj.main.project.getCurrentCluster().sensors.virtual]);
+            sensor = virtual_sensors(id);
+            obj.main.project.getCurrentCluster().removeSensor(sensor.getCaption());
             obj.hPropGrid.removeProperty(prop);
             obj.refreshPropGrid();
         end        
@@ -73,8 +79,10 @@ classdef VirtualSensors < handle
                 return
             end
             dpb = [s.dataProcessingBlock];
-            pgf = dpb.makePropGridField();
-            obj.hPropGrid.addProperty(pgf);
+            for i = 1:numel(dpb)
+                pgf = dpb(i).makePropGridField();
+                obj.hPropGrid.addProperty(pgf);
+            end
             for i = 1:numel(dpb)
                 dpb(i).updateParameters(obj.main.project);
             end

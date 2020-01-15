@@ -18,26 +18,27 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = convolution()
+function info = interpolateNaN()
     info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'convolution';
+    info.caption = 'interpolate nan values';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
-        Parameter('shortCaption','framelength', 'value',int32(5)),... %must be odd
-        Parameter('shortCaption','timebase', 'value',0.01),... %or 0.3 for SniffChecker
-%         Parameter('shortCaption','filtertype', 'ARRAY?:step/gaussian','1'),... 
+        Parameter('shortCaption','maxNaNValuesInCycle', 'value',int32(100)),... 
     ];
     info.apply = @apply;
 end
 
-function [data,paramOut] = apply(data,params)
-    paramOut = struct();
-    m = (params.framlength-1)/2;
-    t = params.timebase;
-    tm = ((1:size(data,1))-1)*t;
-    h = [ones(m,1)',0,-ones(m,1)']/m/t;
-    temp = nan(size(data));
-    temp((m+1):end-(m),:) = convn(data',h,'valid')'./mean(conv(tm',h,'valid'));
-    data = temp;
+function [data,params] = apply(data,params)
+    max_values = params.maxNaNValuesInCycle;
+    cycle_with_nan = find(sum(isnan(data'))>0);
+    for i=1:length(cycle_with_nan)
+        if sum(isnan(data(i,:))) > max_values
+           warning(['nan cycle: ', i])
+        end
+        data(cycle_with_nan(i),:) = fillmissing(data(cycle_with_nan(i),:),'linear');
+    end
+    sum(sum(isnan(data)))
+    
+
 end

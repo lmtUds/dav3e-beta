@@ -48,6 +48,8 @@ else
             jclassname = 'java.lang.Double';
         case 'cellstr'  % a single cell or a character array
             jclassname = 'java.lang.String';
+        case 'string'  % a single cell or a character array
+            jclassname = 'java.lang.String';
         case 'color'
             jclassname = 'java.awt.Color';
         otherwise
@@ -86,6 +88,8 @@ switch mtype
     case 'double'  % double-precision floating-point number array
         jclassid = 'D';
     case 'cellstr'  % cell array of strings
+        jclassid = 'Ljava.lang.String;';
+    case 'string'  % cell array of strings
         jclassid = 'Ljava.lang.String;';
     otherwise
         error('java:javaclass:InvalidArgumentValue', ...

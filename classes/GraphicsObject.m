@@ -82,6 +82,10 @@ classdef GraphicsObject < handle
             pos(cyclePosIdx,:) = objArray(cyclePosIdx).getObject().getCyclePosition(sensor.cluster);
             pos(indexPosIdx,:) = objArray(indexPosIdx).getObject().getAbscissaPosition(sensor);
         end
+        
+        function pos = getTimePosition(objArray)
+            pos = objArray.getObject().getTimePosition();
+        end
 
         function setPosition(objArray,pos,sensor)
             if nargin < 3
@@ -101,6 +105,12 @@ classdef GraphicsObject < handle
             indexPosIdx = [objArray.mode] == 'index';
             objArray(cyclePosIdx).getObject().setCyclePosition(pos(cyclePosIdx,:),sensor.cluster);
             objArray(indexPosIdx).getObject().setAbscissaPosition(pos(indexPosIdx,:),sensor);
+            objArray.updatePosition(sensor);
+        end
+        
+        function setTimePosition(objArray, pos)
+            objArray.object.setTimePosition(pos)
+            sensor = objArray(1).currentSensor;
             objArray.updatePosition(sensor);
         end
 

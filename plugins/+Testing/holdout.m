@@ -42,13 +42,14 @@ function [data,params] = apply(data,params)
 end
 
 function updateParameters(params,project)
+    grouping_captions = project.mergedFeatureData.groupingCaptions;
     for i = 1:numel(params)
         if params(i).shortCaption == string('groupbased')
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
             groupbased = params(i).value;
         elseif params(i).shortCaption == string('grouping')
-            params(i).enum = cellstr(project.groupings.getCaption());
+            params(i).enum = cellstr(grouping_captions);
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end

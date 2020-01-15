@@ -37,19 +37,21 @@ function [data,params] = apply(data,params)
 end
 
 function updateParameters(params,project)
+    groupings = project.mergedFeatureData.groupings;    
+    grouping_captions = project.mergedFeatureData.groupingCaptions;
     for i = 1:numel(params)
         if params(i).shortCaption == string('grouping')
-            params(i).enum = cellstr(project.groupings.getCaption());
+            params(i).enum = cellstr(grouping_captions);
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
-            grouping = project.getGroupingByCaption(params(i).getValue());
+            grouping = removecats(groupings(:,strcmp(grouping_captions,params(i).getValue())));
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('groups')
-            if ~all(ismember(params(i).enum,cellstr(grouping.getCategories())))
-                params(i).enum = cellstr(grouping.getCategories());
-                params(i).value = {};
+            if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
+                params(i).enum = cellstr(categories(grouping));
+                params(i).value = params(i).enum;
                 params(i).updatePropGridField();
             end
         end

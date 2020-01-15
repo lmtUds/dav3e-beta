@@ -35,7 +35,10 @@ end
 function populateGui(elements,project,dataprocessingblock)
     cla(elements.hAx,'reset');
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
-    if isempty(dataParam)
+    if isempty(dataParam) 
+        return
+    end
+    if ~dataprocessingblock.parameters.getByCaption('trained').value
         return
     end
 %     groupingCaption = project.currentModel.fullModelData.groupingCaption;

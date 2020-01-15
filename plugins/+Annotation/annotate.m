@@ -29,6 +29,7 @@ function info = annotate()
         Parameter('shortCaption','target', 'value','same as grouping', 'enum',{'same as grouping'}),...
         Parameter('shortCaption','features', 'value',{''}, 'enum',{''}),...
         Parameter('shortCaption','nFeatures', 'value','', 'editable',false)...
+        Parameter('shortCaption','nObservations', 'value','', 'editable',false)...
         ];
     info.apply = @apply;
     info.updateParameters = @updateParameters;
@@ -48,45 +49,55 @@ function [data,params] = apply(data,params)
 %         end
     else
         data.setTarget(data.getFeatureByName(targetCaption),'numeric');
-    end
-    
+    end    
     data.setValidation('none');
     data.setTesting('none');
 end
 
 function updateParameters(params,project)
+    groupings = project.mergedFeatureData.groupings;    
+    grouping_captions = project.mergedFeatureData.groupingCaptions;
     for i = 1:numel(params)
         if params(i).shortCaption == string('grouping')
-            params(i).enum = cellstr(project.groupings.getCaption());
+            params(i).enum = cellstr(grouping_captions);
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
-            grouping = project.getGroupingByCaption(params(i).getValue());
+            grouping = project.mergedFeatureData.getGroupingByName(params(i).getValue());
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('groups')
-            if isempty(params(i).enum) || ~all(ismember(params(i).enum,cellstr(grouping.getCategories())))
-                params(i).enum = cellstr(grouping.getCategories());
+            if isempty(params(i).enum) || ~all(ismember(params(i).enum,cellstr(categories(grouping))))
+                params(i).enum = categories(grouping);
                 params(i).value = params(i).enum;
-                params(i).updatePropGridField();
             end
-%             groups = params(i).getValue();
+            params(i).onChangedCallback = @()updateParameters(params,project);
+            params(i).updatePropGridField();
+            groups = params(i).getValue();
         elseif params(i).shortCaption == string('target')
             params(i).enum = ['same as grouping',cellstr(project.mergedFeatureData.featureCaptions)];
         elseif params(i).shortCaption == string('features')
             params(i).enum = cellstr(project.mergedFeatureData.featureCaptions);
             if isempty(params(i).value) || isempty(params(i).value{1})
                 params(i).value = cellstr(project.mergedFeatureData.featureCaptions);
-                params(i).updatePropGridField();
             end
+            selected = {};
+            for j=1:numel(params(i).enum)
+                if sum(strcmp(params(i).enum{j},params(i).getValue()))
+                    selected = [selected, params(i).enum(j)];
+                end
+            end
+            params(i).value = cellstr(selected);
+            params(i).updatePropGridField();
             features = params(i).getValue();
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('nFeatures')
             params(i).value = sprintf('%d/%d',numel(features),numel(project.mergedFeatureData.featureCaptions));
             params(i).updatePropGridField();
-%         elseif params(i).shortCaption == string('nObservations')
-%             params(i).value = sprintf('%d/%d',sum(ismember(project.mergedFeatureData.getGroupingByName(grouping.getCaption()),groups)),numel(project.mergedFeatureData.grouping));
+        elseif params(i).shortCaption == string('nObservations')
+            params(i).value = sprintf('%d/%d',sum(ismember(grouping,groups)),size(project.mergedFeatureData.data,1));    
+            params(i).updatePropGridField();
         end
     end
 end
