@@ -1,5 +1,5 @@
 Copyright (C) 2018-2019 Saarland University, Author: Manuel Bastuck
-Website/Contact: www.lmt.uni-saarland.de, info@lmt.uni-saarland.de
+Website/Contact: www.lmt.uni-saarland.de, dev@lmt.uni-saarland.de
 
 The author thanks Tobias Baur, Tizian Schneider, and Jannis Morsch
 for their contributions.

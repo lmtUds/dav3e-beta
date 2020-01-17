@@ -32,10 +32,13 @@ classdef About < handle
             obj.f = figure('Name','About','Units','pixel',...
                 'menubar','none','toolbar','none');
             layout = uiextras.VBox('Parent',obj.f);
-            
-            copyrightNotice = fileread('./+Gui/+Dialogs/copyrightNotice.txt');
+            if isdeployed
+                copyrightNotice = fileread([ctfroot '/DAVE/+Gui/+Dialogs/copyrightNotice.txt']);
+            else
+                copyrightNotice = fileread('./+Gui/+Dialogs/copyrightNotice.txt');
+            end
             licenseText = fileread('LICENSE');
-            obj.jTextArea = javax.swing.JTextArea(sprintf('DAV³E v%d\n\n%s\n\n%s',version,copyrightNotice,licenseText));
+            obj.jTextArea = javax.swing.JTextArea(sprintf('DAV³E v%s\n\n%s\n\n%s',version,copyrightNotice,licenseText));
             sp = javax.swing.JScrollPane(obj.jTextArea);
             [obj.jScrollPane,obj.hScrollPane] = javacomponent(sp,[0,0,1,1],layout);
 

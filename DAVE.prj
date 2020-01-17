@@ -1,17 +1,20 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="596501916" file="C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta\DAVE.prj" location="C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta" name="DAVE" preferred-package-location="C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta\DAVE\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="149267531" file="C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern\DAVE.prj" location="C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern" name="DAVE" preferred-package-location="C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern\DAVE\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>DAVE</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.0</param.version>
-    <param.authnamewatermark />
-    <param.email />
-    <param.company />
-    <param.summary />
-    <param.description />
+    <param.version>0.2</param.version>
+    <param.authnamewatermark>Lab for Measurement Technology (LMT)</param.authnamewatermark>
+    <param.email>dev@lmt.uni-saarland.de</param.email>
+    <param.company>Saarland University</param.company>
+    <param.summary>A MATLAB toolbox for feature extraction from cyclic sensor signals, sensor fusion, data preprocessing, and statistical model building and.</param.summary>
+    <param.description>DAV³E stands for "Data Analysis and Verification/Visualization/Validation Environment". It is a MATLAB-based toolbox for the evaluation of, mainly, cyclic sensor signals. It focuses on cycle-based raw data preprocessing, graphical feature extraction, and data annotation, but also provides commonly used machine learning methods (with cycle-specific extensions) to develop data-driven models. This allows for a sleek workflow from start to finish without having to change to third-party tools.
+If you publish results obtained with DAV³E, please cite:
+Manuel Bastuck, Tobias Baur, and Andreas Schütze: DAV3E – a MATLAB toolbox for multivariate sensor data evaluation, J. Sens. Sens. Syst. (2018), 7, 489-506 (open access), doi: 10.5194/jsss-7-489-2018.
+This paper describes an earlier version of DAV³E. The current version is based on the older one, but has been rewritten completely from scratch. Please note that, despite thorough testing and care, we cannot guarantee the correct implementation of any function or algorithm and are not responsible for data loss or other issues that you might experience while using the software. We appreciate, however, any bug reports, feature requests, bug fixes, and new feature implementations.</param.description>
     <param.screenshot />
     <param.guid />
-    <param.installpath.string>\DAVE\</param.installpath.string>
+    <param.installpath.string>\Saarland University\DAVE\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo />
     <param.install.notes />
@@ -22,32 +25,30 @@
     <param.logdir>${PROJECT_ROOT}\DAVE</param.logdir>
     <param.enable.clean.build>false</param.enable.clean.build>
     <param.user.defined.mcr.options />
-    <param.embed.ctf>true</param.embed.ctf>
     <param.target.type>subtarget.standalone</param.target.type>
     <param.support.packages />
     <param.web.mcr>true</param.web.mcr>
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
-    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.web.mcr.name>DAVE_v0_2_web_installer</param.web.mcr.name>
     <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>false</param.windows.command.prompt>
     <param.create.log>false</param.create.log>
     <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text />
     <unset>
       <param.icon />
       <param.icons />
-      <param.version />
-      <param.authnamewatermark />
-      <param.email />
-      <param.company />
-      <param.summary />
-      <param.description />
       <param.screenshot />
       <param.guid />
       <param.installpath.string />
       <param.installpath.combo />
       <param.logo />
+      <param.install.notes />
       <param.target.install.notes />
       <param.intermediate />
       <param.files.only />
@@ -55,17 +56,19 @@
       <param.logdir />
       <param.enable.clean.build />
       <param.user.defined.mcr.options />
-      <param.embed.ctf />
       <param.target.type />
       <param.support.packages />
       <param.web.mcr />
       <param.package.mcr />
       <param.no.mcr />
-      <param.web.mcr.name />
       <param.package.mcr.name />
       <param.no.mcr.name />
       <param.create.log />
       <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+      <param.help.text />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\DAVE.m</file>
@@ -77,45 +80,27 @@
       <file>${PROJECT_ROOT}\init.m</file>
       <file>${PROJECT_ROOT}\plugins</file>
       <file>${PROJECT_ROOT}\toolboxes</file>
-      <file>C:\Users\Jannis\Documents\MATLAB\Add-Ons\Toolboxes\GUI Layout Toolbox</file>
+      <file>${PROJECT_ROOT}\toolboxes\GUILayoutToolbox</file>
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
       <file>${PROJECT_ROOT}\LICENSE</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="splash.png" optional="false">C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta\DAVE\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="DAVE.exe" optional="false">C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta\DAVE\for_testing\DAVE.exe</file>
-      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="readme.txt" optional="true">C:\Users\Jannis\Desktop\HiWi Lmt\dav3e2-beta\DAVE\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="DAVE.exe" optional="false">C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern\DAVE\for_testing\DAVE.exe</file>
+      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="readme.txt" optional="true">C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern\DAVE\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\DAVE\for_testing" name="splash.png" optional="false">C:\Users\Tobias\Documents\LMT\Softwareentwicklung\dav3e-beta-extern\DAVE\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2016b</root>
+      <root>C:\Program Files\MATLAB\R2018b</root>
       <toolboxes>
-        <toolbox name="fixedpoint" />
-        <toolbox name="matlabcoder" />
-        <toolbox name="matlabhdlcoder" />
-        <toolbox name="embeddedcoder" />
+        <toolbox name="neuralnetwork" />
       </toolboxes>
       <toolbox>
-        <fixedpoint>
+        <neuralnetwork>
           <enabled>true</enabled>
-        </fixedpoint>
-      </toolbox>
-      <toolbox>
-        <matlabcoder>
-          <enabled>true</enabled>
-        </matlabcoder>
-      </toolbox>
-      <toolbox>
-        <matlabhdlcoder>
-          <enabled>true</enabled>
-        </matlabhdlcoder>
-      </toolbox>
-      <toolbox>
-        <embeddedcoder>
-          <enabled>true</enabled>
-        </embeddedcoder>
+        </neuralnetwork>
       </toolbox>
     </matlab>
     <platform>
@@ -127,7 +112,7 @@
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>6.2</osver>
+      <osver>10.0</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>win64</arch>

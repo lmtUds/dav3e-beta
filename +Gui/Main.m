@@ -39,7 +39,7 @@ classdef Main < handle
         projectFile
         projectPath
         
-        version = 1902;
+        version = '0.2';
     end
     
     methods
@@ -288,7 +288,7 @@ classdef Main < handle
         end
         
         function howto(obj,varargin)
-            web('https://gitlab.com/manuel.bastuck/dave-beta');
+            web('https://github.com/lmtUds/dav3e-beta');
         end
         
         function about(obj,varargin)
