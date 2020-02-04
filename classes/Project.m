@@ -991,7 +991,7 @@ classdef Project < handle
                 varDesription = t.Properties.VariableDescriptions{id(i)};
                 if ~isempty(varDesription)
                     if contains(varDesription, 'Original column heading: ')
-                        newStr = erase(varDesription,"'");
+                        newStr = erase(varDesription,string(''''));
                         strSpl = strsplit(newStr, 'Original column heading: label:');
                         if numel(strSpl) == 2
                             groupCaptions(i) = strSpl{2}; 

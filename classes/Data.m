@@ -306,7 +306,7 @@ classdef Data < Descriptions
         
         function setSelectedData(obj, data, varargin)
             p = inputParser();
-            p.addParameter('captions', cellstr("f" + num2str((1:size(data,2))')));
+            p.addParameter('captions', cellstr(string('f') + num2str((1:size(data,2))')));
             p.parse(varargin{:});
             p = p.Results;
             sel = obj.getCurrentCycleSelection();
