@@ -18,7 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = automatedMethods()
+function info = autoFeatureSelect()
 %Provides a collection of automated feature selectors
 %   The automated feature selection methods used are:
 %       RFESVM, RELIEFF and Pearson Correlation
@@ -26,7 +26,7 @@ function info = automatedMethods()
     
 %start by providing information and parameters
     info.type = DataProcessingBlockTypes.DimensionalityReduction;
-    info.caption = 'automated methods';
+    info.caption = 'automated feature selection';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
