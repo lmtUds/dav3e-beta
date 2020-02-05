@@ -31,7 +31,7 @@ function info = autoFeatureExtract()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true),...    
-        Parameter('shortCaption','ranks', 'internal',true),... 
+        Parameter('shortCaption','extractor', 'internal',true),...
         Parameter('shortCaption','featureCaptions', 'internal',true),... 
         Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:3), 'selectionType','multiple'),...
         Parameter('shortCaption','autoNumFeat','value',true),...
@@ -49,7 +49,7 @@ end
 
 function [data,params] = apply(data,params)
     if ~params.trained
-        error('automated Methods must first be trained.');
+        error('automated feature extraction must be trained first.');
     end
     %get the saved ranking from previous training
     ranks = params.ranks;
@@ -63,25 +63,37 @@ end
 
 function params = train(data,params)
     %translate integer indexing of methods
-    switch params.methods
-        case 1
-            method = 'RFESVM';
-        case 2
-            method = 'RELIEFF';
-        case 3
-            method = 'Pearson';
-        otherwise
-            method = 'wrong';
-    end
-    %compute the ranking by the desired method
-    ranks = rankByMethod(data,params,method);
-    %set parameters after training
-    params.ranks = ranks;
-    params.trained = true;
-    %accquire unselected feature captions
-    selFeat = data.selectedFeatures();
-    %select the best numFeat Captions matching the ranking
-    params.featureCaptions = selFeat(ranks(1:params.numFeat));
+    
+    %%TODO add extractor functions
+        switch params.methods
+            case 1
+                method = 'ALA';
+                ext = DimensionalityReduction.autoTools.ALAExtractor();
+            case 2
+                method = 'BDW';
+                ext = DimensionalityReduction.autoTools.BDWExtractor();
+            case 3
+                method = 'BFC';
+                ext = DimensionalityReduction.autoTools.BFCExtractor();
+            case 4
+                method = 'PCA';
+                ext = DimensionalityReduction.autoTools.PCAExtractor();
+            otherwise
+                method = 'wrong';
+        end
+    %%END TODO
+    params.extractor = ext;
+    %%TODO check computation path
+        %compute the ranking by the desired method
+        ranks = rankByMethod(data,params,method);
+        %set parameters after training
+        params.ranks = ranks;
+        params.trained = true;
+        %accquire unselected feature captions
+        selFeat = data.selectedFeatures();
+        %select the best numFeat Captions matching the ranking
+        params.featureCaptions = selFeat(ranks(1:params.numFeat));
+    %%END TODO
 end
 
 function updateParameters(params,project)
@@ -93,55 +105,7 @@ function updateParameters(params,project)
         elseif params(i).shortCaption == string('numFeat')
             params(i).hidden = autoNumFeat;
             params(i).updatePropGridField();
-        elseif params(i).shortCaption == string('evaluator')
-            params(i).hidden = ~autoNumFeat;
-            params(i).updatePropGridField();
         elseif params(i).shortCaption == string('methods')
         end
-    end
-end
-
-function ranks  = rankByMethod(data,params,method)
-%compute feature ranking for later selection
-%ranking is done based on the selected method
-    ranks = ones(size(data.getSelectedData(),2),1);
-    if method == string('RFESVM')
-        disp(method);
-        if params.autoNumFeat
-            mySel= DimensionalityReduction.autoTools.RFESVMSelector(params.evaluator);
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
-            params.numFeat = sum(subsInd);
-        else 
-            mySel = DimensionalityReduction.autoTools.RFESVMSelector();
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
-        end
-    elseif method == string('RELIEFF')
-        disp(method);
-        if params.autoNumFeat
-            mySel = DimensionalityReduction.autoTools.RELIEFFSelector(params.evaluator);
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
-            params.numFeat = sum(subsInd);
-        else 
-            mySel = DimensionalityReduction.autoTools.RELIEFFSelector();
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
-        end
-    elseif method == string('Pearson')
-        disp(method);
-        if params.autoNumFeat
-            mySel= DimensionalityReduction.autoTools.PearsonSelector(params.evaluator);
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
-            params.numFeat = sum(subsInd);
-        else 
-            mySel = DimensionalityReduction.autoTools.PearsonSelector();
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
-        end    
-    else
-        error('Invalid method specified, cannot compute feature ranks');
     end
 end
