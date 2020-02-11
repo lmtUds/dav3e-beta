@@ -51,49 +51,43 @@ function [data,params] = apply(data,params)
     if ~params.trained
         error('automated feature extraction must be trained first.');
     end
-    %get the saved ranking from previous training
-    ranks = params.ranks;
-    %get the number of features to choose;may be set manualy or via training
-    numFeat = params.numFeat;
-    %accquire unselected feature captions
-    selFeat = data.selectedFeatures();
-    %select the best numFeat Captions matching the ranking
-    data.setSelectedFeatures(selFeat(ranks(1:numFeat)));
+    
+    ext = params.extractor;
+    
+    feats = ext.apply(data.getSelectedData());
+    
+    %TODO: Update data to consist of computed features and set labels
+    %accordingly to resemble the used extraction method
+    
 end
 
 function params = train(data,params)
     %translate integer indexing of methods
+    switch params.methods
+        case 1
+            method = 'ALA';
+            ext = DimensionalityReduction.autoTools.ALAExtractor();
+        case 2
+            method = 'BDW';
+            ext = DimensionalityReduction.autoTools.BDWExtractor();
+        case 3
+            method = 'BFC';
+            ext = DimensionalityReduction.autoTools.BFCExtractor();
+        case 4
+            method = 'PCA';
+            ext = DimensionalityReduction.autoTools.PCAExtractor();
+        otherwise
+            method = 'wrong';
+    end
+    % set manually specified feature count
+    if ~params.autoNumFeat
+        ext.numFeat = params.numFeat;
+    end
     
-    %%TODO add extractor functions
-        switch params.methods
-            case 1
-                method = 'ALA';
-                ext = DimensionalityReduction.autoTools.ALAExtractor();
-            case 2
-                method = 'BDW';
-                ext = DimensionalityReduction.autoTools.BDWExtractor();
-            case 3
-                method = 'BFC';
-                ext = DimensionalityReduction.autoTools.BFCExtractor();
-            case 4
-                method = 'PCA';
-                ext = DimensionalityReduction.autoTools.PCAExtractor();
-            otherwise
-                method = 'wrong';
-        end
-    %%END TODO
+    ext = ext.train(data.getSelectedData());
+    %set parameters after training
     params.extractor = ext;
-    %%TODO check computation path
-        %compute the ranking by the desired method
-        ranks = rankByMethod(data,params,method);
-        %set parameters after training
-        params.ranks = ranks;
-        params.trained = true;
-        %accquire unselected feature captions
-        selFeat = data.selectedFeatures();
-        %select the best numFeat Captions matching the ranking
-        params.featureCaptions = selFeat(ranks(1:params.numFeat));
-    %%END TODO
+    params.trained = true;
 end
 
 function updateParameters(params,project)
