@@ -56,9 +56,12 @@ function [data,params] = apply(data,params)
     
     feats = ext.apply(data.getSelectedData());
     
-    %TODO: Update data to consist of computed features and set labels
-    %accordingly to resemble the used extraction method
-    
+    captions = string.empty;
+    for i=1:size(feats,2)/2
+        captions(2*i-1) = ['ala_mean_',num2str(i)];
+        captions(2*i) = ['ala_slope_',num2str(i)];
+    end
+    data.setSelectedData(feats, 'captions', captions);
 end
 
 function params = train(data,params)
