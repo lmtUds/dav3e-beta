@@ -32,7 +32,8 @@ function info = autoFeatureExtract()
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true),...    
         Parameter('shortCaption','extractor', 'internal',true),...
-        Parameter('shortCaption','featureCaptions', 'internal',true),... 
+        Parameter('shortCaption','featureCaptions', 'internal',true),...
+        Parameter('shortCaption','ranks', 'internal',true),...
         Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:3), 'selectionType','multiple'),...
         Parameter('shortCaption','autoNumFeat','value',true),...
         Parameter('shortCaption','numFeat', 'value',int32(3), 'enum',int32(1:50), 'selectionType','multiple'),...
@@ -44,7 +45,7 @@ function info = autoFeatureExtract()
     info.apply = @apply;
     info.train = @train;
     info.updateParameters = @updateParameters;
-    info.detailsPages = {'scatter', 'ranking'};
+    info.detailsPages = {'ranking'};
 end
 
 function [data,params] = apply(data,params)
@@ -55,13 +56,12 @@ function [data,params] = apply(data,params)
     ext = params.extractor;
     
     feats = ext.apply(data.getSelectedData());
+    captions = ext.getCaptions(size(feats,2));
     
-    captions = string.empty;
-    for i=1:size(feats,2)/2
-        captions(2*i-1) = ['ala_mean_',num2str(i)];
-        captions(2*i) = ['ala_slope_',num2str(i)];
-    end
+    params.featureCaptions = captions;
+    params.ranks = 1:size(feats,2)';
     data.setSelectedData(feats, 'captions', captions);
+    data.setSelectedFeatures(captions);
 end
 
 function params = train(data,params)
