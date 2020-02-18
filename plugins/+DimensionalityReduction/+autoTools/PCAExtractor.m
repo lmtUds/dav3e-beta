@@ -131,6 +131,14 @@ classdef PCAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
                     ' do not match and cannot be combined']);
             end
         end
+        
+        function captions = getCaptions(this, featCount)
+            captions = string.empty;
+            for i=1:featCount
+                captions(i) = ['pc_',num2str(i)];
+            end
+        end
+        
     end
     methods (Access = private)
         function finishTraining(this)

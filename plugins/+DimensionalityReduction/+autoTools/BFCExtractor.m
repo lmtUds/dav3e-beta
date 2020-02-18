@@ -84,6 +84,18 @@ classdef BFCExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
             end
         end
         
+        function captions = getCaptions(this, featCount)
+            captions = string.empty;
+            for i=1:featCount/2
+                captions(i) = ['bfc_abs_',num2str(i)];
+            end
+            tempStr = string.empty;
+            for i=1:featCount/2
+                tempStr(i) = ['bfc_angle_',num2str(i)];
+            end
+            captions = horzcat(captions,tempStr);
+        end
+        
     end
     
     methods (Access = private)

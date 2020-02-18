@@ -114,7 +114,16 @@ classdef ALAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
 			else
 				this.errVec = this.errVec + other.errVec;
 			end
-		end
+        end
+        
+        function captions = getCaptions(this, featCount)
+            captions = string.empty;
+            for i=1:featCount/2
+                captions(2*i-1) = ['ala_mean_',num2str(i)];
+                captions(2*i) = ['ala_slope_',num2str(i)];
+            end
+        end
+        
     end
 	
 	methods(Access = private)

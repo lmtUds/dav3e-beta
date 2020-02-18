@@ -48,7 +48,7 @@ classdef BDWExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
         function [this] = train(this, data)
             this.ind = [];
             % compute wavelet transformation
-            wlevel = BDWExtractor.wMaxLv(size(data,2));
+            wlevel = DimensionalityReduction.autoTools.BDWExtractor.wMaxLv(size(data,2));
             % [af, df] = wfilters('db2'); Results are hardcoded below
             af = [-0.129409522550921 0.224143868041857 0.836516303737469 0.482962913144690];
             df = [-0.482962913144690 0.836516303737469 -0.224143868041857 -0.129409522550921];
@@ -85,7 +85,7 @@ classdef BDWExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
             end
             
             % compute wavelet transformation
-            wlevel = BDWExtractor.wMaxLv(size(data,2));
+            wlevel = DimensionalityReduction.autoTools.BDWExtractor.wMaxLv(size(data,2));
             [af, df] = wfilters('db2');
 
             d = cell(1,wlevel);
@@ -127,6 +127,14 @@ classdef BDWExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
                     ' do not match and cannot be combined']);
             end
         end
+        
+        function captions = getCaptions(this, featCount)
+            captions = string.empty;
+            for i=1:featCount
+                captions(i) = ['bdw_',num2str(i)];
+            end
+        end
+        
     end
     methods (Access = private)
         function finishTraining(this)
