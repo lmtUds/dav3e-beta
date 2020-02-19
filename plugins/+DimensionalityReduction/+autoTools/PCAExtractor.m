@@ -132,10 +132,10 @@ classdef PCAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
             end
         end
         
-        function captions = getCaptions(this, featCount)
+        function captions = getCaptions(this, featCount, prefix)
             captions = string.empty;
             for i=1:featCount
-                captions(i) = ['pc_',num2str(i)];
+                captions(i) = [prefix,'_pc_',num2str(i)];
             end
         end
         

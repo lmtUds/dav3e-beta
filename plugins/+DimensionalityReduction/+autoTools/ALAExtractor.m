@@ -116,11 +116,11 @@ classdef ALAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
 			end
         end
         
-        function captions = getCaptions(this, featCount)
+        function captions = getCaptions(this, featCount, prefix)
             captions = string.empty;
             for i=1:featCount/2
-                captions(2*i-1) = ['ala_mean_',num2str(i)];
-                captions(2*i) = ['ala_slope_',num2str(i)];
+                captions(2*i-1) = [prefix,'_ala_mean_',num2str(i)];
+                captions(2*i) = [prefix,'_ala_slope_',num2str(i)];
             end
         end
         
