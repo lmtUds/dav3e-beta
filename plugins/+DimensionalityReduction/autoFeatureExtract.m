@@ -55,33 +55,46 @@ function [data,params] = apply(data,params)
         error('automated feature extraction must be trained first.');
     end
     
+    % get the parameters saved in training
     extractors = params.extractors;
     tracks = params.tracks;
     trackInds = params.trackInds;
+    
     features = [];
     captionSet = string.empty;
+    
+    % apply one extractor to its matching sensor/track data and create
+    % matching captions
     for i = 1:size(extractors,2)
         ext = extractors{i};
         trackData = data.getSelectedData();
         trackData = trackData(:,trackInds(i,:));
+        
         feats = ext.apply(trackData);
+        
         captions = ext.getCaptions(size(feats,2),char(tracks(i)));
-        if isempty(features)
+        
+        if isempty(features)    % first iteration
             features = feats;
             captionSet = captions;
-        else
+        else                    % other iterations
             features = horzcat(features,feats);
             captionSet = horzcat(captionSet, captions);
         end
     end
-    params.featureCaptions = captionSet;
-    params.ranks = 1:size(features,2);
-    data.setSelectedData(features, 'captions', captionSet);
-    data.setSelectedFeatures(captionSet);
+    % only change parameters if there is something to change to
+    if ~isempty(features) && ~isempty(captionSet)
+        params.featureCaptions = captionSet;
+        params.ranks = 1:size(features,2);
+        data.setSelectedData(features, 'captions', captionSet);
+        data.setSelectedFeatures(captionSet);
+    end
 end
 
 function params = train(data,params)
+    % if multiple sensors/tracks were used, calculate indices for demerging
     [trackInds,tracks] = extractTracks(data.selectedFeatures());
+    % create, train and save one extractor per sensor/track
     extractors = cell(1,size(trackInds,1));
     for i = 1:size(trackInds,1)
         %translate integer indexing of methods
@@ -105,8 +118,10 @@ function params = train(data,params)
         if ~params.autoNumFeat
             ext.numFeat = params.numFeat;
         end
+        % only use data of current sensor/track
         trackData = data.getSelectedData();
         trackData = trackData(:,trackInds(i,:));
+        
         ext = ext.train(trackData);
         extractors{i} = ext;
     end
