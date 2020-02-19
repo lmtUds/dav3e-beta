@@ -31,7 +31,9 @@ function info = autoFeatureExtract()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true),...    
-        Parameter('shortCaption','extractor', 'internal',true),...
+        Parameter('shortCaption','extractors', 'internal',true),...
+        Parameter('shortCaption','tracks', 'internal',true),...
+        Parameter('shortCaption','trackInds', 'internal',true),...
         Parameter('shortCaption','featureCaptions', 'internal',true),...
         Parameter('shortCaption','ranks', 'internal',true),...
         Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:3), 'selectionType','multiple'),...
@@ -53,43 +55,65 @@ function [data,params] = apply(data,params)
         error('automated feature extraction must be trained first.');
     end
     
-    ext = params.extractor;
-    
-    feats = ext.apply(data.getSelectedData());
-    captions = ext.getCaptions(size(feats,2));
-    
-    params.featureCaptions = captions;
-    params.ranks = 1:size(feats,2)';
-    data.setSelectedData(feats, 'captions', captions);
-    data.setSelectedFeatures(captions);
+    extractors = params.extractors;
+    tracks = params.tracks;
+    trackInds = params.trackInds;
+    features = [];
+    captionSet = string.empty;
+    for i = 1:size(extractors,2)
+        ext = extractors{i};
+        trackData = data.getSelectedData();
+        trackData = trackData(:,trackInds(i,:));
+        feats = ext.apply(trackData);
+        captions = ext.getCaptions(size(feats,2),char(tracks(i)));
+        if isempty(features)
+            features = feats;
+            captionSet = captions;
+        else
+            features = horzcat(features,feats);
+            captionSet = horzcat(captionSet, captions);
+        end
+    end
+    params.featureCaptions = captionSet;
+    params.ranks = 1:size(features,2);
+    data.setSelectedData(features, 'captions', captionSet);
+    data.setSelectedFeatures(captionSet);
 end
 
 function params = train(data,params)
-    %translate integer indexing of methods
-    switch params.methods
-        case 1
-            method = 'ALA';
-            ext = DimensionalityReduction.autoTools.ALAExtractor();
-        case 2
-            method = 'BDW';
-            ext = DimensionalityReduction.autoTools.BDWExtractor();
-        case 3
-            method = 'BFC';
-            ext = DimensionalityReduction.autoTools.BFCExtractor();
-        case 4
-            method = 'PCA';
-            ext = DimensionalityReduction.autoTools.PCAExtractor();
-        otherwise
-            method = 'wrong';
+    [trackInds,tracks] = extractTracks(data.selectedFeatures());
+    extractors = cell(1,size(trackInds,1));
+    for i = 1:size(trackInds,1)
+        %translate integer indexing of methods
+        switch params.methods
+            case 1
+                method = 'ALA';
+                ext = DimensionalityReduction.autoTools.ALAExtractor();
+            case 2
+                method = 'BDW';
+                ext = DimensionalityReduction.autoTools.BDWExtractor();
+            case 3
+                method = 'BFC';
+                ext = DimensionalityReduction.autoTools.BFCExtractor();
+            case 4
+                method = 'PCA';
+                ext = DimensionalityReduction.autoTools.PCAExtractor();
+            otherwise
+                method = 'wrong';
+        end
+        % set manually specified feature count
+        if ~params.autoNumFeat
+            ext.numFeat = params.numFeat;
+        end
+        trackData = data.getSelectedData();
+        trackData = trackData(:,trackInds(i,:));
+        ext = ext.train(trackData);
+        extractors{i} = ext;
     end
-    % set manually specified feature count
-    if ~params.autoNumFeat
-        ext.numFeat = params.numFeat;
-    end
-    
-    ext = ext.train(data.getSelectedData());
     %set parameters after training
-    params.extractor = ext;
+    params.extractors = extractors;
+    params.tracks = tracks;
+    params.trackInds = trackInds;
     params.trained = true;
 end
 
@@ -104,5 +128,20 @@ function updateParameters(params,project)
             params(i).updatePropGridField();
         elseif params(i).shortCaption == string('methods')
         end
+    end
+end
+
+function [inds,tracks] = extractTracks(featureNames)
+    names = featureNames;
+    for i = 1:size(featureNames,2)
+        name = char(featureNames(i));
+        slashes = strfind(name,'/');
+        len = size(slashes,2);
+        names(i) = name(1:slashes(len)-1);
+    end
+    tracks = unique(names);
+    inds = true(size(tracks,2),size(featureNames,2));
+    for i = 1:size(tracks,2)
+        inds(i,:) = strcmp(names,tracks(i));
     end
 end
