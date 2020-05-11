@@ -990,17 +990,17 @@ classdef Project < handle
                 colorCaptions(i) = '';
                 varDesription = t.Properties.VariableDescriptions{id(i)};
                 if ~isempty(varDesription)
-                    if contains(varDesription, 'Original column heading: ')
-                        newStr = erase(varDesription,"'");
-                        strSpl = strsplit(newStr, 'Original column heading: label:');
+%                     if contains(varDesription, 'Original column heading:')
+%                         newStr = erase(varDesription,"'");
+                        strSpl = strsplit(varDesription, 'label:');
                         if numel(strSpl) == 2
                             groupCaptions(i) = strSpl{2}; 
                         end
-                        strSpl = strsplit(newStr, 'Original column heading: color:');
-                        if numel(strSpl) == 2
-                            colorCaptions(i) = strSpl{2};
-                        end
-                    end
+%                         strSpl = strsplit(newStr, 'color:');
+%                         if numel(strSpl) == 2
+%                             colorCaptions(i) = strSpl{2};
+%                         end
+%                     end
                 end
             end
             
