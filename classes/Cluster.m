@@ -294,6 +294,10 @@ classdef Cluster < Descriptions
 %             obj.featureData = featDataObjs;
 %             header = obj.getCaption() + string('/') + header;
         end
+        
+        function p = getByCaption(objArray,caption)
+            p = objArray(objArray.getCaption() == caption);
+        end
     end
     
     methods(Static)

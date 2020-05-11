@@ -518,6 +518,10 @@ classdef DataProcessingBlock < Descriptions
                 pgf.addChild(prmpgf);
             end
         end        
+        
+        function p = getByCaption(objArray,caption)
+            p = objArray(objArray.getCaption() == caption);
+        end
     end
     
     methods(Static)

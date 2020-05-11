@@ -153,6 +153,10 @@ classdef FeatureDefinition < Descriptions
         function pgf = makePropGridFields(obj)
             pgf = obj.dataProcessingBlock.makePropGridField();
         end
+        
+        function p = getByCaption(objArray,caption)
+            p = objArray(objArray.getCaption() == caption);
+        end
     end
     
 %     methods (Static)
