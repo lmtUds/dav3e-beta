@@ -37,6 +37,7 @@ end
 
 function [data,params] = apply(data,params)
     if params.raw
+        data(isnan(data))=0;
         d = data;
     else
         d = data.data;
