@@ -25,6 +25,7 @@ classdef Clusters < handle
         hTable
         normalizeCycleDurationButton
         deleteButton
+        applyButton
     end
     
     methods
@@ -37,6 +38,10 @@ classdef Clusters < handle
             obj.hTable = JavaTable(layout,'default');
             obj.refreshTable();
             
+             obj.applyButton = uicontrol(layout,...
+                'String','Apply',...
+                'Callback',@(h,e)obj.applyButtonClicked);
+            
             obj.normalizeCycleDurationButton = uicontrol(layout,...
                 'String','normlaize all cycle durations',...
                 'Callback',@(h,e)obj.normalizeCycleDurationsButtonClicked);
@@ -44,7 +49,7 @@ classdef Clusters < handle
                 'String','delete...',...
                 'Callback',@(h,e)obj.deleteButtonClicked);
             
-            layout.Sizes = [-1,30,30];
+            layout.Sizes = [-1,30,30,30];
         end
 
         function tableDataChange(obj,rc,v)
@@ -52,6 +57,13 @@ classdef Clusters < handle
                 o = obj.hTable.getRowObjectsAt(rc(i,1));
                 switch rc(i,2)
                     case 1
+                        c1 = obj.main.project.clusters;
+                        c2 = c1.getCaption();
+                        for j=1:length(c2)
+                            if (c2(j))==v{i} && j ~= rc(1)
+                                v{i} = 'error';
+                            end
+                        end
                         o.setCaption(v{i});
                     case 2
                         o.track = v{i};
@@ -70,6 +82,10 @@ classdef Clusters < handle
             for i = 1:numel(clusters)
                 clusters(i).samplingPeriod = 1 / clusters(i).nCyclePoints;
             end
+            obj.refreshTable();
+        end
+        
+        function applyButtonClicked(obj)
             obj.refreshTable();
         end
         
