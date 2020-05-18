@@ -253,8 +253,9 @@ classdef Main < handle
                 string(horzcat(groupings.vals))];
 
             for i=1:numel(groupings)
-                color = cell2mat(cellfun(@(x) groupings(1).colors(x)*255,...
-                    cellstr(groupings(1).vals),'UniformOutput', false));
+%                 color = cell2mat(cellfun(@(x) groupings(i).colors(x)*255,...
+%                     cellstr(deStar(groupings(i).vals)),'UniformOutput', false));
+                color = groupings(i).getColorsInOrder*255;
                 out = [out, join(string(color),',')];
             end
 
