@@ -32,6 +32,6 @@ end
 
 function [data,paramOut] = apply(data,params)
     paramOut = struct();
-    toDelete = any(data > params.upperboundary,2) | any(data < params.lowerboundary,2);
+    toDelete = any(data > params.upperBoundary,2) | any(data < params.lowerBoundary,2);
     data(toDelete,:) = nan;
 end
