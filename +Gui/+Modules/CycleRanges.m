@@ -99,14 +99,23 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickExport(obj)
-            [file,path] = uiputfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
             
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
+            
             rangeJson.cycleRanges = obj.ranges.getObject().toStruct();
-            rangeJson = jsonencode(rangeJson);
+            switch extension
+                case 'json'
+                    rangeJson = jsonencode(rangeJson);
+                case 'csv'
+                    rangeJson = rangeCsvEncode(rangeJson);
+            end
             fid = fopen(fullfile(path,file), 'w+');
             fwrite(fid, rangeJson, 'char');
             fclose(fid);
