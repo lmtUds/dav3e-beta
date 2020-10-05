@@ -115,11 +115,15 @@ classdef Grouping < Gui.Modules.GuiModule
         end
 
         function onClickImport(obj)
-            [file,path] = uigetfile({'*.json','JSON file'},'Choose groupings file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uigetfile(options,'Choose groupings file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
+            
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
             
             re = questdlg('This will delete the current groupings. Proceed?','Proceed?','Yes','No','No');
             if ~strcmp(re,'Yes')
@@ -127,7 +131,12 @@ classdef Grouping < Gui.Modules.GuiModule
             end
             
             groupingJson = fileread(fullfile(path,file));
-            groupingStruct = jsondecode(groupingJson);
+            switch extension
+                case 'json'
+                    groupingStruct = jsondecode(groupingJson);
+                case 'csv'
+                    groupingStruct = groupingCsvDecode(groupingJson);
+            end
             if ~isfield(groupingStruct,'groupings')
                 error('Field groupings not found.');
             end
