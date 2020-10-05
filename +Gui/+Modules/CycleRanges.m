@@ -74,7 +74,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickImport(obj)
-            [file,path] = uigetfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
@@ -87,8 +88,16 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 end
             end
             
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
+            
             rangeJson = fileread(fullfile(path,file));
-            rangeStruct = jsondecode(rangeJson);
+            switch extension
+                case 'json'
+                    rangeStruct = jsondecode(rangeJson);
+                case 'csv'
+                    rangeStruct = rangeCsvDecode(rangeJson);
+            end
             if ~isfield(rangeStruct,'cycleRanges')
                 error('Field cycleRanges not found.');
             end
