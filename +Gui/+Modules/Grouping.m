@@ -140,14 +140,23 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function onClickExport(obj)
-            [file,path] = uiputfile({'*.json','JSON file'},'Choose groupings file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uiputfile(options,'Choose groupings file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
             
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
+            
             groupingJson.groupings = obj.getProject().groupings.toStruct();
-            groupingJson = jsonencode(groupingJson);
+            switch extension
+                case 'json'
+                    groupingJson = jsonencode(groupingJson);
+                case 'csv'
+                    groupingJson = groupingCsvEncode(groupingJson);
+            end
             fid = fopen(fullfile(path,file), 'w+');
             fwrite(fid, groupingJson, 'char');
             fclose(fid);
