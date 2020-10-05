@@ -37,25 +37,28 @@ function [data,prms] = apply(files,prms)
         file = files{fidx};
         
         info = h5info(file);
-        d = h5read(file,['/',info.Datasets(1).Name]);
-        
-        dim = size(d);
+        setCount = size(info.Datasets,1);
+        for i = 1:setCount
+            d = h5read(file,['/',info.Datasets(i).Name]);
 
-        [~,filename,~] = fileparts(file);
-        sensordata = SensorData.Memory(d);
-        sensor = Sensor(sensordata,'caption',filename);
-        
-        warning('Unable to extract sampling period from this filetype. Assuming 1 s.');
-        c = Cluster('samplingPeriod',1,...
-            'nCyclePoints',size(d,2),...
-            'nCycles',size(d,1),...
-            'caption',filename);
-        c.addSensor(sensor);
-        
-        if isempty(clusters)
-            clusters = c;
-        else
-            clusters(end+1) = c;
+            dim = size(d);
+
+            [~,filename,~] = fileparts(file);
+            sensordata = SensorData.Memory(d);
+            sensor = Sensor(sensordata,'caption',filename);
+
+            warning('Unable to extract sampling period from this filetype. Assuming 1 s.');
+            c = Cluster('samplingPeriod',1,...
+                'nCyclePoints',size(d,2),...
+                'nCycles',size(d,1),...
+                'caption',[filename,num2str(i)]);
+            c.addSensor(sensor);
+
+            if isempty(clusters)
+                clusters = c;
+            else
+                clusters(end+1) = c;
+            end
         end
     end
     data.clusters = clusters;
