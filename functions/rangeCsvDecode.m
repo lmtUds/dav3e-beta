@@ -21,6 +21,9 @@
 function rangeStruct = rangeCsvDecode(content)
     lines = strsplit(content,'\n');
     imported = cellfun(@(x) strsplit(x,';'),lines,'UniformOutput',false);
+    if size(imported{end},2) ~= 7
+        imported = imported(1:end - 1);
+    end
     imported = vertcat(imported{:});
     
     cycleRanges = struct();
