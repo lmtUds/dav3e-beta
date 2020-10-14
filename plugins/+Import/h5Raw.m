@@ -45,7 +45,7 @@ function [data,prms] = apply(files,prms)
 
             [~,filename,~] = fileparts(file);
             sensordata = SensorData.Memory(d);
-            sensor = Sensor(sensordata,'caption',filename);
+            sensor = Sensor(sensordata,'caption',[filename,num2str(i)]);
 
             warning('Unable to extract sampling period from this filetype. Assuming 1 s.');
             c = Cluster('samplingPeriod',1,...
