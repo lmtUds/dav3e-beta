@@ -28,5 +28,5 @@ function info = amplitudeSpectrum()
 end
 
 function [data,params] = apply(data,params)
-    data = abs(fft(data));
+    data = abs(fft(data,[],2));
 end

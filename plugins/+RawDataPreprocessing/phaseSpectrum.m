@@ -28,5 +28,5 @@ function info = phaseSpectrum()
 end
 
 function [data,params] = apply(data,params)
-    data = angle(fft(data));
+    data = angle(fft(data,[],2));
 end
