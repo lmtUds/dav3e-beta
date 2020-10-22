@@ -117,6 +117,8 @@ function params = train(data,params)
         % set manually specified feature count
         if ~params.autoNumFeat
             ext.numFeat = params.numFeat;
+        else
+            ext.numFeat = [];
         end
         % only use data of current sensor/track
         trackData = data.getSelectedData();
