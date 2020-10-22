@@ -79,7 +79,7 @@ function params = train(data,params)
             method = 'wrong';
     end
     %compute the ranking by the desired method
-    ranks = rankByMethod(data,params,method);
+    [ranks,params] = rankByMethod(data,params,method);
     %set parameters after training
     params.ranks = ranks;
     params.trained = true;
@@ -106,7 +106,7 @@ function updateParameters(params,project)
     end
 end
 
-function ranks  = rankByMethod(data,params,method)
+function [ranks,params]  = rankByMethod(data,params,method)
 %compute feature ranking for later selection
 %ranking is done based on the selected method
     ranks = ones(size(data.getSelectedData(),2),1);
