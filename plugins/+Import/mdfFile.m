@@ -34,6 +34,8 @@ end
 function [data,prms] = apply(files,prms)
     clusters = [];
     allData = {};
+    sensNames = {};
+    clusNames = {};
     pointCounts = [];
     
     % import multi sensor data as one cycle per file
@@ -46,15 +48,21 @@ function [data,prms] = apply(files,prms)
             for j = 1:numel(mdfObj.ChannelNames{i})
                 names = mdfObj.ChannelNames{i};
                 channel = names{j};
+                if strcmp(channel,'time')   % exclude time data
+                    continue
+                end
                 sensors{counter} = read(mdfObj,i,channel,'OutputFormat','Vector')';
                 pointCounts(counter) = size(sensors{counter},2);
+                sensNames{counter} = channel;
                 counter = counter + 1;
             end
+            clusNames{i} = mdfObj.ChannelGroup(i).AcquisitionName;
         end
         allData{fidx}= sensors;
     end
     % unify all sensors into multiple cycles per sensor
-    pointCounts = unique(pointCounts);
+    pointCounts = unique(pointCounts,'stable');
+    clusNames = unique(clusNames,'stable');
     try
         allData = vertcat(allData{:});
     catch ME
@@ -65,7 +73,7 @@ function [data,prms] = apply(files,prms)
         try 
             sensors{i} =  vertcat(allData{:,i});
         catch ME
-            error(['Cycle point mismatch for Sensor ',num2str(i)]);
+            error(['Cycle point mismatch for Sensor ',num2str(i),' while combining multiple MDF files']);
         end
     end
     
@@ -76,16 +84,17 @@ function [data,prms] = apply(files,prms)
         c = Cluster('samplingPeriod',1,...
             'nCyclePoints',pointCounts(i),...
             'nCycles',fidx,...
-            'caption',[filename,'mdfCluster',num2str(i)]);
+            'caption',[filename,clusNames{i}]);
         
         ind = cellfun(@(x) size(x,2) == pointCounts(i),sensors);
         grouped = sensors(ind);
+        gNames = sensNames(ind);
         for j = 1:numel(grouped)
             d = grouped{j};
             sensordata = SensorData.Memory(d);
 %             sensor = Sensor(sensordata,'caption',...
 %                 [filename,'mdfCluster',num2str(i),'sensor',num2str(j)]);
-            sensor = Sensor(sensordata,'caption',['sensor',num2str(j)]);
+            sensor = Sensor(sensordata,'caption',gNames{j});
             c.addSensor(sensor);
         end
         
