@@ -52,8 +52,8 @@ function [data,prms] = apply(files,prms)
                     continue
                 end
                 sensors{counter} = read(mdfObj,i,channel,'OutputFormat','Vector')';
-                pointCounts(counter) = size(sensors{counter},2);
-                sensNames{counter} = channel;
+                pointCounts(end + 1) = size(sensors{counter},2);
+                sensNames{end + 1} = channel;
                 counter = counter + 1;
             end
             clusNames{i} = mdfObj.ChannelGroup(i).AcquisitionName;
@@ -73,7 +73,14 @@ function [data,prms] = apply(files,prms)
         try 
             sensors{i} =  vertcat(allData{:,i});
         catch ME
-            error(['Cycle point mismatch for Sensor ',num2str(i),' while combining multiple MDF files']);
+            currDat = allData(:,i);
+            sz = cellfun(@(x) size(x,2),currDat);
+            nonMin = sz(sz ~= min(sz));
+            pointCounts = pointCounts(pointCounts ~= nonMin);
+            currDat = cellfun(@(x) x(1:min(sz)),currDat,'UniformOutput',false);
+            sensors{i} = vertcat(currDat{:});
+            warning(['Cycle lengths for Sensor ',num2str(i),' needed to be cut. New lengths are unified to ',num2str(min(sz))]);
+%             error(['Cycle point mismatch for Sensor ',num2str(i),' while combining multiple MDF files']);
         end
     end
     
