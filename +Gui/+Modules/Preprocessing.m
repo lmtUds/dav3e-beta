@@ -94,7 +94,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             leftInnerLayout1 = uiextras.VBox('Parent',leftLayout);
 %             leftInnerLayout2 = uiextras.VBox('Parent',leftLayout);
             axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
-           
+            
             comparePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','compare with', 'Padding',5);
             clusterPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cluster', 'Padding',5);
             cTablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cycle points', 'Padding',5);
