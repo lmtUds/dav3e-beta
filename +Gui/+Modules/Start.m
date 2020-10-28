@@ -106,7 +106,7 @@ classdef Start < Gui.Modules.GuiModule
                 importPaths = pathsdialog(mainPos);
                 warning('No automated method available yet');
             else
-                error('Unexpected return value for choosedialog()');
+                warning('Data import was aborted.');
             end
         end
     end

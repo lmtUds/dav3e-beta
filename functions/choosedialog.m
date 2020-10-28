@@ -22,6 +22,7 @@ function choice = choosedialog(mainPos)
 %CHOOSEDIALOG Summary of this function goes here
 %   Detailed explanation goes here
     d = dialog('Name','Import Method Selection','WindowStyle','normal');
+    d.CloseRequestFcn = @close_me;
     d.Units = 'normalized';
     x=mainPos(1);
     y=mainPos(2);
@@ -62,5 +63,9 @@ function choice = choosedialog(mainPos)
           otherwise
               choice = 'simple';
       end
+    end
+    function close_me(src,callbackdata)
+        choice = '';
+        delete(gcf);
     end
 end
