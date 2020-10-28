@@ -31,7 +31,7 @@ classdef Start < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             menu = [];
             
             layout = uiextras.VBox('Parent',panel, 'Padding',20, 'Spacing',10);

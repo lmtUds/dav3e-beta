@@ -43,7 +43,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','CycleRanges');
             uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
