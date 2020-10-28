@@ -84,7 +84,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = Gui.Modules.Panel();
+            panel = Gui.Modules.Panel();%Replaced from the uiextras package
             
             menu = uimenu('Label','Preprocessing');
             obj.globalYLimitsMenu = uimenu(menu,'Label','global y-limits', 'Checked','off', getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
