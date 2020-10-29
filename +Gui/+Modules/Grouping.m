@@ -82,7 +82,7 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function [panel,menu] = makeLayout(obj)
-            panel = Gui.Modules.Panel();
+            panel = uix.Panel();
             
             menu = uimenu('Label','Grouping');
             uimenu(menu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
