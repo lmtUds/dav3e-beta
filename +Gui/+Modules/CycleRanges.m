@@ -43,7 +43,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','CycleRanges');
             uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
@@ -74,8 +74,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickImport(obj)
-            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
-            [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
+            [file,path] = uigetfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
@@ -88,16 +87,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 end
             end
             
-            splitFile = strsplit(file,'.');
-            extension = splitFile{end};
-            
             rangeJson = fileread(fullfile(path,file));
-            switch extension
-                case 'json'
-                    rangeStruct = jsondecode(rangeJson);
-                case 'csv'
-                    rangeStruct = rangeCsvDecode(rangeJson);
-            end
+            rangeStruct = jsondecode(rangeJson);
             if ~isfield(rangeStruct,'cycleRanges')
                 error('Field cycleRanges not found.');
             end
@@ -108,23 +99,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickExport(obj)
-            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
-            [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
+            [file,path] = uiputfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
             
-            splitFile = strsplit(file,'.');
-            extension = splitFile{end};
-            
             rangeJson.cycleRanges = obj.ranges.getObject().toStruct();
-            switch extension
-                case 'json'
-                    rangeJson = jsonencode(rangeJson);
-                case 'csv'
-                    rangeJson = rangeCsvEncode(rangeJson);
-            end
+            rangeJson = jsonencode(rangeJson);
             fid = fopen(fullfile(path,file), 'w+');
             fwrite(fid, rangeJson, 'char');
             fclose(fid);

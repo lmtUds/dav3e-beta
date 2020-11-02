@@ -82,7 +82,7 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function [panel,menu] = makeLayout(obj)
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','Grouping');
             uimenu(menu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
@@ -115,15 +115,11 @@ classdef Grouping < Gui.Modules.GuiModule
         end
 
         function onClickImport(obj)
-            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
-            [file,path] = uigetfile(options,'Choose groupings file',obj.oldPath);
+            [file,path] = uigetfile({'*.json','JSON file'},'Choose groupings file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
-            
-            splitFile = strsplit(file,'.');
-            extension = splitFile{end};
             
             re = questdlg('This will delete the current groupings. Proceed?','Proceed?','Yes','No','No');
             if ~strcmp(re,'Yes')
@@ -131,12 +127,7 @@ classdef Grouping < Gui.Modules.GuiModule
             end
             
             groupingJson = fileread(fullfile(path,file));
-            switch extension
-                case 'json'
-                    groupingStruct = jsondecode(groupingJson);
-                case 'csv'
-                    groupingStruct = groupingCsvDecode(groupingJson);
-            end
+            groupingStruct = jsondecode(groupingJson);
             if ~isfield(groupingStruct,'groupings')
                 error('Field groupings not found.');
             end
@@ -149,23 +140,14 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function onClickExport(obj)
-            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
-            [file,path] = uiputfile(options,'Choose groupings file',obj.oldPath);
+            [file,path] = uiputfile({'*.json','JSON file'},'Choose groupings file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
             
-            splitFile = strsplit(file,'.');
-            extension = splitFile{end};
-            
             groupingJson.groupings = obj.getProject().groupings.toStruct();
-            switch extension
-                case 'json'
-                    groupingJson = jsonencode(groupingJson);
-                case 'csv'
-                    groupingJson = groupingCsvEncode(groupingJson);
-            end
+            groupingJson = jsonencode(groupingJson);
             fid = fopen(fullfile(path,file), 'w+');
             fwrite(fid, groupingJson, 'char');
             fclose(fid);
