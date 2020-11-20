@@ -49,9 +49,9 @@ function [data,prms] = apply(files,prms)
             for j = 1:numel(mdfObj.ChannelNames{i})
                 names = mdfObj.ChannelNames{i};
                 channel = names{j};
-                if or(strcmp(channel,'time'),strcmp(channel,'timestamp'))   % exclude time data
-                    continue
-                end
+%                 if or(strcmp(channel,'time'),strcmp(channel,'timestamp'))   % exclude time data
+%                     continue
+%                 end
                 sensors{counter} = read(mdfObj,i,channel,'OutputFormat','Vector')';
                 pointCounts(end + 1) = size(sensors{counter},2);
                 sensNames{end + 1} = channel;
