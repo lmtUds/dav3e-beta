@@ -37,6 +37,7 @@ function [data,prms] = apply(files,prms)
     sensNames = {};
     clusNames = {};
     pointCounts = [];
+    allClusters = {};
     
     % import multi sensor data as one cycle per file
     for fidx = 1:numel(files)
@@ -48,7 +49,7 @@ function [data,prms] = apply(files,prms)
             for j = 1:numel(mdfObj.ChannelNames{i})
                 names = mdfObj.ChannelNames{i};
                 channel = names{j};
-                if strcmp(channel,'time')   % exclude time data
+                if or(strcmp(channel,'time'),strcmp(channel,'timestamp'))   % exclude time data
                     continue
                 end
                 sensors{counter} = read(mdfObj,i,channel,'OutputFormat','Vector')';
@@ -57,6 +58,7 @@ function [data,prms] = apply(files,prms)
                 counter = counter + 1;
             end
             clusNames{i} = mdfObj.ChannelGroup(i).AcquisitionName;
+            allClusters{fidx,i} = mdfObj.ChannelGroup(i).AcquisitionName;
         end
         allData{fidx}= sensors;
     end
@@ -77,9 +79,7 @@ function [data,prms] = apply(files,prms)
             sz = cellfun(@(x) size(x,2),currDat);
             nonMin = sz(sz ~= min(sz));
             pointRM = pointCounts ~= nonMin;
-            if(size(pointRM,1)>1)
-                pointRM = and(pointRM(1,:),pointRM(2:end,:));
-            end
+            pointRM = andCollapse(pointRM);
             pointCounts = pointCounts(pointRM);
             currDat = cellfun(@(x) x(1:min(sz)),currDat,'UniformOutput',false);
             sensors{i} = vertcat(currDat{:});
@@ -116,4 +116,10 @@ function [data,prms] = apply(files,prms)
         end
     end
     data.clusters = clusters;
+end
+function logicInd = andCollapse(logicMatrix)
+    logicInd = logicMatrix(1,:);
+    for i = 1:size(logicMatrix,1)
+       logicInd = and(logicInd,logicMatrix(i,:)); 
+    end
 end
