@@ -76,7 +76,11 @@ function [data,prms] = apply(files,prms)
             currDat = allData(:,i);
             sz = cellfun(@(x) size(x,2),currDat);
             nonMin = sz(sz ~= min(sz));
-            pointCounts = pointCounts(pointCounts ~= nonMin);
+            pointRM = pointCounts ~= nonMin;
+            if(size(pointRM,1)>1)
+                pointRM = and(pointRM(1,:),pointRM(2:end,:));
+            end
+            pointCounts = pointCounts(pointRM);
             currDat = cellfun(@(x) x(1:min(sz)),currDat,'UniformOutput',false);
             sensors{i} = vertcat(currDat{:});
             warning(['Cycle lengths for Sensor ',num2str(i),' needed to be cut. New lengths are unified to ',num2str(min(sz))]);
