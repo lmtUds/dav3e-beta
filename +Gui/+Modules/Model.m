@@ -64,7 +64,7 @@ classdef Model < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','Model');
 
@@ -72,8 +72,8 @@ classdef Model < Gui.Modules.GuiModule
             leftLayout = uiextras.VBox('Parent',layout);
             obj.detailsLayout = uiextras.HBox('Parent',layout, 'Spacing',5, 'Padding',5);
 
-            defsPanel = uiextras.Panel('Parent',leftLayout, 'Title','model', 'Padding',5);
-%             tablePanel = uiextras.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
+            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','model', 'Padding',5);
+%             tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
             
             propGridLayout = uiextras.VBox('Parent',defsPanel);
             
@@ -108,7 +108,7 @@ classdef Model < Gui.Modules.GuiModule
             % not reproduce the issue
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
             obj.tabLayout = uiextras.VBox('Parent',obj.detailsLayout);
-            obj.parametersDropdownPanel = uiextras.Panel('Parent',obj.detailsLayout, 'Title','parameters', 'Padding',2);
+            obj.parametersDropdownPanel = Gui.Modules.Panel('Parent',obj.detailsLayout, 'Title','parameters', 'Padding',2);
             obj.parametersDropdownGrid = uiextras.Grid('Parent',obj.parametersDropdownPanel, 'Spacing',2, 'Padding',0);
             obj.parametersDropdownPanel.Visible = 'off';
 

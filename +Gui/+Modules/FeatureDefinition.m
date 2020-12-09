@@ -144,7 +144,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','FeatureDefinition');
             uimenu(menu,'Label','plot features over time', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
@@ -157,8 +157,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             leftLayout = uiextras.VBox('Parent',layout);
             axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
             
-            defsPanel = uiextras.Panel('Parent',leftLayout, 'Title','feature definitions', 'Padding',5);
-            tablePanel = uiextras.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
+            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature definitions', 'Padding',5);
+            tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
             
             propGridLayout = uiextras.VBox('Parent',defsPanel);
             

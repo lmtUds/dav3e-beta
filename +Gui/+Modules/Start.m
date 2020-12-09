@@ -31,7 +31,7 @@ classdef Start < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             menu = [];
             
             layout = uiextras.VBox('Parent',panel, 'Padding',20, 'Spacing',10);
@@ -106,7 +106,7 @@ classdef Start < Gui.Modules.GuiModule
                 importPaths = pathsdialog(mainPos);
                 warning('No automated method available yet');
             else
-                warning('Data import was aborted.');
+                error('Unexpected return value for choosedialog()');
             end
         end
     end
