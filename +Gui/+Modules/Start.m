@@ -103,6 +103,8 @@ classdef Start < Gui.Modules.GuiModule
                 % statusbar (Ready)
                 sb = statusbar(obj.main.hFigure,'Ready.');
                 set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            % !!BETA!!: Automated multi file import is not implemented yet
+            % and therefore the selection dialog is currently also disabled.
             elseif strcmp(chosenOne,'complex')
                 importPaths = pathsdialog(mainPos);
                 warning('No automated method available yet');
