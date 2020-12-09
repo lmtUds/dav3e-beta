@@ -1081,7 +1081,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 axis(obj.hAxCycle);
 %                 yyaxis(obj.hAxCycle,side);
                 hold(obj.hAxCycle,'on');
-                obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,x',cSignals',style);
+                if size(sensor.abscissa,2) > 1
+                    obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,x',cSignals',style);
+                else   %if there is no cycle, the one cycle point is replicated, so that plot() still creates one Line for each selected cycle
+                    obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,repmat(x',2,1),repmat(cSignals',2,1),style);
+                end
                 hold(obj.hAxCycle,'off');
             else
                 for i = 1:numel(obj.hLines.(type).(pp).cycle)
