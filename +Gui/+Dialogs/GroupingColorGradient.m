@@ -26,6 +26,7 @@ classdef GroupingColorGradient < handle
         hColorChooser
         jColorChooser
         hGroupList
+        infosection
         applyButton
     end
     
@@ -46,11 +47,14 @@ classdef GroupingColorGradient < handle
                 'Style','listbox', 'String',{'a','b','c'},...
                 'min',0,'max',100);
             
+            obj.infosection = uicontrol(layout,...
+                'Style','text','String','The selected groups will be ignored for color gradient');
+            
             obj.applyButton = uicontrol(layout,...
                 'String','apply',...
                 'Callback',@(h,e)obj.applyButtonClicked);
             
-            layout.Sizes = [-3,-1,30];
+            layout.Sizes = [-3,-1,30,30];
         end
         
         function show(obj)

@@ -74,7 +74,7 @@ function [data,params] = apply(data,params)
     feats = nan(size(d,1),size(pos,1),maxFeatLength);
     for j=1:size(d,1)
         for i = 1:size(pos,1)
-            feats(j,i,:)=f{i}(j,:);
+            feats(j,i,1:size(f{i}(j,:),2))=f{i}(j,:);
         end
     end
     params.header = cap;

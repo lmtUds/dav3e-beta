@@ -18,14 +18,14 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = standardize()
+function info = deleteNaNfeatures()
     info.type = DataProcessingBlockTypes.FeaturePreprocessing;
-    info.caption = 'standardize';
+    info.caption = 'deleteNaNfeatures';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
-        Parameter('shortCaption','mean', 'value',[], 'internal',true),... 
-        Parameter('shortCaption','std', 'value',[], 'internal',true),... 
+        Parameter('shortCaption','a', 'value',[], 'internal',true),...
+        Parameter('shortCaption','b', 'value',[], 'internal',true),...
     ];
     info.apply = @apply;
     info.train = @train;
@@ -33,13 +33,16 @@ end
 
 function [data,paramOut] = apply(data,params)
     paramOut = struct();
-    d = (data.getSelectedData() - params.mean) ./ params.std;
-    dTest = (data.getSelectedData('testing') - params.mean) ./ params.std;
-    data.setSelectedData(d, 'captions', data.featureCaptions(data.featureSelection));
-    data.data(data.testingSelection,:) = dTest;
+    h = data.featureCaptions(params.a);
+    params.b = [h{:}]; 
+    
+    data.data(:,params.a) = [];
+    data.featureSelection(params.a) = [];
+    data.featureCaptions(params.a) = [];
+    warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
 end
 
 function params = train(data,params)
-    params.mean = mean(data.getSelectedData(),1);
-    params.std = std(data.getSelectedData(),[],1);
+    d = data.getSelectedData();
+    [~,params.a] = find(isnan(d(1,:))==1);   
 end
