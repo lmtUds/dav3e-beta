@@ -79,8 +79,9 @@ classdef Start < Gui.Modules.GuiModule
                 filterCell{i,1} = strjoin(extParam.getValue(),';');
                 filterCell{i,2} = char(blocks(i).getCaption());
             end
-            mainPos = obj.main.hFigure.Position;
-            chosenOne = choosedialog(mainPos);
+%             mainPos = obj.main.hFigure.Position;
+%             chosenOne = choosedialog(mainPos);
+            chosenOne = 'simple';
             if strcmp(chosenOne,'simple')
                 [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
                 if path == 0
