@@ -18,6 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
+% !!BETA!!
 function info = autoFeatureExtract()
 %Provides a collection of automated feature extractors
 %   The automated feature extration methods used are:
@@ -26,7 +27,7 @@ function info = autoFeatureExtract()
     
 %start by providing information and parameters
     info.type = DataProcessingBlockTypes.DimensionalityReduction;
-    info.caption = 'automated feature extraction';
+    info.caption = 'BETA automated feature extraction';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
