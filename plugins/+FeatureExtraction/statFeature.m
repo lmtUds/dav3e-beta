@@ -20,7 +20,7 @@
 
 function info = statFeature()
     info.type = DataProcessingBlockTypes.FeatureExtraction;
-    info.caption = 'Statical Moments';
+    info.caption = 'Statistical Moments';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
