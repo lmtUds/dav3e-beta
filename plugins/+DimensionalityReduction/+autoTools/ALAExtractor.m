@@ -23,6 +23,9 @@ classdef ALAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
     %   This is used to extract features via the ALA method. Therefore
     %   cycles are divided into several intervals. Slope and mean for each
     %   interval are then combined to form the extracted features.
+    %   By default his method will compute up to a maximum of 500 features 
+    %   if no feature count is provided. If the cycle length is less than 
+    %   500 the maximum number equals the cycle length.
     
     properties
         errVec = [];

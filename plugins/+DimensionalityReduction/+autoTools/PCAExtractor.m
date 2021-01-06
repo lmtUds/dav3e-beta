@@ -26,6 +26,9 @@ classdef PCAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
     %   The Components that explain the most variance resemble the best.
     %   Features are computed by multiplying the raw data with the sorted
     %   coefficient matrix.
+    %   By default his method will compute up to a maximum of 500 features 
+    %   if no feature count is provided. If the cycle length is less than 
+    %   500 the maximum number equals the cycle length.
     
     properties
         coeffs = [];     % the PCA coefficients sorted as a result of training

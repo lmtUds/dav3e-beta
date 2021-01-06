@@ -19,8 +19,11 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
 classdef BFCExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterface & DimensionalityReduction.autoTools.CombinableInterface
-    %BFCEXTRACTOR Summary of this class goes here
-    %   Detailed explanation goes here
+    %BFCEXTRACTOR A feature extractor for best fourier coefficients (BFC)
+    %   This extractor computes fourier coefficients and returns the best
+    %   ones as features.
+    %   By default this method will produce a feature count of 10 percent 
+    %   of the cycle length if no count is provided manually.
     
     properties
         m = [];

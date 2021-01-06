@@ -22,6 +22,8 @@ classdef BDWExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
     %BDWEXTRACTOR A feature extractor for best daubechies wavelet coefficients (BDW)
     %   This is used to extract the best daubechies wavelet coefficients
     %   for the provided raw data.
+    %   By default this method will produce a feature count of 10 percent 
+    %   of the cycle length if no count is provided manually.
     
     properties
         ind = [];%the indices ordering the wavelet coefficients that result from training
