@@ -18,15 +18,22 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = phaseSpectrum()
-    info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'compute phase spectrum';
-    info.shortCaption = mfilename;
-    info.description = '';
-    info.parameters = [];
-    info.apply = @apply;
+function printable = rangeCsvEncode(rangeStruct)
+    printable = sprintf('%s\n',['caption',';','start',';','stop',';',...
+        'color1',';','color2',';','color3',';','reference']);
+    ranges = rangeStruct.cycleRanges;
+    numRanges = size(ranges,2);
+    
+    % compose the printable for output from the ranges struct    
+    for i = 1:numRanges
+        line = [ranges(i).caption,';',ranges(i).timePosition(1),';',...
+            ranges(i).timePosition(2),';',ranges(i).clr(1),';',...
+            ranges(i).clr(2),';',ranges(i).clr(3),';','0'];
+        if i ~= numRanges
+           printable = [printable,sprintf('%s\n',horzcat(line{:}))];
+        else
+           printable = [printable,sprintf('%s',horzcat(line{:}))];
+        end
+    end
 end
 
-function [data,params] = apply(data,params)
-    data = angle(fft(data,[],2));
-end

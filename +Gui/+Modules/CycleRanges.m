@@ -43,13 +43,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             
             menu = uimenu('Label','CycleRanges');
             uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
             uimenu(menu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
             uimenu(menu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
-            
+            uimenu(menu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
+
             layout = uiextras.VBox('Parent',panel);
             
             obj.hAx = axes(layout); title('quasistatic signal');
@@ -74,7 +75,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickImport(obj)
-            [file,path] = uigetfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
@@ -86,9 +88,16 @@ classdef CycleRanges < Gui.Modules.GuiModule
                     return
                 end
             end
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
             
             rangeJson = fileread(fullfile(path,file));
-            rangeStruct = jsondecode(rangeJson);
+            switch extension
+                case 'json'
+                    rangeStruct = jsondecode(rangeJson);
+                case 'csv'
+                    rangeStruct = rangeCsvDecode(rangeJson);
+            end
             if ~isfield(rangeStruct,'cycleRanges')
                 error('Field cycleRanges not found.');
             end
@@ -99,17 +108,86 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickExport(obj)
-            [file,path] = uiputfile({'*.json','JSON file'},'Choose cycle range file',obj.oldPath);
+            options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
+            [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
             if file == 0
                 return
             end
             obj.oldPath = path;
             
+            splitFile = strsplit(file,'.');
+            extension = splitFile{end};
             rangeJson.cycleRanges = obj.ranges.getObject().toStruct();
-            rangeJson = jsonencode(rangeJson);
+            switch extension
+                case 'json'
+                    rangeJson = jsonencode(rangeJson);
+                case 'csv'
+                    rangeJson = rangeCsvEncode(rangeJson);
+            end
             fid = fopen(fullfile(path,file), 'w+');
             fwrite(fid, rangeJson, 'char');
             fclose(fid);
+        end
+        
+        function onClickMakeCycleRangesAndGroupingFromSelectedSensor(obj)
+            sensor = obj.getCurrentSensor();
+            
+            offset=sensor.getCluster().offset;
+            samplingPeriod=sensor.getCluster().samplingPeriod;
+            
+            data = sensor.data;
+            
+%             if numel(unique(data))>2
+%                 warning('This function is limited to a sensor that only has the values 0 and 1.')
+%                 return;
+%             end
+            
+%             lastOff = find(diff(data) == 1);
+%             lastOn = find(diff(data) == -1);
+%             changes = sort([[lastOff,lastOn],[lastOff,lastOn]+1]);
+            change = find(diff(data) ~= 0)';
+            changes = sort([change,change+1]);
+            changes = [1,changes,size(data,1)];
+            nRanges = numel(changes)/2;
+            
+            cr = Range.empty;
+            groupColors=[];
+            for ridx = 1:1:nRanges
+                beginTime(ridx) = offset+changes(1+2*(ridx-1))*samplingPeriod;
+                endTime(ridx) = offset+changes(2+2*(ridx-1))*samplingPeriod;
+                cr(ridx) = Range([beginTime(ridx), endTime(ridx)]);
+                cr(ridx).setCaption(data(round((changes(1+2*(ridx-1))+changes(2+2*(ridx-1)))/2)))
+                groupCaptions=strsplit(sensor.getCaption, ' ');
+                groupCaptions=groupCaptions(1,1);
+%                 rng(str2num(cr(ridx).getCaption())); %sets seed for random
+%                 color; works only as expected for integer data; not
+%                 absolutely necessary anyway
+                groupColors{ridx,1}=rand(1,3);
+            end
+           
+            obj.addRange([],cr);
+            
+             for i = 1:numel(groupCaptions)
+                if ~strcmp(groupCaptions(i),'')
+                    gCaption = groupCaptions(i);
+                    g = obj.main.project.getGroupingByCaption(gCaption);
+                    if isempty(g)
+                        g = Grouping();
+                        g.setCaption(gCaption);
+                        obj.main.project.addGrouping(g);
+                    end
+                    vals = string(vertcat(cr.getCaption'));
+                    g.setGroup(categorical(vals),cr);
+                    
+                    color = groupColors;
+                    for j=1:numel(color)
+                        if ~isnan(color{j,i})
+                            g.setColor(vals{j,1}, color{j,1});
+                        end
+                    end
+                    g.updateColors();
+                end
+             end
         end
         
         function allowed = canOpen(obj)

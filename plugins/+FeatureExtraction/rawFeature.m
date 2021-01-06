@@ -71,6 +71,13 @@ function [data,params] = apply(data,params)
     end
     params.header = cap;
     
+    
+    valueLabels = string.empty;
+    for i = 1:mLength
+        valueLabels(end+1) = string(num2str(i));
+    end
+    params.valueLabels = valueLabels;
+    
     if params.raw
         data = f;
     else

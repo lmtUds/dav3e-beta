@@ -59,10 +59,10 @@ function [data,params] = apply(data,params)
         x = params.x;
     end
     
-    f = nan(size(d,1),size(pos,1),params.order+params.includeOffset);
+    f = nan(size(d,1),size(pos,1));
     cap = string.empty;
     for i = 1:size(pos,1)
-        f(:,i,:) = computeFeature(...
+        f(:,i) = computeFeature(...
             d(:,pos(i,1):pos(i,2)),...
             x(pos(i,1):pos(i,2)));
         cap(i) = sprintf('linSlope_%.2f-%.2f',x(pos(i,1)),x(pos(i,2)));

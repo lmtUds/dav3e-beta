@@ -300,7 +300,7 @@ classdef Model < Descriptions
             % "for free" (like in LDA, PLSR, ...)
             p = cellfun(@(x)sort(x,'descend'),p,'uni',false);
             % create a list with all combinations of parameters
-            hParamTable = combvec(p{:})
+            hParamTable = combvec(p{:});
 
             % save function handles so as not to pass the whole obj to
             % parfor later
@@ -368,12 +368,12 @@ classdef Model < Descriptions
                 obj.processingChain.finalize(d(i),hParams);
                 x = d(i).computeErrors();
                 errors(i) = x;
-                fprintf('\n');
-                disp(x)
+%                 fprintf('\n');
+%                 disp(x)
                 x = d(i).computePearsonCorrelation();
                 corrCoeffs(i) = x;
-                fprintf('\n');
-                disp(x)
+%                 fprintf('\n');
+%                 disp(x)
             end
             toc
             

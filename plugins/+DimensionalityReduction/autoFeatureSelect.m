@@ -18,7 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = automatedMethods()
+function info = autoFeatureSelect()
 %Provides a collection of automated feature selectors
 %   The automated feature selection methods used are:
 %       RFESVM, RELIEFF and Pearson Correlation
@@ -26,7 +26,7 @@ function info = automatedMethods()
     
 %start by providing information and parameters
     info.type = DataProcessingBlockTypes.DimensionalityReduction;
-    info.caption = 'automated methods';
+    info.caption = 'automated feature selection';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
@@ -79,7 +79,7 @@ function params = train(data,params)
             method = 'wrong';
     end
     %compute the ranking by the desired method
-    ranks = rankByMethod(data,params,method);
+    [ranks,params] = rankByMethod(data,params,method);
     %set parameters after training
     params.ranks = ranks;
     params.trained = true;
@@ -106,7 +106,7 @@ function updateParameters(params,project)
     end
 end
 
-function ranks  = rankByMethod(data,params,method)
+function [ranks,params]  = rankByMethod(data,params,method)
 %compute feature ranking for later selection
 %ranking is done based on the selected method
     ranks = ones(size(data.getSelectedData(),2),1);

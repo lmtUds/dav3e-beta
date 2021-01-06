@@ -84,7 +84,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();%Replaced from the uiextras package
             
             menu = uimenu('Label','Preprocessing');
             obj.globalYLimitsMenu = uimenu(menu,'Label','global y-limits', 'Checked','off', getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
@@ -95,13 +95,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             leftInnerLayout2 = uiextras.VBox('Parent',leftLayout);
             axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
             
-            comparePanel = uiextras.Panel('Parent',leftLayout, 'Title','compare with', 'Padding',5);
-            clusterPanel = uiextras.Panel('Parent',leftLayout, 'Title','cluster', 'Padding',5);
-            cTablePanel = uiextras.Panel('Parent',leftLayout, 'Title','cycle points', 'Padding',5);
+            comparePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','compare with', 'Padding',5);
+            clusterPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cluster', 'Padding',5);
+            cTablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cycle points', 'Padding',5);
             cTablePanelLayout = uiextras.VBox('Parent',cTablePanel);
-            qsTablePanel = uiextras.Panel('Parent',leftLayout, 'Title','quasistatic points', 'Padding',5);
+            qsTablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','quasistatic points', 'Padding',5);
             qsTablePanelLayout = uiextras.VBox('Parent',qsTablePanel);
-            chainPanel = uiextras.Panel('Parent',leftLayout, 'Title','preprocessing chain', 'Padding',5);
+            chainPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','preprocessing chain', 'Padding',5);
             
             l = uiextras.HBox('Parent',comparePanel);
             hCompareWithCheckbox = uicontrol('Parent',l, 'Style','checkbox',...
@@ -1081,7 +1081,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 axis(obj.hAxCycle);
 %                 yyaxis(obj.hAxCycle,side);
                 hold(obj.hAxCycle,'on');
-                obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,x',cSignals',style);
+                if size(sensor.abscissa,2) > 1
+                    obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,x',cSignals',style);
+                else   %if there is no cycle, the one cycle point is replicated, so that plot() still creates one Line for each selected cycle
+                    obj.hLines.(type).(pp).cycle = plot(obj.hAxCycle,repmat(x',2,1),repmat(cSignals',2,1),style);
+                end
                 hold(obj.hAxCycle,'off');
             else
                 for i = 1:numel(obj.hLines.(type).(pp).cycle)

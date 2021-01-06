@@ -31,7 +31,7 @@ classdef Start < Gui.Modules.GuiModule
         
         function [panel,menu] = makeLayout(obj)
             %%
-            panel = uiextras.Panel();
+            panel = Gui.Modules.Panel();
             menu = [];
             
             layout = uiextras.VBox('Parent',panel, 'Padding',20, 'Spacing',10);
@@ -79,8 +79,9 @@ classdef Start < Gui.Modules.GuiModule
                 filterCell{i,1} = strjoin(extParam.getValue(),';');
                 filterCell{i,2} = char(blocks(i).getCaption());
             end
-            mainPos = obj.main.hFigure.Position;
-            chosenOne = choosedialog(mainPos);
+%             mainPos = obj.main.hFigure.Position;
+%             chosenOne = choosedialog(mainPos);
+            chosenOne = 'simple';
             if strcmp(chosenOne,'simple')
                 [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
                 if path == 0
@@ -102,6 +103,8 @@ classdef Start < Gui.Modules.GuiModule
                 % statusbar (Ready)
                 sb = statusbar(obj.main.hFigure,'Ready.');
                 set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            % !!BETA!!: Automated multi file import is not implemented yet
+            % and therefore the selection dialog is currently also disabled.
             elseif strcmp(chosenOne,'complex')
                 importPaths = pathsdialog(mainPos);
                 warning('No automated method available yet');

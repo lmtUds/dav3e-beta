@@ -148,7 +148,11 @@ classdef Grouping < RangeAnnotation
                 g.ranges = ranges;
                 g.vals = categorical(s(i).categories(s(i).order));
                 for j = 1:numel(s(i).categories)
-                    g.colors(s(i).categories{j}) = s(i).colors(j,:);
+                    if iscell(s(i).colors)
+                        g.colors(s(i).categories{j}) = s(i).colors{j};
+                    else
+                        g.colors(s(i).categories{j}) = s(i).colors(j,:);
+                    end
                 end
                 groupings(end+1) = g; %#ok<AGROW>
             end

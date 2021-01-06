@@ -34,7 +34,9 @@ end
 function [data,paramOut] = apply(data,params)
     paramOut = struct();
     d = (data.getSelectedData() - params.mean) ./ params.std;
+    dTest = (data.getSelectedData('testing') - params.mean) ./ params.std;
     data.setSelectedData(d, 'captions', data.featureCaptions(data.featureSelection));
+    data.data(data.testingSelection,:) = dTest;
 end
 
 function params = train(data,params)

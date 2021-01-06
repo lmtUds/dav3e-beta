@@ -18,15 +18,15 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = phaseSpectrum()
-    info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'compute phase spectrum';
-    info.shortCaption = mfilename;
-    info.description = '';
-    info.parameters = [];
-    info.apply = @apply;
+classdef CombinableInterface < handle
+    %COMBINABLEINTERFACE Summary of this class goes here
+    %   Detailed explanation goes here
+    
+    properties
+    end
+    
+    methods (Abstract)
+        obj1 = combine(obj1,obj2);
+    end
 end
 
-function [data,params] = apply(data,params)
-    data = angle(fft(data,[],2));
-end

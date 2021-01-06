@@ -18,15 +18,31 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = phaseSpectrum()
-    info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'compute phase spectrum';
+function info = deleteNaNfeatures()
+    info.type = DataProcessingBlockTypes.FeaturePreprocessing;
+    info.caption = 'deleteNaNfeatures';
     info.shortCaption = mfilename;
     info.description = '';
-    info.parameters = [];
+    info.parameters = [...
+        Parameter('shortCaption','a', 'value',[], 'internal',true),...
+        Parameter('shortCaption','b', 'value',[], 'internal',true),...
+    ];
     info.apply = @apply;
+    info.train = @train;
 end
 
-function [data,params] = apply(data,params)
-    data = angle(fft(data,[],2));
+function [data,paramOut] = apply(data,params)
+    paramOut = struct();
+    h = data.featureCaptions(params.a);
+    params.b = [h{:}]; 
+    
+    data.data(:,params.a) = [];
+    data.featureSelection(params.a) = [];
+    data.featureCaptions(params.a) = [];
+    warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
+end
+
+function params = train(data,params)
+    d = data.getSelectedData();
+    [~,params.a] = find(isnan(d(1,:))==1);   
 end
