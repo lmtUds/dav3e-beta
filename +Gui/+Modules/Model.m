@@ -312,6 +312,8 @@ classdef Model < Gui.Modules.GuiModule
             obj.makeModelTabs();
             obj.makeParameterDropdowns(caps,inds);
             
+            obj.updatePropGrid();
+            
             sb = statusbar(obj.main.hFigure,'Ready.');
             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);  
         end
