@@ -33,7 +33,10 @@ function [panel,elements] = makeGui(parent)
     box on,
     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
     elements.hAx = hAx;
-    spinButton = uicontrol(layout, 'String','spin','Callback',@(varargin)spinAxes(hAx));
+    spinButton = uicontrol(layout, 'String','Start spin','Callback',...
+        @(src,event)spinAxes(src,event,hAx),'Interruptible',true,'BusyAction','cancel');
+    setappdata(spinButton,'spinning',0);    % current plot spinning state
+    setappdata(spinButton,'degree',0);      % degrees covered by the spin
     elements.spinButton = spinButton;
     layout.Sizes = [-1,20];
 end
@@ -125,10 +128,34 @@ function [handles,captions] = scatterPlot(hAx,data,grouping,dims,groupingColors)
     hold(hAx,'off');
 end
 
-function spinAxes(hAx)
-    v = get(hAx,'View');
-    for i = 0:1:360
-        set(hAx,'View',v + [i 0]);
-        pause(0.05)
+function spinAxes(src,~,hAx)
+    % obtain current spinning state
+    spinning = getappdata(src,'spinning');
+    
+    if spinning
+        setappdata(src,'spinning',0);       %set state to paused
+        set(src,'String','Resume spin');    %alter the label
+        drawnow;
+    else %so not spinning
+        setappdata(src,'spinning',1);       %set state to spinning
+        set(src,'String','Pause spin');     %alter the label
+        
+        % continue to spin until 360 degrees have been covered
+        for i = getappdata(src,'degree'):1:360
+            setappdata(src,'degree',i); 
+            % check current spinning state to cope with button interruption
+            if ~getappdata(src,'spinning')  
+                break
+            end
+            set(hAx,'View',[i 90]);
+            pause(0.05)
+        end
+        
+        % after a full 360 degree spin restore the starting state
+        if i == 360
+            set(src,'String','Start spin');
+            setappdata(src,'degree',0);
+            setappdata(src,'spinning',0);
+        end
     end
 end
