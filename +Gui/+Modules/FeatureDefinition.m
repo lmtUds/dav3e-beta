@@ -526,6 +526,19 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 obj.handleFeatureDefinitionSetChange();
             end
             
+            % display the current grouping features are being computed for
+            tCyc = 'cycles with grouping colors';
+            tCyc = strcat(tCyc, {' of '''},...
+                obj.getProject.currentGrouping.caption, {''''});
+            obj.hAxCycle.Title.String = tCyc;
+            set(obj.hAxCycle.Title,'Interpreter','none');
+            
+            tPre = 'feature preview';
+            tPre = strcat(tPre, {' for '''},...
+                obj.getProject.currentGrouping.caption, {''''});
+            obj.hAxPreview.Title.String = tPre;
+            set(obj.hAxPreview.Title,'Interpreter','none');
+            
             obj.updateFeaturePreview();
             set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
