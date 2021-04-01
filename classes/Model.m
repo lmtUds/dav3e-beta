@@ -459,7 +459,11 @@ classdef Model < Descriptions
             validationIterationLoop = @obj.validationIterationLoop;
             n = data(1).testingSteps;
             if n > 1
-                isparallel = ~isempty(getCurrentTask());
+                try
+                    isparallel = ~isempty(getCurrentTask());
+                catch
+                    isparallel = false;
+                end
                 if ~isparallel
                     d(n,numel(data)) = Data();
                     for i = 1:numel(data)
@@ -500,7 +504,11 @@ classdef Model < Descriptions
             validationStepLoop = @obj.validationStepLoop;
             n = data(1).validationIterations;
             if n > 1
-                isparallel = ~isempty(getCurrentTask());
+                try
+                    isparallel = ~isempty(getCurrentTask());
+                catch
+                    isparallel = false;
+                end
                 if ~isparallel
                     d(n,numel(data)) = Data();
                     for i = 1:numel(data)
@@ -539,7 +547,11 @@ classdef Model < Descriptions
             hyperParametersLoop = @obj.hyperParametersLoop;
             n = data(1).validationSteps;
             if n > 1
-                isparallel = ~isempty(getCurrentTask());
+                try
+                    isparallel = ~isempty(getCurrentTask());
+                catch
+                    isparallel = false;
+                end
                 if ~isparallel
                     d(n,numel(data)) = Data();
                     for i = 1:numel(data)
