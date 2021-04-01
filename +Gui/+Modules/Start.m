@@ -59,6 +59,43 @@ classdef Start < Gui.Modules.GuiModule
                 '489-506 (open access), doi: 10.5194/jsss-7-489-2018']),...
                 'FontSize',12);
         end
+        
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent)
+            %%
+            % we use a grid layout with 3 rows of decreasing height
+            moduleLayout = uigridlayout(uiParent,[3 1],'RowHeight',{'3x','2x','1x'});
+            moduleMenu = [];
+                        
+            img = uiimage(moduleLayout);
+            img.Layout.Row = 1;
+            img.ImageSource = '+Gui/+Modules/logo.png';
+            
+            buttonLayout = uigridlayout(moduleLayout,[1 2]);
+            buttonLayout.Layout.Row = 2;
+            
+            loadButton = uibutton(buttonLayout,...
+                'Text','Load project',...
+                'FontSize',30,...
+                'ButtonPushedFcn',@(varargin)obj.main.loadProject());
+            loadButton.Layout.Column = 1;
+            
+            importButton = uibutton(buttonLayout,...
+                'Text','Import Data',...
+                'FontSize',30,...
+                'ButtonPushedFcn',@(varargin)obj.importData());
+            importButton.Layout.Column = 2;
+                
+            citeLabel = uilabel(moduleLayout);
+            citeLabel.Layout.Row = 3;
+            citeLabel.Text = ['If you publish results obtained ',...
+                'with DAV³E, please cite: Manuel Bastuck, Tobias Baur,', ...
+                'and Andreas Schütze: DAV3E – a MATLAB toolbox for multivariate ',...
+                'sensor data evaluation, J. Sens. Sens. Syst. (2018), 7, ',...
+                '489-506 (open access), doi: 10.5194/jsss-7-489-2018'];
+            citeLabel.FontSize = 12;
+            citeLabel.WordWrap = 'on';
+            citeLabel.HorizontalAlignment = 'center';
+        end
 
         function importData(obj)
             persistent oldPath
