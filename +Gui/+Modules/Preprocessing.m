@@ -202,6 +202,176 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
         end
         
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent)
+            %%
+            % create a grid layout for the preprocessing panel
+            moduleLayout = uigridlayout(uiParent,[12 2],...
+                'ColumnWidth',{'1x','2x'},...
+                'RowHeight',{'fit'});
+            
+            % create the menu bar dropdown
+            moduleMenu = uimenu('Label','Preprocessing');
+            obj.globalYLimitsMenu = uimenu(moduleMenu,...
+                'Label','global y-limits',...
+                'Checked','off',...
+                getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
+                        
+            % create and fill the grid layout of the 'compare with' section
+            compareGrid = uigridlayout(moduleLayout,...
+                'ColumnWidth',{'1x','4x'},...
+                'RowHeight',{'fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            compareGrid.Layout.Row = 1;
+            compareGrid.Layout.Column = 1;
+            
+            compareLabel = uilabel(compareGrid,'Text','Compare with');
+            compareLabel.Layout.Row = 1;
+            compareLabel.Layout.Column = [1 2];
+            
+            compareCheckbox = uicheckbox(compareGrid,...
+                'Text','',...
+                'ValueChangedFcn',@obj.compareWithCheckboxCallback);
+            compareCheckbox.Layout.Column = 1;
+            
+            compareDropdown = uidropdown(compareGrid,...
+                'Items',{'1','2'},...
+                'ValueChangedFcn',@obj.compareWithSensorPopup);
+            compareDropdown.Layout.Column = 2;
+            
+            obj.hCompareWith.hCompareWithCheckbox = compareCheckbox;
+            obj.hCompareWith.hSensorPopup = compareDropdown;
+            
+            % create and fill the grid layout of the 'cluster' section
+            clusterGrid = uigridlayout(moduleLayout, [4 2],...
+                'ColumnWidth',{'1x','1x'},...
+                'RowHeight',{'fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            clusterGrid.Layout.Row = [2 3];
+            clusterGrid.Layout.Column = 1;
+            
+            clusterLabel = uilabel(clusterGrid,'Text','Cluster');
+            clusterLabel.Layout.Row = 1;
+            clusterLabel.Layout.Column = [1 2];
+            
+            periodLabel = uilabel(clusterGrid,'Text','sampling period / s');
+            periodLabel.Layout.Row = 2;
+            periodLabel.Layout.Column = 1;
+            
+            offsetLabel = uilabel(clusterGrid,'Text','offset / s');
+            offsetLabel.Layout.Row = 3;
+            offsetLabel.Layout.Column = 1;
+            
+            virtOffsetLabel = uilabel(clusterGrid,'Text','virtual offset / s');
+            virtOffsetLabel.Layout.Row = 4;
+            virtOffsetLabel.Layout.Column = 1;
+            
+            periodEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',0.1,...
+                'ValueChangedFcn',@obj.samplingPeriodEditCallback);
+            periodEdit.Layout.Row = 2;
+            periodEdit.Layout.Column = 2;
+            
+            offsetEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',100,...
+                'ValueChangedFcn',@obj.offsetEditCallback);
+            offsetEdit.Layout.Row = 3;
+            offsetEdit.Layout.Column = 2;
+            
+            virtOffsetEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',0,...
+                'ValueChangedFcn',@obj.virtualOffsetEditCallback);
+            virtOffsetEdit.Layout.Row = 4;
+            virtOffsetEdit.Layout.Column = 2;
+                        
+            obj.hCompareWith.hSamplingPeriodEdit = periodEdit;
+            obj.hCompareWith.hOffsetEdit = offsetEdit;
+            obj.hCompareWith.hVirtualOffsetEdit = virtOffsetEdit;
+            
+            % create and fill the grid layout of the 'cycle points' section
+            cTablePanel = uipanel(moduleLayout,'Title','Cycle points');
+            cTablePanel.Layout.Row = [4 6];
+            cTablePanel.Layout.Column = 1;
+                       
+            % cycle point set dropdown
+            obj.cyclePointSetDropdown = Gui.EditableDropdown(cTablePanelLayout);
+            obj.cyclePointSetDropdown.AppendClickCallback = @obj.dropdownNewCyclePointSet;
+            obj.cyclePointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveCyclePointSet;
+            obj.cyclePointSetDropdown.EditCallback = @obj.dropdownCyclePointSetRename;
+            obj.cyclePointSetDropdown.SelectionChangedCallback = @obj.dropdownCyclePointSetChange;
+            obj.cyclePointTable = JavaTable(cTablePanelLayout);
+            
+            
+            % create and fill the grid layout of the 'quasistatic points' section
+            qsTablePanel = uipanel(moduleLayout,'Title','Quasistatic points');
+            qsTablePanel.Layout.Row = [7 9];
+            qsTablePanel.Layout.Column = 1;
+            
+            qsTablePanelLayout = uiextras.VBox('Parent',qsTablePanel);
+            
+            
+            % create and fill the grid layout of the 'preprocessing chain' section
+            chainPanel = uipanel(moduleLayout, 'Title','Preprocessing chain');
+            chainPanel.Layout.Row = [10 12];
+            chainPanel.Layout.Column = 1;
+
+            propGridLayout = uiextras.VBox('Parent',chainPanel);
+            
+            % preprocessing chain set dropdown
+            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
+            obj.setDropdown.AppendClickCallback = @obj.dropdownNewPreprocessingChain;
+            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemovePreprocessingChain;
+            obj.setDropdown.EditCallback = @obj.dropdownPreprocessingChainRename;
+            obj.setDropdown.SelectionChangedCallback = @obj.dropdownPreprocessingChainChange;
+            
+            % preprocessing chain propgrid
+            obj.propGrid = PropGrid(propGridLayout);
+            obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
+            obj.propGrid.setShowToolbar(false);
+            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
+            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addPreprocessing);
+            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removePreprocessing);
+            uicontrol(propGridControlsLayout,'String','/\', 'Callback',@(h,e)obj.movePreprocessingUp);
+            uicontrol(propGridControlsLayout,'String','\/', 'Callback',@(h,e)obj.movePreprocessingDown);
+            propGridLayout.Sizes = [30,-1,20];
+            
+%             propGrid.grid.setDragEnabled(true);
+%             propGrid.grid.setDropMode(javax.swing.DropMode.INSERT_ROWS);
+%             propGrid.grid.setTransferHandler(javax.swing.TransferHandler())
+
+%             propGrid.addProperty(PropGridField('test1','test1'));
+%             propGrid.addProperty(PropGridField('test2','test2'));
+            
+            obj.hAxQuasistatic = axes(axesLayout); title('quasistatic signal');
+            obj.hAxQuasistatic.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
+            xlabel('cycle number'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
+            box on, 
+            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
+            obj.hAxCycle = axes(axesLayout); title('selected cycles');
+            obj.hAxCycle.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
+            xlabel('time / s'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
+            box on
+            set(gca,'LooseInset',get(gca,'TightInset'))
+            
+            
+            
+            % index point set dropdown
+            obj.indexPointSetDropdown = Gui.EditableDropdown(qsTablePanelLayout);
+            obj.indexPointSetDropdown.AppendClickCallback = @obj.dropdownNewIndexPointSet;
+            obj.indexPointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveIndexPointSet;
+            obj.indexPointSetDropdown.EditCallback = @obj.dropdownIndexPointSetRename;
+            obj.indexPointSetDropdown.SelectionChangedCallback = @obj.dropdownIndexPointSetChange;
+            obj.indexPointTable = JavaTable(qsTablePanelLayout);
+            qsTablePanelLayout.Sizes = [30,-1];
+            
+            leftLayout.Sizes = [50,-1,-2,-2,-4];
+            leftLayout.MinimumSizes = [50,100,100,100,150];
+            layout.Sizes = [-1,-4];
+%             leftLayout.Sizes = [-1,-1,120,-2];
+            
+        end
+        
         function globalYLimitsMenuClicked(obj,h,varargin)
             switch h.Checked
                 case 'on', h.Checked = 'off';
