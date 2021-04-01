@@ -145,7 +145,7 @@ classdef MainRework < handle
             bottomTable.Layout.Row = 2;
             bottomTable.Layout.Column = [1 2];
 %             modulesSidebar = uiextras.VButtonBox('Parent',content);
-            modulesSidebar = uigridlayout(mainLayout,[6 1]);
+            modulesSidebar = uigridlayout(mainLayout,[numel(obj.moduleNames) 1]);
             modulesSidebar.Layout.Row = 1;
             modulesSidebar.Layout.Column = 1;
 %             module = uiextras.CardPanel('Parent',content);
@@ -187,8 +187,10 @@ classdef MainRework < handle
                 [moduleLayout,moduleMenu] = m.makeLayoutRework(module);
 %                 moduleLayout.Parent = module;
                 moduleMenu.Parent = f;
-                uicontrol('Parent',modulesSidebar, 'String',m.caption, ...
-                    'Callback', @(varargin)obj.setModule(i));
+                moduleButton = uibutton(modulesSidebar,...
+                    'Text',m.caption,...
+                    'ButtonPushedFcn',@(varargin)obj.setModule(i));
+                moduleButton.Layout.Row = i;
                 obj.modules(i) = m;
             end
             
