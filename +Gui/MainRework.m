@@ -18,7 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef Main < handle
+classdef MainRework < handle
     properties
         moduleNames = {...
             'Gui.Modules.Start',...
@@ -43,7 +43,7 @@ classdef Main < handle
     end
     
     methods
-        function obj = Main()
+        function obj = MainRework()
             obj.makeLayout();
         end
         
@@ -69,19 +69,19 @@ classdef Main < handle
             obj.hFigure = f;
         
             % remove some buttons that are not needed
-            a = findall(gcf);
-            b = findall(a,'ToolTipString','Save Figure');
-            b = [b, findall(a,'ToolTipString','Open File')];
-            b = [b, findall(a,'ToolTipString','New Figure')];
-            b = [b, findall(a,'ToolTipString','Print Figure')];
-            b = [b, findall(a,'ToolTipString','Show Plot Tools')];
-            b = [b, findall(a,'ToolTipString','Hide Plot Tools')];
-            b = [b, findall(a,'ToolTipString','Link Plot')];
-            b = [b, findall(a,'ToolTipString','Insert Colorbar')];
-            b = [b, findall(a,'ToolTipString','Open File')];
-            b = [b, findall(a,'ToolTipString','Insert Legend')];
-            b = [b, findall(a,'ToolTipString','Show Plot Tools and Dock Figure')];
-            set(b,'Visible','Off');
+%             a = findall(gcf);
+%             b = findall(a,'ToolTipString','Save Figure');
+%             b = [b, findall(a,'ToolTipString','Open File')];
+%             b = [b, findall(a,'ToolTipString','New Figure')];
+%             b = [b, findall(a,'ToolTipString','Print Figure')];
+%             b = [b, findall(a,'ToolTipString','Show Plot Tools')];
+%             b = [b, findall(a,'ToolTipString','Hide Plot Tools')];
+%             b = [b, findall(a,'ToolTipString','Link Plot')];
+%             b = [b, findall(a,'ToolTipString','Insert Colorbar')];
+%             b = [b, findall(a,'ToolTipString','Open File')];
+%             b = [b, findall(a,'ToolTipString','Insert Legend')];
+%             b = [b, findall(a,'ToolTipString','Show Plot Tools and Dock Figure')];
+%             set(b,'Visible','Off');
             
             % menubar
             callback = getMenuCallbackName();
@@ -127,7 +127,7 @@ classdef Main < handle
             uimenu(mh,'Label','very wide plot',callback,@obj.openVeryWidePlot);
             
             % statusbar
-            warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+%             warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 %             sb = statusbar(f,'Initialize...');
 %             set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
             
@@ -145,38 +145,38 @@ classdef Main < handle
             bottomTable.Layout.Row = 2;
             bottomTable.Layout.Column = [1 2];
 %             modulesSidebar = uiextras.VButtonBox('Parent',content);
-            modulesSidebar = uigridlayout(mainLayout,[1 6]);
+            modulesSidebar = uigridlayout(mainLayout,[6 1]);
             modulesSidebar.Layout.Row = 1;
             modulesSidebar.Layout.Column = 1;
 %             module = uiextras.CardPanel('Parent',content);
-            module = uigridlayout(mainLayout,[4 4]);
+            module = uigridlayout(mainLayout,[1 1]);
             module.Layout.Row = 1;
             module.Layout.Column = 2;
             %uicontrol('Parent',modulesSidebar, 'Background','y')
             %uicontrol('Parent',module, 'Background','r')
             %uicontrol('Parent',bottomTable, 'Background','b')
             
-            t = JavaTable(bottomTable,'sortable');
-            t.setSortingEnabled(true)
-            t.setFilteringEnabled(true);
-            t.setColumnReorderingAllowed(false);
+%             t = JavaTable(bottomTable,'sortable');
+%             t.setSortingEnabled(true)
+%             t.setFilteringEnabled(true);
+%             t.setColumnReorderingAllowed(false);
+%             
+%             % context menu
+%             popupMenu = javax.swing.JPopupMenu();
+%             selectItem = javax.swing.JMenuItem('select all');
+%             deselectItem = javax.swing.JMenuItem('deselect all');
+%             popupMenu.add(selectItem);
+%             popupMenu.add(deselectItem);
+%             t.jTable.setComponentPopupMenu(popupMenu);
+%             set(handle(selectItem,'CallbackProperties'),'MousePressedCallback',@obj.selectVisibleSensors)
+%             set(handle(deselectItem,'CallbackProperties'),'MousePressedCallback',@obj.deselectVisibleSensors)
+%             
+%             obj.sensorSetTable = t;
             
-            % context menu
-            popupMenu = javax.swing.JPopupMenu();
-            selectItem = javax.swing.JMenuItem('select all');
-            deselectItem = javax.swing.JMenuItem('deselect all');
-            popupMenu.add(selectItem);
-            popupMenu.add(deselectItem);
-            t.jTable.setComponentPopupMenu(popupMenu);
-            set(handle(selectItem,'CallbackProperties'),'MousePressedCallback',@obj.selectVisibleSensors)
-            set(handle(deselectItem,'CallbackProperties'),'MousePressedCallback',@obj.deselectVisibleSensors)
-            
-            obj.sensorSetTable = t;
-            
-            mainLayout.Sizes = [-1,200];
-            content.Sizes = [200,-5];
-            modulesSidebar.ButtonSize = [190,35];
-            modulesSidebar.VerticalAlignment = 'top';
+%             mainLayout.Sizes = [-1,200];
+%             content.Sizes = [200,-5];
+%             modulesSidebar.ButtonSize = [190,35];
+%             modulesSidebar.VerticalAlignment = 'top';
             
             obj.modulePanel = module;
             obj.moduleSidebar = modulesSidebar;
@@ -184,9 +184,9 @@ classdef Main < handle
             % load modules
             for i = 1:numel(obj.moduleNames)
                 m = feval(obj.moduleNames{i},obj);
-                [panel,menu] = m.makeLayout();
-                panel.Parent = module;
-                menu.Parent = f;
+                [moduleLayout,moduleMenu] = m.makeLayoutRework(module);
+%                 moduleLayout.Parent = module;
+                moduleMenu.Parent = f;
                 uicontrol('Parent',modulesSidebar, 'String',m.caption, ...
                     'Callback', @(varargin)obj.setModule(i));
                 obj.modules(i) = m;
