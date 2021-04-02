@@ -447,19 +447,25 @@ classdef Preprocessing < Gui.Modules.GuiModule
             chainElementDwn.Layout.Row = 4;
             chainElementDwn.Layout.Column = 4;
             
+            qsAx = uiaxes(moduleLayout);
+            qsAx.Title.String = 'Quasistatic signal';
+            qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
+            qsAx.XLabel.String = 'Cycle Number';
+            qsAx.YLabel.String = 'Data / a.u.';
+            qsAx.Layout.Row = [1 6];
+            qsAx.Layout.Column = 2;
             
-            obj.hAxQuasistatic = axes(axesLayout); title('quasistatic signal');
-            obj.hAxQuasistatic.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
-            xlabel('cycle number'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            obj.hAxCycle = axes(axesLayout); title('selected cycles');
-            obj.hAxCycle.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
-            xlabel('time / s'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
+            obj.hAxQuasistatic = qsAx;
             
+            cyAx = uiaxes(moduleLayout);
+            cyAx.Title.String = 'Selected cycles';
+            cyAx.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
+            cyAx.XLabel.String = 'Time /s';
+            cyAx.YLabel.String = 'Data / a.u.';
+            cyAx.Layout.Row = [7 12];
+            cyAx.Layout.Column = 2;
             
+            obj.hAxCycle = cyAx;
         end
         
         function globalYLimitsMenuClicked(obj,h,varargin)
