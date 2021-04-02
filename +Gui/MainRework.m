@@ -207,10 +207,6 @@ classdef MainRework < handle
             obj.modulePanel.SelectedChild = 1;
             obj.modules(1).onOpen();
             obj.moduleSidebar.Children(end).FontWeight = deal('bold');
-            
-            % statusbar (Ready)
-            sb = statusbar(f,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
         end
  
         function importGasmixerFile(obj,varargin)

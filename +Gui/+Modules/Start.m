@@ -63,7 +63,10 @@ classdef Start < Gui.Modules.GuiModule
         function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
             % we use a grid layout with 3 rows of decreasing height
-            moduleLayout = uigridlayout(uiParent,[3 1],'RowHeight',{'3x','2x','1x'});
+            moduleLayout = uigridlayout(uiParent,[3 1],...
+                'Padding',[0 0 0 0],...
+                'RowHeight',{'3x','2x','1x'},...
+                'RowSpacing',7);
             moduleMenu = [];
                         
             img = uiimage(moduleLayout);

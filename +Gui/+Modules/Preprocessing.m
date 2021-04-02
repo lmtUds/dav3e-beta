@@ -450,7 +450,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             qsAx = uiaxes(moduleLayout);
             qsAx.Title.String = 'Quasistatic signal';
             qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
-            qsAx.XLabel.String = 'Cycle Number';
+            qsAx.XLabel.String = 'Cycle number';
             qsAx.YLabel.String = 'Data / a.u.';
             qsAx.Layout.Row = [1 6];
             qsAx.Layout.Column = 2;
