@@ -201,6 +201,140 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             layout.Sizes = [-1,-3];
             leftLayout.Sizes = [-1,-1];
         end
+        
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+            %%
+            moduleLayout = uigridlayout(uiParent,[2 2],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x','4x'},...
+                'RowHeight',{'1x','1x'},...
+                'RowSpacing',7);
+            
+            moduleMenu = uimenu('Label','FeatureDefinition');
+            uimenu(moduleMenu,'Label','plot features over time', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
+            uimenu(moduleMenu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
+            uimenu(moduleMenu,'Label','compute features', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
+            uimenu(moduleMenu,'Label','copy all ranges',getMenuCallbackName(),@(varargin)obj.copyRangesCallback);
+            uimenu(moduleMenu,'Label','paste all ranges',getMenuCallbackName(),@(varargin)obj.pasteRangesCallback);
+                        
+            defsGrid = uigridlayout(moduleLayout, [4 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'1x','1x','5x','1x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            defsGrid.Layout.Row = 1;
+            defsGrid.Layout.Column = 1;
+            
+            defsLabel = uilabel(defsGrid,...
+                'Text','Feature definitions',...
+                'FontWeight','bold');
+            defsLabel.Layout.Row = 1;
+            defsLabel.Layout.Column = [1 4];
+            
+            % feature definition set dropdown
+            defsDropdown = uidropdown(defsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@obj.dropdownFeatureDefinitionSetCallback);
+            defsDropdown.Layout.Row = 2;
+            defsDropdown.Layout.Column = [1 2];
+            
+            defsAdd = uibutton(defsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@obj.dropdownNewFeatureDefinitionSet);
+            defsAdd.Layout.Row = 2;
+            defsAdd.Layout.Column = 3;
+            
+            defsRem = uibutton(defsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@obj.dropdownRemoveFeatureDefinitionSet);
+            defsRem.Layout.Row = 2;
+            defsRem.Layout.Column = 4;
+            
+            propGridPanel = uipanel(defsGrid);
+            propGridPanel.Layout.Row = 3;
+            propGridPanel.Layout.Column = [1 4];
+            
+            defsElementAdd = uibutton(defsGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(h,e)obj.addFeatureDefinition);
+            defsElementAdd.Layout.Row = 4;
+            defsElementAdd.Layout.Column = [1 2];
+            
+            defsElementDel = uibutton(defsGrid,...
+                'Text','Delete',...
+                'ButtonPushedFcn',@(h,e)obj.removeFeatureDefinition);
+            defsElementDel.Layout.Row = 4;
+            defsElementDel.Layout.Column = [3 4];
+            
+%             defsElementUp = uibutton(defsGrid,...
+%                 'Text','/\',...
+%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
+%             defsElementUp.Layout.Row = 4;
+%             defsElementUp.Layout.Column = 3;
+            
+%             defsElementDwn = uibutton(defsGrid,...
+%                 'Text','\/',...
+%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
+%             defsElementDwn.Layout.Row = 4;
+%             defsElementDwn.Layout.Column = 4;
+            
+            
+            obj.setDropdown = defsDropdown;
+            
+            % prop grid
+            obj.propGrid = propGridPanel;
+            
+            rangeGrid = uigridlayout(moduleLayout, [4 2],...
+                'ColumnWidth',{'2x','1x'},...
+                'RowHeight',{'1x','1x','5x','1x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            rangeGrid.Layout.Row = 2;
+            rangeGrid.Layout.Column = 1;
+            
+            rangeLabel = uilabel(rangeGrid,...
+                'Text','Feature ranges',...
+                'FontWeight','bold');
+            rangeLabel.Layout.Row = 1;
+            rangeLabel.Layout.Column = [1 2];
+            
+            rangeTable = uitable(rangeGrid);
+            rangeTable.Layout.Row = [2 3];
+            rangeTable.Layout.Column = [1 2];
+            
+            obj.rangeTable = rangeTable;
+            
+            rangeAdd = uibutton(rangeGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(h,e)obj.addRange);
+            rangeAdd.Layout.Row = 4;
+            rangeAdd.Layout.Column = 1;
+            
+            rangeDel = uibutton(rangeGrid,...
+                'Text','Delete',...
+                'ButtonPushedFcn',@(h,e)obj.removeRange);
+            rangeDel.Layout.Row = 4;
+            rangeDel.Layout.Column = 2;
+            
+            previewAx = uiaxes(moduleLayout);
+            previewAx.Title.String = 'Feature Preview';
+            previewAx.XLabel.String = 'Time / s';
+            previewAx.YLabel.String = 'Features / a.u.';
+            previewAx.Layout.Row = 1;
+            previewAx.Layout.Column = 2;
+
+            obj.hAxPreview = previewAx;
+            
+            cycleAx = uiaxes(moduleLayout);
+            cycleAx.Title.String = 'Cycles with grouping colors';
+            cycleAx.ButtonDownFcn = @obj.axesButtonDownCallback;
+            cycleAx.XLabel.String = 'Time / s';
+            cycleAx.YLabel.String = 'Data / a.u.';
+            cycleAx.Layout.Row = 2;
+            cycleAx.Layout.Column = 2;
+            
+            obj.hAxCycle = cycleAx;
+        end
 
         function copyRangesCallback(obj)
             obj.copiedRangeInfo = obj.ranges.getObject().toStruct();
@@ -374,6 +508,14 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             h.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
+        end
+        
+        function dropdownFeatureDefinitionSetCallback(obj,event)
+            if event.Edited
+                dropdownFeatureDefinitionSetRename(obj,h,newName,index)
+            else
+                dropdownFeatureDefinitionSetChange(obj,h,newItem,newIndex)
+            end
         end
         
         function dropdownFeatureDefinitionSetRename(obj,h,newName,index)
