@@ -60,7 +60,7 @@ classdef Start < Gui.Modules.GuiModule
                 'FontSize',12);
         end
         
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent)
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
             % we use a grid layout with 3 rows of decreasing height
             moduleLayout = uigridlayout(uiParent,[3 1],'RowHeight',{'3x','2x','1x'});

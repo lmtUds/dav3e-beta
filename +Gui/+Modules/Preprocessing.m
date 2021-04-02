@@ -202,7 +202,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
         end
         
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent)
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
             % create a grid layout for the preprocessing panel
             moduleLayout = uigridlayout(uiParent,[12 2],...
@@ -212,7 +212,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'RowSpacing',7);
             
             % create the menu bar dropdown
-            moduleMenu = uimenu('Label','Preprocessing');
+            moduleMenu = uimenu(mainFigure,'Label','Preprocessing');
             obj.globalYLimitsMenu = uimenu(moduleMenu,...
                 'Label','global y-limits',...
                 'Checked','off',...
