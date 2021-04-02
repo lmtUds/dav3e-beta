@@ -185,8 +185,7 @@ classdef MainRework < handle
             % load modules
             for i = 1:numel(obj.moduleNames)
                 m = feval(obj.moduleNames{i},obj);
-                [moduleLayout,moduleMenu] = m.makeLayoutRework(module);
-                moduleMenu.Parent = f;  %will be removed later
+                [moduleLayout,moduleMenu] = m.makeLayoutRework(module,f);
                 moduleButton = uibutton(modulesSidebar,...
                     'Text',m.caption,...
                     'ButtonPushedFcn',@(varargin)obj.setModule(i));
