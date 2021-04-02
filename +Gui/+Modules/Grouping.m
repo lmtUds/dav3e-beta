@@ -113,6 +113,65 @@ classdef Grouping < Gui.Modules.GuiModule
             tablePropLayout.Sizes = [-4,-1];
             configLayout.Sizes = [25,25,25,-1];
         end
+        
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+            moduleLayout = uigridlayout(uiParent,[3 2],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'4x','1x'},...
+                'RowHeight',{'1x','1x','2x'},...
+                'RowSpacing',4);
+            
+            moduleMenu = uimenu(mainFigure,'Label','Grouping');
+            uimenu(moduleMenu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
+            uimenu(moduleMenu,'Label','make color gradient', getMenuCallbackName(),@(varargin)obj.colorGradientDialog.show());
+            uimenu(moduleMenu,'Label','import groupings', getMenuCallbackName(),@(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label','export groupings', getMenuCallbackName(),@(varargin)obj.onClickExport);
+                        
+            groupAx = uiaxes(moduleLayout);
+            groupAx.XLabel.String = 'Cycle number';
+            groupAx.YLabel.String = 'Prepro. data / a.u.';
+            
+            groupAx.Layout.Row = 1;
+            groupAx.Layout.Column = [1 2];
+           
+            obj.hAx = groupAx;
+            
+            groupingTable = uitable(moduleLayout);
+            groupingTable.Layout.Row = [2 3];
+            groupingTable.Layout.Column = 1;
+
+            obj.groupingTable = groupingTable;
+            
+            buttonGrid = uigridlayout(moduleLayout,[3 1],...
+                'Padding' ,[0 0 0 0],...
+                'RowSpacing',4,...
+                'RowHeight',{'1x','1x','1x'});
+            buttonGrid.Layout.Row = 2;
+            buttonGrid.Layout.Column = 2;
+            
+            addButton = uibutton(buttonGrid,...
+                'Text','Add new grouping',...
+                'ButtonPushedFcn',@obj.addGroupingButtonCallback);
+            addButton.Layout.Row = 1;
+            
+            createButton = uibutton(buttonGrid,...
+                'Text','Create new grouping',...
+                'ButtonPushedFcn',@(varargin)obj.createGroupingDialog.show());
+            createButton.Layout.Row = 2;
+            
+            deleteButton = uibutton(buttonGrid,...
+                'Text','Delete grouping',...
+                'ButtonPushedFcn',@obj.deleteGroupingButtonCallback);
+            deleteButton.Layout.Row = 3;
+            
+            obj.deleteButton = deleteButton;
+            
+            groupsTable = uitable(moduleLayout);
+            groupsTable.Layout.Row = 3;
+            groupsTable.Layout.Column = 2;
+            
+            obj.groupsTable = groupsTable;
+        end
 
         function onClickImport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
