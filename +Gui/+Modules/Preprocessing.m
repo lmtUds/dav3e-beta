@@ -206,8 +206,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
             %%
             % create a grid layout for the preprocessing panel
             moduleLayout = uigridlayout(uiParent,[12 2],...
-                'ColumnWidth',{'1x','2x'},...
-                'RowHeight',{'fit'});
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x','3x'},...
+                'RowHeight',{'fit'},...
+                'RowSpacing',7);
             
             % create the menu bar dropdown
             moduleMenu = uimenu('Label','Preprocessing');
@@ -225,7 +227,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             compareGrid.Layout.Row = 1;
             compareGrid.Layout.Column = 1;
             
-            compareLabel = uilabel(compareGrid,'Text','Compare with');
+            compareLabel = uilabel(compareGrid,...
+                'Text','Compare with',...
+                'FontWeight','bold');
             compareLabel.Layout.Row = 1;
             compareLabel.Layout.Column = [1 2];
             
@@ -251,7 +255,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             clusterGrid.Layout.Row = [2 3];
             clusterGrid.Layout.Column = 1;
             
-            clusterLabel = uilabel(clusterGrid,'Text','Cluster');
+            clusterLabel = uilabel(clusterGrid,...
+                'Text','Cluster',...
+                'FontWeight','bold');
             clusterLabel.Layout.Row = 1;
             clusterLabel.Layout.Column = [1 2];
             
@@ -290,58 +296,157 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.hCompareWith.hVirtualOffsetEdit = virtOffsetEdit;
             
             % create and fill the grid layout of the 'cycle points' section
-            cTablePanel = uipanel(moduleLayout,'Title','Cycle points');
-            cTablePanel.Layout.Row = [4 6];
-            cTablePanel.Layout.Column = 1;
+            cyclePointsGrid = uigridlayout(moduleLayout, [4 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            cyclePointsGrid.Layout.Row = [4 6];
+            cyclePointsGrid.Layout.Column = 1;
+            
+            cyclePointsLabel = uilabel(cyclePointsGrid,...
+                'Text','Cycle points',...
+                'FontWeight','bold');
+            cyclePointsLabel.Layout.Row = 1;
+            cyclePointsLabel.Layout.Column = [1 4];
+            
+            % cycle point set dropdown and buttons
+            cyclePointsDropdown = uidropdown(cyclePointsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@obj.dropdowCyclePointSetCallback);
+            cyclePointsDropdown.Layout.Row = 2;
+            cyclePointsDropdown.Layout.Column = [1 2];
+            
+            cPointSetAdd = uibutton(cyclePointsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@obj.dropdownNewCyclePointSet);
+            cPointSetAdd.Layout.Row = 2;
+            cPointSetAdd.Layout.Column = 3;
                        
-            % cycle point set dropdown
-            obj.cyclePointSetDropdown = Gui.EditableDropdown(cTablePanelLayout);
-            obj.cyclePointSetDropdown.AppendClickCallback = @obj.dropdownNewCyclePointSet;
-            obj.cyclePointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveCyclePointSet;
-            obj.cyclePointSetDropdown.EditCallback = @obj.dropdownCyclePointSetRename;
-            obj.cyclePointSetDropdown.SelectionChangedCallback = @obj.dropdownCyclePointSetChange;
-            obj.cyclePointTable = JavaTable(cTablePanelLayout);
+            cPointSetRem = uibutton(cyclePointsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@obj.dropdownRemoveCyclePointSet);
+            cPointSetRem.Layout.Row = 2;
+            cPointSetRem.Layout.Column = 4;
+            
+            cyclePointsTable = uitable(cyclePointsGrid);
+            cyclePointsTable.Layout.Row = [3 4];
+            cyclePointsTable.Layout.Column = [1 4];
+                       
+            obj.cyclePointSetDropdown = cyclePointsDropdown;
+            obj.cyclePointTable = cyclePointsTable;
             
             
             % create and fill the grid layout of the 'quasistatic points' section
-            qsTablePanel = uipanel(moduleLayout,'Title','Quasistatic points');
-            qsTablePanel.Layout.Row = [7 9];
-            qsTablePanel.Layout.Column = 1;
+            qsPointsGrid = uigridlayout(moduleLayout, [4 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            qsPointsGrid.Layout.Row = [7 9];
+            qsPointsGrid.Layout.Column = 1;
             
-            qsTablePanelLayout = uiextras.VBox('Parent',qsTablePanel);
+            qsPointsLabel = uilabel(qsPointsGrid,...
+                'Text','Quasistatic points',...
+                'FontWeight','bold');
+            qsPointsLabel.Layout.Row = 1;
+            qsPointsLabel.Layout.Column = [1 4];
+            
+            % cycle point set dropdown and buttons
+            qsPointsDropdown = uidropdown(qsPointsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@obj.dropdowIndexPointSetCallback);
+            qsPointsDropdown.Layout.Row = 2;
+            qsPointsDropdown.Layout.Column = [1 2];
+            
+            qsPointSetAdd = uibutton(qsPointsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@obj.dropdownNewIndexPointSet);
+            qsPointSetAdd.Layout.Row = 2;
+            qsPointSetAdd.Layout.Column = 3;
+                       
+            qsPointSetRem = uibutton(qsPointsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@obj.dropdownRemoveIndexPointSet);
+            qsPointSetRem.Layout.Row = 2;
+            qsPointSetRem.Layout.Column = 4;
+            
+            qsPointsTable = uitable(qsPointsGrid);
+            qsPointsTable.Layout.Row = [3 4];
+            qsPointsTable.Layout.Column = [1 4];
+                        
+            % index point set dropdown
+            obj.indexPointSetDropdown = qsPointsDropdown;
+            obj.indexPointTable = qsPointsTable;
             
             
             % create and fill the grid layout of the 'preprocessing chain' section
-            chainPanel = uipanel(moduleLayout, 'Title','Preprocessing chain');
-            chainPanel.Layout.Row = [10 12];
-            chainPanel.Layout.Column = 1;
-
-            propGridLayout = uiextras.VBox('Parent',chainPanel);
+            chainGrid = uigridlayout(moduleLayout, [4 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            chainGrid.Layout.Row = [10 12];
+            chainGrid.Layout.Column = 1;
             
+            chainLabel = uilabel(chainGrid,...
+                'Text','Preprocessing Chain',...
+                'FontWeight','bold');
+            chainLabel.Layout.Row = 1;
+            chainLabel.Layout.Column = [1 4];
+            
+            chainDropdown = uidropdown(chainGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@obj.dropdownPreprocessingChainCallback);
+            chainDropdown.Layout.Row = 2;
+            chainDropdown.Layout.Column = [1 2];
+            
+            chainAdd = uibutton(chainGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@obj.dropdownNewPreprocessingChain);
+            chainAdd.Layout.Row = 2;
+            chainAdd.Layout.Column = 3;
+            
+            chainRem = uibutton(chainGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@obj.dropdownRemovePreprocessingChain);
+            chainRem.Layout.Row = 2;
+            chainRem.Layout.Column = 4;
+            
+            propGridPanel = uipanel(chainGrid);
+            propGridPanel.Layout.Row = 3;
+            propGridPanel.Layout.Column = [1 4];
             % preprocessing chain set dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewPreprocessingChain;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemovePreprocessingChain;
-            obj.setDropdown.EditCallback = @obj.dropdownPreprocessingChainRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownPreprocessingChainChange;
+            obj.setDropdown = chainDropdown;
             
             % preprocessing chain propgrid
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addPreprocessing);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removePreprocessing);
-            uicontrol(propGridControlsLayout,'String','/\', 'Callback',@(h,e)obj.movePreprocessingUp);
-            uicontrol(propGridControlsLayout,'String','\/', 'Callback',@(h,e)obj.movePreprocessingDown);
-            propGridLayout.Sizes = [30,-1,20];
+%             obj.propGrid = PropGrid(propGridPanel);
+%             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
+%             obj.propGrid.setShowToolbar(false);
+            chainElementAdd = uibutton(chainGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(h,e)obj.addPreprocessing);
+            chainElementAdd.Layout.Row = 4;
+            chainElementAdd.Layout.Column = 1;
             
-%             propGrid.grid.setDragEnabled(true);
-%             propGrid.grid.setDropMode(javax.swing.DropMode.INSERT_ROWS);
-%             propGrid.grid.setTransferHandler(javax.swing.TransferHandler())
-
-%             propGrid.addProperty(PropGridField('test1','test1'));
-%             propGrid.addProperty(PropGridField('test2','test2'));
+            chainElementDel = uibutton(chainGrid,...
+                'Text','Delete',...
+                'ButtonPushedFcn',@(h,e)obj.removePreprocessing);
+            chainElementDel.Layout.Row = 4;
+            chainElementDel.Layout.Column = 2;
+            
+            chainElementUp = uibutton(chainGrid,...
+                'Text','/\',...
+                'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
+            chainElementUp.Layout.Row = 4;
+            chainElementUp.Layout.Column = 3;
+            
+            chainElementDwn = uibutton(chainGrid,...
+                'Text','\/',...
+                'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
+            chainElementDwn.Layout.Row = 4;
+            chainElementDwn.Layout.Column = 4;
+            
             
             obj.hAxQuasistatic = axes(axesLayout); title('quasistatic signal');
             obj.hAxQuasistatic.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
@@ -354,21 +459,6 @@ classdef Preprocessing < Gui.Modules.GuiModule
             box on
             set(gca,'LooseInset',get(gca,'TightInset'))
             
-            
-            
-            % index point set dropdown
-            obj.indexPointSetDropdown = Gui.EditableDropdown(qsTablePanelLayout);
-            obj.indexPointSetDropdown.AppendClickCallback = @obj.dropdownNewIndexPointSet;
-            obj.indexPointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveIndexPointSet;
-            obj.indexPointSetDropdown.EditCallback = @obj.dropdownIndexPointSetRename;
-            obj.indexPointSetDropdown.SelectionChangedCallback = @obj.dropdownIndexPointSetChange;
-            obj.indexPointTable = JavaTable(qsTablePanelLayout);
-            qsTablePanelLayout.Sizes = [30,-1];
-            
-            leftLayout.Sizes = [50,-1,-2,-2,-4];
-            leftLayout.MinimumSizes = [50,100,100,100,150];
-            layout.Sizes = [-1,-4];
-%             leftLayout.Sizes = [-1,-1,120,-2];
             
         end
         
@@ -642,6 +732,14 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.updatePlotsInPlace();
         end
         
+        function dropdownPreprocessingChainCallback(obj, event)
+            if event.Edited
+                dropdownPreprocessingChainRename(obj,h,newName,index)
+            else
+                dropdownPreprocessingChainChange(obj,h,newItem,newIndex)
+            end
+        end
+        
         function dropdownPreprocessingChainRename(obj,h,newName,index)
             newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolPreprocessingChains.getCaption()));
             obj.getProject().poolPreprocessingChains(index).setCaption(newName);
@@ -725,7 +823,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.handleCyclePointSetChange();
             obj.main.populateSensorSetTable();
         end
-        
+        function dropdownCyclePointSetCallback(obj,event)
+           if event.Edited
+               dropdownCyclePointSetRename(obj,h,newName,index)
+           else 
+               dropdownCyclePointSetChange(obj,h,newItem,newIndex)
+           end
+        end
         function dropdownCyclePointSetRename(obj,h,newName,index)
             newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolCyclePointSets.getCaption()));
             obj.getProject().poolCyclePointSets(index).setCaption(newName);
@@ -808,6 +912,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.main.populateSensorSetTable();
         end
         
+        function dropdownIndexPointSetCallback(obj,event)
+           if event.Edited
+               dropdownIndexPointSetRename(obj,h,newName,index)
+           else
+               dropdownIndexPointSetChange(obj,h,newItem,newIndex)
+           end
+        end
         function dropdownIndexPointSetRename(obj,h,newName,index)
             newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolIndexPointSets.getCaption()));
             obj.getProject().poolIndexPointSets(index).setCaption(newName);
