@@ -115,6 +115,115 @@ classdef Model < Gui.Modules.GuiModule
             layout.Sizes = [-1,-3];
             leftLayout.Sizes = [-1];
         end
+        
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+            %%
+            moduleLayout = uigridlayout(uiParent,[1 3],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'2x','5x','1x'},...
+                'RowHeight',{'1x'},...
+                'RowSpacing',7);
+            
+            moduleMenu = uimenu(mainFigure,'Label','Model');
+                      
+            defsGrid = uigridlayout(moduleLayout, [5 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'1x','1x','12x','1x','2x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            defsGrid.Layout.Row = 1;
+            defsGrid.Layout.Column = 1;
+            
+            defsLabel = uilabel(defsGrid,...
+                'Text','Model',...
+                'FontWeight','bold');
+            defsLabel.Layout.Row = 1;
+            defsLabel.Layout.Column = [1 4];
+            
+            defsDropdown = uidropdown(defsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@obj.dropdownModelCallback);
+            defsDropdown.Layout.Row = 2;
+            defsDropdown.Layout.Column = [1 2];
+            
+            defsAdd = uibutton(defsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@obj.dropdownNewModel);
+            defsAdd.Layout.Row = 2;
+            defsAdd.Layout.Column = 3;
+            
+            defsRem = uibutton(defsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@obj.dropdownRemoveModel);
+            defsRem.Layout.Row = 2;
+            defsRem.Layout.Column = 4;
+            
+            propGridPanel = uipanel(defsGrid);
+            propGridPanel.Layout.Row = 3;
+            propGridPanel.Layout.Column = [1 4];
+                        
+            % model dropdown
+            obj.setDropdown = defsDropdown;           
+            
+%             obj.propGrid = PropGrid(propGridLayout);
+%             obj.propGrid.setShowToolbar(false);
+%             propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
+            
+            defsElementAdd = uibutton(defsGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(h,e)obj.addModelChainBlock);
+            defsElementAdd.Layout.Row = 4;
+            defsElementAdd.Layout.Column = 1;
+            
+            defsElementDel = uibutton(defsGrid,...
+                'Text','Delete',...
+                'ButtonPushedFcn',@(h,e)obj.removeModelChainBlock);
+            defsElementDel.Layout.Row = 4;
+            defsElementDel.Layout.Column = 2;
+            
+            defsElementUp = uibutton(defsGrid,...
+                'Text','/\',...
+                'ButtonPushedFcn',@(h,e)obj.moveModelChainBlockUp);
+            defsElementUp.Layout.Row = 4;
+            defsElementUp.Layout.Column = 3;
+            
+            defsElementDwn = uibutton(defsGrid,...
+                'Text','\/',...
+                'ButtonPushedFcn',@(h,e)obj.moveModelChainBlockDown);
+            defsElementDwn.Layout.Row = 4;
+            defsElementDwn.Layout.Column = 4;
+            
+            defsTrain = uibutton(defsGrid,...
+                'Text','Train',...
+                'ButtonpushedFcn',@(h,e)obj.trainModel);
+            defsTrain.Layout.Row = 5;
+            defsTrain.Layout.Column = [1 4];
+
+            % This works fine for R2018a (and possibly lower), but causes a
+            % fatal Java crash with R2016b (and possibly higher)
+            % reason seems to be assigning the panel returned by this 
+            % function (with uitabgroup inside) to a new parent after this
+            % function has finished
+            % if we do it later, all is fine
+            % alternatively, MATLAB's native uipanel could be used
+            % David Sampson (creater of GUI Layout Toolbox) could so far
+            % not reproduce the issue
+%             obj.tabGroup = uitabgroup(obj.detailsLayout);
+            
+            tabGroup = uipanel(moduleLayout,...
+                'BorderType','none');
+            tabGroup.Layout.Row = 1;
+            tabGroup.Layout.Column = 2;
+            
+            obj.tabLayout = tabGroup;
+            
+            parameterPanel = uipanel(moduleLayout,...
+                'BorderType','none',...
+                'Visible','off');
+            parameterPanel.Layout.Row = 1;
+            parameterPanel.Layout.Column = 3;
+            obj.parametersDropdownPanel = parameterPanel;
+        end
 
         function addModelChainBlock(obj,desc)
             if nargin < 2
@@ -239,6 +348,14 @@ classdef Model < Gui.Modules.GuiModule
                 
             h.removeItemAt(idx);
             h.setSelectedItem(obj.currentModel.getCaption());
+        end
+        
+        function dropdownModelCallback(obj,event)
+           if event.Edited
+               dropdownModelRename(obj,h,newName,index)
+           else
+               dropdownModelChange(obj,h,newItem,newIndex)
+           end
         end
         
         function dropdownModelRename(obj,h,newName,index)
