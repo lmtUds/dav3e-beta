@@ -64,6 +64,35 @@ classdef CycleRanges < Gui.Modules.GuiModule
             layout.Sizes = [-3,-1];
         end
         
+        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent)
+            %%
+            moduleLayout = uigridlayout(uiParent,[2 1],...
+                'Padding',[0 0 0 0],...
+                'RowHeight',{'3x','2x'},...
+                'RowSpacing',4);
+            
+            moduleMenu = uimenu('Label','CycleRanges');
+            uimenu(moduleMenu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
+            uimenu(moduleMenu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
+            uimenu(moduleMenu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
+
+            rangeAx = uiaxes(moduleLayout);
+            rangeAx.Title.String = 'Quasistatic signal';
+            rangeAx.ButtonDownFcn = @obj.axesButtonDownCallback;
+            rangeAx.XLabel.String = 'Cycle number';
+            rangeAx.YLabel.String = 'Data / a.u.';
+            
+            rangeAx.Layout.Row = 1;
+           
+            obj.hAx = rangeAx;
+            
+            rangeTable = uitable(moduleLayout);
+            rangeTable.Layout.Row = 2;
+            
+            obj.rangeTable = rangeTable;            
+        end
+        
         function onClickChangeRangeLength(obj,onlyCluster)
             answer = inputdlg({'start','end'},'Change range size',[1 10],{'0','0'});
             startVal = str2double(answer{1});
