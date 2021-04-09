@@ -145,7 +145,9 @@ classdef MainRework < handle
             bottomTable.Layout.Row = 2;
             bottomTable.Layout.Column = [1 2];
 %             modulesSidebar = uiextras.VButtonBox('Parent',content);
-            modulesSidebar = uigridlayout(mainLayout,[numel(obj.moduleNames) 1]);
+            modulesSidebar = uigridlayout(mainLayout,...
+                [numel(obj.moduleNames) 1],...
+                'Padding',[0 0 0 0]);
             modulesSidebar.Layout.Row = 1;
             modulesSidebar.Layout.Column = 1;
 %             module = uiextras.CardPanel('Parent',content);
@@ -193,6 +195,10 @@ classdef MainRework < handle
                 obj.modules(i) = m;
             end
             
+            % reverse child order as they are pushed to the front in the
+            % panel children array, but to the back of obj.modules
+            obj.modulePanel.Children = obj.modulePanel.Children(end:-1:1);
+            
             mh = uimenu(f,'Label','DevTools');
             uimenu(mh,'Label','create example data','Callback',@(varargin)obj.createTestData);
             
@@ -204,9 +210,9 @@ classdef MainRework < handle
             % set first module active
             % this is not done with the setModule method in order to avoid
             % calling onClose on the last module here
-            obj.modulePanel.SelectedChild = 1;
+            obj.modulePanel.Children(1).Visible = 1;
             obj.modules(1).onOpen();
-            obj.moduleSidebar.Children(end).FontWeight = deal('bold');
+            obj.moduleSidebar.Children(1).FontWeight = 'bold';
         end
  
         function importGasmixerFile(obj,varargin)

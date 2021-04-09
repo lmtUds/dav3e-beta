@@ -64,7 +64,7 @@ classdef Start < Gui.Modules.GuiModule
             %%
             % we use a grid layout with 3 rows of decreasing height
             moduleLayout = uigridlayout(uiParent,[3 1],...
-                'Padding',[0 0 0 0],...
+                'Visible','off',...
                 'RowHeight',{'3x','2x','1x'},...
                 'RowSpacing',7);
             moduleMenu = [];
@@ -133,16 +133,17 @@ classdef Start < Gui.Modules.GuiModule
                 end
 
                 % statusbar (Working)
-                sb = statusbar(obj.main.hFigure,'Loading files...');
-                set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+%                 sb = statusbar(obj.main.hFigure,'Loading files...');
+%                 set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
 
                 obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
                 obj.getProject().clusters.getCaption()
                 obj.main.populateSensorSetTable();
 
                 % statusbar (Ready)
-                sb = statusbar(obj.main.hFigure,'Ready.');
-                set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+%                 sb = statusbar(obj.main.hFigure,'Ready.');
+%                 set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+
             % !!BETA!!: Automated multi file import is not implemented yet
             % and therefore the selection dialog is currently also disabled.
             elseif strcmp(chosenOne,'complex')
