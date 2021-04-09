@@ -421,24 +421,43 @@ classdef MainRework < handle
             if ~obj.modules(i).canOpen()
                 return
             end
-            statusbar(obj.hFigure,'Changing module...');
+%             statusbar(obj.hFigure,'Changing module...');
             try
-                obj.modules(obj.modulePanel.SelectedChild).onClose()
+%                 ind = 1;
+%                 children = obj.modulePanel.Children;
+%                 % select the first visible child
+%                 for j = 1:size(children,1)
+%                     if children(j).Visible == 1
+%                         ind = j;
+%                         break
+%                     end
+%                 end
+                obj.modules(panelChildFind(obj.modulePanel)).onClose()
             catch ME
                 disp(ME);
                 error(['An error occured. This one is usually resolved '...
                        'by executing "clear classes" or restarting MATLAB.']);
             end
-            obj.modulePanel.SelectedChild = i;
+%             obj.modulePanel.SelectedChild = i;
+            panelChildSelect(obj.modulePanel,i);
             obj.modules(i).onOpen();
             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
             c = obj.moduleSidebar.Children(end:-1:1);
             c(i).FontWeight = 'bold';
-            statusbar(obj.hFigure,'Ready.');
+%             statusbar(obj.hFigure,'Ready.');
         end
         
         function m = getActiveModule(obj)
-            m = obj.modules(obj.modulePanel.SelectedChild);
+%             ind = 1;
+%             children = obj.modulePanel.Children;
+%             % select the first visible child
+%             for i = 1:size(children,1)
+%                 if children(i).Visible == 1
+%                     ind = i;
+%                     break
+%                 end
+%             end
+            m = obj.modules(panelChildFind(obj.modulePanel));
         end
         
         function populateSensorSetTable(obj)
@@ -466,148 +485,125 @@ classdef MainRework < handle
             obj.sensorSetTable.ColumnEditable = ...
                 [true true true true true true true];
             
+            % make certain columns selectable via a dropdown
             cycleSets = cellstr(obj.project.poolCyclePointSets.getCaption());
             indexSets = cellstr(obj.project.poolIndexPointSets.getCaption());
             prepChains = cellstr(obj.project.poolPreprocessingChains.getCaption());
             featSets = cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
-%             pointSets = horzcat(pointSets{:});
             obj.sensorSetTable.ColumnFormat = {...
                 'logical' 'char' 'char'...
                 cycleSets indexSets prepChains featSets};
             
-            obj.sensorSetTable.clear();
-            obj.sensorSetTable.setData(data,{'use','cluster','sensor','cycle points','index points','preprocessing','feature set'});
-            obj.sensorSetTable.setColumnsEditable([true true true true true true true]);
-            obj.sensorSetTable.setColumnClasses({'bool','str','str',...
-                cellstr(obj.project.poolCyclePointSets.getCaption()),...
-                cellstr(obj.project.poolIndexPointSets.getCaption()),...
-                cellstr(obj.project.poolPreprocessingChains.getCaption()),...
-                cellstr(obj.project.poolFeatureDefinitionSets.getCaption())});
-            obj.sensorSetTable.setRowObjects(s);
+%             obj.sensorSetTable.clear();
+%             obj.sensorSetTable.setData(data,{'use','cluster','sensor','cycle points','index points','preprocessing','feature set'});
+%             obj.sensorSetTable.setColumnsEditable([true true true true true true true]);
+%             obj.sensorSetTable.setColumnClasses({'bool','str','str',...
+%                 cellstr(obj.project.poolCyclePointSets.getCaption()),...
+%                 cellstr(obj.project.poolIndexPointSets.getCaption()),...
+%                 cellstr(obj.project.poolPreprocessingChains.getCaption()),...
+%                 cellstr(obj.project.poolFeatureDefinitionSets.getCaption())});
+%             obj.sensorSetTable.setRowObjects(s);
             
-            obj.sensorSetTable.jTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-            obj.sensorSetTable.jTable.setColumnSelectionAllowed(false);
-            pos = find(ismember(s,obj.project.getCurrentSensor())) - 1;
-            if ~isempty(pos) && pos > 0
-                try
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                catch, end
-            end
-            
-            obj.sensorSetTable.onDataChangedCallback = @dataCallback;
-            obj.sensorSetTable.onMouseClickedCallback = @mouseCallback;
-            obj.sensorSetTable.onRowSelectionChangedCallback = @rowSelectionCallback;
-            obj.sensorSetTable.onIndexChangedCallback = @indexChangedCallback;
+%             obj.sensorSetTable.jTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+%             obj.sensorSetTable.jTable.setColumnSelectionAllowed(false);
+%             pos = find(ismember(s,obj.project.getCurrentSensor())) - 1;
+%             if ~isempty(pos) && pos > 0
+%                 try
+%                     obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
+%                 catch, end
+%             end
+            obj.sensorSetTable.CellEditCallback =...
+                @(src,event) editCallback(src,event,s,obj);
+            obj.sensorSetTable.CellSelectionCallback =...
+                @(src,event) selectCallback(src,event,s,obj);
+%             obj.sensorSetTable.onDataChangedCallback = @dataCallback;
+%             obj.sensorSetTable.onMouseClickedCallback = @mouseCallback;
+%             obj.sensorSetTable.onRowSelectionChangedCallback = @rowSelectionCallback;
+%             obj.sensorSetTable.onIndexChangedCallback = @indexChangedCallback;
             
 %             com.jidesoft.grid.TableUtils.autoResizeAllColumns(obj.sensorSetTable.jTable,true);
 %             width = obj.sensorSetTable.jTable.getColumn('use').getWidth();
+%             
+%             obj.sensorSetTable.jTable.setAutoResizeMode(obj.sensorSetTable.jTable.AUTO_RESIZE_ALL_COLUMNS);
+%             c = obj.sensorSetTable.jTable.getColumn('use'); c.setMinWidth(50); c.setMaxWidth(100);        
+%             c = obj.sensorSetTable.jTable.getColumn('cluster'); c.setMinWidth(100); %c.setMaxWidth(200);
+%             c = obj.sensorSetTable.jTable.getColumn('sensor'); c.setMinWidth(100); %c.setMaxWidth(200);
+%             c = obj.sensorSetTable.jTable.getColumn('cycle points'); c.setMinWidth(100); %c.setMaxWidth(200);
+%             c = obj.sensorSetTable.jTable.getColumn('index points'); c.setMinWidth(100); %c.setMaxWidth(200);
+%             c = obj.sensorSetTable.jTable.getColumn('preprocessing'); c.setMinWidth(100); %c.setMaxWidth(200);
+%             c = obj.sensorSetTable.jTable.getColumn('feature set'); c.setMinWidth(100); %c.setMaxWidth(200);
             
-            obj.sensorSetTable.jTable.setAutoResizeMode(obj.sensorSetTable.jTable.AUTO_RESIZE_ALL_COLUMNS);
-            c = obj.sensorSetTable.jTable.getColumn('use'); c.setMinWidth(50); c.setMaxWidth(100);        
-            c = obj.sensorSetTable.jTable.getColumn('cluster'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('sensor'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('cycle points'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('index points'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('preprocessing'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('feature set'); c.setMinWidth(100); %c.setMaxWidth(200);
-            
-            function dataCallback(rc,v)
-                redoCluster = false;
-                for j = 1:size(rc,1)
-                    r = rc(j,1);
-                    sensor = obj.sensorSetTable.getRowObjectsAt(r);
-                    switch rc(j,2)
-                        case 1
-                            sensor.setActive(v{j});
-                        case 2
-                            sensor.getCluster().setCaption(v{j});
-                            redoCluster = true;
-                        case 3
-                            sensor.setCaption(v{j});
-                        case 4
-                            idx = obj.project.poolCyclePointSets.getCaption() == string(v{j});
-                            sensor.cyclePointSet = obj.project.poolCyclePointSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentCyclePointSet = obj.project.poolCyclePointSets(idx);
-                                obj.getActiveModule().onCurrentCyclePointSetChanged(obj.project.poolCyclePointSets(idx));
-                            end
-                        case 5
-                            idx = obj.project.poolIndexPointSets.getCaption() == string(v{j});
-                            sensor.indexPointSet = obj.project.poolIndexPointSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentIndexPointSet = obj.project.poolIndexPointSets(idx);
-                                obj.getActiveModule().onCurrentIndexPointSetChanged(obj.project.poolIndexPointSets(idx));
-                            end
-                        case 6
-                            idx = obj.project.poolPreprocessingChains.getCaption() == string(v{j});
-                            sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentPreprocessingChain = obj.project.poolPreprocessingChains(idx);
-                                obj.getActiveModule().onCurrentPreprocessingChainChanged(obj.project.poolPreprocessingChains(idx));
-                            end
-                        case 7
-                            idx = obj.project.poolFeatureDefinitionSets.getCaption() == string(v{j});
-                            sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentFeatureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
-                                obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(obj.project.poolFeatureDefinitionSets(idx));  
-                            end
-                    end
+            function editCallback(src, event, sensors, obj)
+                row = event.Indices(1);
+                col = event.Indices(2);
+                sensor = sensors(row);
+                switch col
+                    case 1
+                        sensor.setActive(event.EditData);
+                    case 2
+                        sensor.getCluster().setCaption(event.EditData);
+                    case 3
+                        sensor.setCaption(event.EditData);
+                    case 4
+                        idx = obj.project.poolCyclePointSets.getCaption()...
+                            == string(event.EditData);
+                        sensor.cyclePointSet = obj.project.poolCyclePointSets(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentCyclePointSet = ...
+                                obj.project.poolCyclePointSets(idx);
+                            obj.getActiveModule().onCurrentCyclePointSetChanged(...
+                                obj.project.poolCyclePointSets(idx));
+                        end
+                    case 5
+                        idx = obj.project.poolIndexPointSets.getCaption()...
+                            == string(event.EditData);
+                        sensor.indexPointSet = obj.project.poolIndexPointSets(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentIndexPointSet = ...
+                                obj.project.poolIndexPointSets(idx);
+                            obj.getActiveModule().onCurrentIndexPointSetChanged(...
+                                obj.project.poolIndexPointSets(idx));
+                        end
+                    case 6
+                        idx = obj.project.poolPreprocessingChains.getCaption()...
+                            == string(event.EditData);
+                        sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentPreprocessingChain = ...
+                                obj.project.poolPreprocessingChains(idx);
+                            obj.getActiveModule().onCurrentPreprocessingChainChanged(...
+                                obj.project.poolPreprocessingChains(idx));
+                        end
+                    case 7
+                        idx = obj.project.poolFeatureDefinitionSets.getCaption()...
+                            == string(event.EditData);
+                        sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentFeatureDefinitionSet = ...
+                                obj.project.poolFeatureDefinitionSets(idx);
+                            obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(...
+                                obj.project.poolFeatureDefinitionSets(idx));  
+                        end
                 end
-                if redoCluster
-                    for k = 1:numel(s)
-                        obj.sensorSetTable.setValue(s(k).getCluster().getCaption(),k,2);
-                    end
-                end
-                
-%                 pos = find(ismember(s,obj.project.getCurrentSensor())) - 1;
-%                 obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
             end
             
-            function mouseCallback(visRC,actualRC)
-%                 row = actualRC(1);
-                if visRC(2) > 0
-                    return
-                end
-                
-                newSensor = obj.sensorSetTable.getRowObjectsAt(visRC(1));
+            function selectCallback(src, event, sensors, obj)
+                row = event.Indices(1);
+                newSensor = sensors(row);
                 prevSensor = obj.project.getCurrentSensor();
                 prevCluster = prevSensor.getCluster();
+                
                 newSensor.setCurrent()
                 newSensor.getCluster().setCurrent();
                 
                 if prevCluster ~= newSensor.getCluster()
-                    obj.getActiveModule().onCurrentClusterChanged(newSensor.getCluster(),prevSensor.getCluster());
+                    obj.getActiveModule().onCurrentClusterChanged(...
+                        newSensor.getCluster(),prevSensor.getCluster());
                 end
                 if prevSensor ~= newSensor
                     obj.getActiveModule().onCurrentSensorChanged(newSensor,prevSensor);
                 end
-            end
-            
-            function rowSelectionCallback(visRows,actRows)
-                pos = find(ismember(s,obj.project.getCurrentSensor()));
-                %pos = obj.sensorSetTable.getActualRowsAt(pos);
-                pos = obj.sensorSetTable.getRowsAt(pos);
-                if ~isempty(pos)
-                    pos = pos - 1;  % next is a Java method (0-based)
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                else
-                    obj.sensorSetTable.jTable.clearSelection();
-                end
-            end
-            
-            function indexChangedCallback()
-                pos = find(ismember(s,obj.project.getCurrentSensor()));
-                %pos = obj.sensorSetTable.getActualRowsAt(pos);
-                pos = obj.sensorSetTable.getRowsAt(pos);
-                if ~isempty(pos)
-                    pos = pos - 1;  % next is a Java method (0-based)
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                else
-                    obj.sensorSetTable.jTable.clearSelection();
-                end
-            end
-
+            end            
         end
         
         function newProject(obj)
