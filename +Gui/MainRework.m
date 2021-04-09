@@ -165,6 +165,14 @@ classdef MainRework < handle
 %             t.setColumnReorderingAllowed(false);
 %             
 %             % context menu
+%               bTableContextMenu = uicontextmenu(f);
+%               selectAll = uimenu(bTableContextMenu,...
+%                   'Text','Select all',...
+%                   'MenuSelectedFcn',@obj.selectVisibleSensors);
+%               deselectAll = uimenu(bTableContextMenu,...
+%                   'Text','Deselect all',...
+%                   'MenuSelectedFcn',@obj.deselectVisibleSensors);
+%               bottomTable.ContextMenu = bTableContextMenu;
 %             popupMenu = javax.swing.JPopupMenu();
 %             selectItem = javax.swing.JMenuItem('select all');
 %             deselectItem = javax.swing.JMenuItem('deselect all');
@@ -174,7 +182,7 @@ classdef MainRework < handle
 %             set(handle(selectItem,'CallbackProperties'),'MousePressedCallback',@obj.selectVisibleSensors)
 %             set(handle(deselectItem,'CallbackProperties'),'MousePressedCallback',@obj.deselectVisibleSensors)
 %             
-%             obj.sensorSetTable = t;
+            obj.sensorSetTable = bottomTable;
             
 %             mainLayout.Sizes = [-1,200];
 %             content.Sizes = [200,-5];
@@ -434,17 +442,39 @@ classdef MainRework < handle
         end
         
         function populateSensorSetTable(obj)
+            % retrieve sensor information
             s = obj.project.getSensors();
             data = cell(numel(s),6);
             for i = 1:numel(s)
                 data{i,1} = s(i).isActive();
-                data{i,2} = s(i).getCluster().getCaption();
-                data{i,3} = s(i).getCaption();
-                data{i,4} = s(i).cyclePointSet.getCaption();
-                data{i,5} = s(i).indexPointSet.getCaption();
-                data{i,6} = s(i).preprocessingChain.getCaption();
-                data{i,7} = s(i).featureDefinitionSet.getCaption();
+                data{i,2} = char(s(i).getCluster().getCaption());
+                data{i,3} = char(s(i).getCaption());
+                data{i,4} = char(s(i).cyclePointSet.getCaption());
+                data{i,5} = char(s(i).indexPointSet.getCaption());
+                data{i,6} = char(s(i).preprocessingChain.getCaption());
+                data{i,7} = char(s(i).featureDefinitionSet.getCaption());
             end
+            
+            % prepare the table for display
+%             t = cell2table(data);
+            vars = {'Use','Cluster','Sensor','Cycle points','Index points','Preprocessing','Feature set'};
+%             t.Properties.VariableNames = vars;
+            
+            obj.sensorSetTable.Data = data;
+            obj.sensorSetTable.ColumnName = vars;
+            obj.sensorSetTable.RowName = 'numbered';
+            obj.sensorSetTable.ColumnEditable = ...
+                [true true true true true true true];
+            
+            cycleSets = cellstr(obj.project.poolCyclePointSets.getCaption());
+            indexSets = cellstr(obj.project.poolIndexPointSets.getCaption());
+            prepChains = cellstr(obj.project.poolPreprocessingChains.getCaption());
+            featSets = cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
+%             pointSets = horzcat(pointSets{:});
+            obj.sensorSetTable.ColumnFormat = {...
+                'logical' 'char' 'char'...
+                cycleSets indexSets prepChains featSets};
+            
             obj.sensorSetTable.clear();
             obj.sensorSetTable.setData(data,{'use','cluster','sensor','cycle points','index points','preprocessing','feature set'});
             obj.sensorSetTable.setColumnsEditable([true true true true true true true]);
