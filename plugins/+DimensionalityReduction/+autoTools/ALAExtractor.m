@@ -146,7 +146,7 @@ classdef ALAExtractor < DimensionalityReduction.autoTools.FeatureExtractorInterf
                 numSplits = floor(this.numFeat/2)-1;
                 [~, splits, e] = this.findSplits(errMat,numSplits);
             else
-                disp('specifiy higher numFeat so splitting is relevant')
+                error('Specifiy higher numFeat so splitting is relevant')
             end
             this.start = cast([1,splits], 'like', this.errVec);
             this.stop = cast([splits, this.l], 'like', this.errVec);

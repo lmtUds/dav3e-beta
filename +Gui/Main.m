@@ -564,7 +564,15 @@ classdef Main < handle
         end
         
         function newProject(obj)
-            questdlg('All unsaved changes in the current project will be lost. Proceed?','Really?','Yes','No','No');
+            answer = questdlg('All unsaved changes in the current project will be lost. All loaded data will be discarded. Proceed?','Really?','Yes','No','No');
+            % do nothing when answered 'No'
+            if strcmp(answer, 'No')
+                return
+            end
+            % swap to the start screen and clear everything when answered
+            % 'Yes'
+            obj.setModule(1)
+            
             obj.project = Project();
             
             obj.populateSensorSetTable();

@@ -428,6 +428,10 @@ classdef Grouping < Gui.Modules.GuiModule
             if isempty(p.groupings)
                 p.addGrouping();
             end
+            
+            % choose the first grouping as the new active grouping
+            p.currentGrouping = p.groupings(1);
+            
             obj.populateGroupingTable();
             obj.populateGroupsTable(obj.currentGrouping);
         end

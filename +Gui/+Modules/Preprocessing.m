@@ -999,8 +999,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t.setSortingEnabled(false)
             t.setFilteringEnabled(false);
             t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(3);
-            
+            t.jTable.sortColumn(2);
+            t.jTable.setAutoResort(false)
             obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
             obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
         end

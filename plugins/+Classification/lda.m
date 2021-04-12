@@ -27,9 +27,13 @@ function info = lda()
         Parameter('shortCaption','trained', 'value',false, 'internal',true)...
         Parameter('shortCaption','classifier', 'internal',true)...
         Parameter('shortCaption','inputData', 'value',[], 'internal',true),...
+        Parameter('shortCaption','trainError','value',1,'editable',false),...
+        Parameter('shortCaption','validationError','value',1,'editable',false),...
+        Parameter('shortCaption','testError','value',1,'editable',false)...
         ];
     info.apply = @apply;
     info.train = @train;
+    info.updateParameters = @updateParameters;
     info.detailsPages = {'confusionmatrix','territorialPlot'};
 end
 
@@ -54,4 +58,31 @@ function params = train(data,params)
     params.classifier = fitcdiscr(data.getSelectedData(),data.getSelectedTarget());
     pred = params.classifier.predict(data.getSelectedData());
     data.setSelectedPrediction(pred);
+end
+
+function updateParameters(params,project)
+    for i = 1:numel(params)
+        if params(i).shortCaption == string('trainError')
+            val = project.currentModel.trainingErrors;
+            if ~isnan(val)
+                params(i).value = val;
+            else
+                params(i).value = 1;
+            end
+        elseif params(i).shortCaption == string('validationError')
+            val = project.currentModel.validationErrors;
+            if ~isnan(val)
+                params(i).value = val;
+            else
+                params(i).value = 1;
+            end
+        elseif params(i).shortCaption == string('testError')
+            val = project.currentModel.testingErrors;
+            if ~isnan(val)
+                params(i).value = val;
+            else
+                params(i).value = 1;
+            end
+        end       
+    end
 end
