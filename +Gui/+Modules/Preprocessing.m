@@ -508,20 +508,35 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         function onOpen(obj)
-            obj.setDropdown.setCallbacksActive(false);
-            obj.setDropdown.setItems(obj.getProject().poolPreprocessingChains.getCaption());
-            obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
-            obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setItems(obj.getProject().poolPreprocessingChains.getCaption());
+%             obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(false);
             
-            obj.cyclePointSetDropdown.setCallbacksActive(false);
-            obj.cyclePointSetDropdown.setItems(obj.getProject().poolCyclePointSets.getCaption());
-            obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
-            obj.cyclePointSetDropdown.setCallbacksActive(true);
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolPreprocessingChains.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentPreprocessingChain.getCaption();
             
-            obj.indexPointSetDropdown.setCallbacksActive(false);
-            obj.indexPointSetDropdown.setItems(obj.getProject().poolIndexPointSets.getCaption());
-            obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
-            obj.indexPointSetDropdown.setCallbacksActive(true);
+%             obj.cyclePointSetDropdown.setCallbacksActive(false);
+%             obj.cyclePointSetDropdown.setItems(obj.getProject().poolCyclePointSets.getCaption());
+%             obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
+%             obj.cyclePointSetDropdown.setCallbacksActive(true);
+            
+            obj.cyclePointSetDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolCyclePointSets.getCaption(),...
+                'UniformOutput',false);
+            obj.cyclePointSetDropdown.Value = obj.currentCyclePointSet.getCaption();
+            
+%             obj.indexPointSetDropdown.setCallbacksActive(false);
+%             obj.indexPointSetDropdown.setItems(obj.getProject().poolIndexPointSets.getCaption());
+%             obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
+%             obj.indexPointSetDropdown.setCallbacksActive(true);
+            
+            obj.indexPointSetDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolIndexPointSets.getCaption(),...
+                'UniformOutput',false);
+            obj.indexPointSetDropdown.Value = obj.currentIndexPointSet.getCaption();
             
             if obj.clusterHasChanged()
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
@@ -536,6 +551,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.handleIndexPointSetChange();
             end
             
+%             cSensors = obj.getProject().getSensors().getCaption('cluster');
+%             cSensors = cellfun(@(x) char(x), cSensors, 'UniformOutput', false);
+%             obj.hCompareWith.hSensorPopup.Items = cSensors;
+%             obj.hCompareWith.hSensorPopup.Value = cSensors{1};
             obj.hCompareWith.hSensorPopup.String = obj.getProject().getSensors().getCaption('cluster');
 
             if isempty(obj.compareSensor)
@@ -591,7 +610,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.deleteAllPlots();
             obj.hCompareWith.hSamplingPeriodEdit.String = num2str(newCluster.samplingPeriod);
             obj.hCompareWith.hOffsetEdit.String = num2str(newCluster.offset);
-            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);  
+            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);
+            
+%             obj.hCompareWith.hSamplingPeriodEdit.Value = newCluster.samplingPeriod;
+%             obj.hCompareWith.hOffsetEdit.Value = newCluster.offset;
+%             obj.hCompareWith.hVirtualOffsetEdit.Value = newCluster.indexOffset;   
         end
         
         function handleSensorChange(obj,newSensor,oldSensor)
