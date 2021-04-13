@@ -1004,9 +1004,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t.ColumnName = {'caption','cycle','time in s'};
 %             t.setData(data,{'caption','cycle','time in s','color'});
 %             t.setRowObjects(gPoints);
-            t.ColumnFormat({'char','numeric','numeric'});
-            t.ColumnEditable = [true true true true];
+            t.ColumnFormat = {'char' 'numeric' 'numeric'};
+            t.ColumnSortable = [false false true];
+            t.ColumnEditable = [true true true];
             t.Data = data;
+%             t.UserData = gPoints;
             
 %             t.setSortingEnabled(false)
 %             t.setFilteringEnabled(false);
@@ -1015,8 +1017,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             t.jTable.setAutoResort(false)
             obj.cyclePointTable.CellEditCallback = ...
                 @(src, event) obj.cyclePointTableEditCallback(src, event);
-            obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
-            obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
+%             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
+%             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
         end
         
         function populateIndexPointsTable(obj)
@@ -1127,6 +1129,29 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
 %             obj.indexPointTable.setRowHeader();
             obj.indexPointTable.setCallbacksActive(true);
+        end
+        
+        function cyclePointTableEditCallback(obj, src, event)
+            row = event.Indices(1);
+            col = event.Indices(2);
+            cPoint = src.UserData(row);
+            switch col
+                case 1
+                    cPoint.getObject().setCaption(event.EditData);
+                case 2
+                    cPoint.setPosition(event.EditData,...
+                        obj.getProject().getCurrentSensor());
+                    src.Data(row,3) = cPoint.getTimePosition();
+                case 3
+                    cPoint.setTimePosition(event.EditData);
+                    src.Data(row,2) = cPoint.getPosition();
+%                 case 4
+%                     o.setColor(v{i});
+%                     idx = ismember(obj.cyclePoints,o);
+%                     obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
+%                     obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
+            end
+            obj.cyclePointTable.jTable.sortColumn(3);
         end
         
         function cyclePointTableDataChangeCallback(obj,rc,v)
