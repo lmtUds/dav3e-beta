@@ -608,13 +608,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
         
         function handleClusterChange(obj,newCluster,oldCluster)
             obj.deleteAllPlots();
-            obj.hCompareWith.hSamplingPeriodEdit.String = num2str(newCluster.samplingPeriod);
-            obj.hCompareWith.hOffsetEdit.String = num2str(newCluster.offset);
-            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);
+%             obj.hCompareWith.hSamplingPeriodEdit.String = num2str(newCluster.samplingPeriod);
+%             obj.hCompareWith.hOffsetEdit.String = num2str(newCluster.offset);
+%             obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);
             
-%             obj.hCompareWith.hSamplingPeriodEdit.Value = newCluster.samplingPeriod;
-%             obj.hCompareWith.hOffsetEdit.Value = newCluster.offset;
-%             obj.hCompareWith.hVirtualOffsetEdit.Value = newCluster.indexOffset;   
+            obj.hCompareWith.hSamplingPeriodEdit.Value = newCluster.samplingPeriod;
+            obj.hCompareWith.hOffsetEdit.Value = newCluster.offset;
+            obj.hCompareWith.hVirtualOffsetEdit.Value = newCluster.indexOffset;   
         end
         
         function handleSensorChange(obj,newSensor,oldSensor)
@@ -631,9 +631,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.cyclePoints.updatePosition(newSensor);
                 obj.cyclePoints.setYLimits(ylimits);
             else
-                obj.cyclePointSetDropdown.setCallbacksActive(false);
-                obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
-                obj.cyclePointSetDropdown.setCallbacksActive(true);
+%                 obj.cyclePointSetDropdown.setCallbacksActive(false);
+%                 obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
+%                 obj.cyclePointSetDropdown.setCallbacksActive(true);
+                
+                obj.cyclePointSetDropdown.Value = obj.currentCyclePointSet.getCaption();
                 obj.handleCyclePointSetChange(ylimits);
             end
             
@@ -641,16 +643,21 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.indexPoints.updatePosition(newSensor);
                 obj.indexPoints.setYLimits(ylimits);
             else
-                obj.indexPointSetDropdown.setCallbacksActive(false);
-                obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
-                obj.indexPointSetDropdown.setCallbacksActive(true);
+%                 obj.indexPointSetDropdown.setCallbacksActive(false);
+%                 obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
+%                 obj.indexPointSetDropdown.setCallbacksActive(true);
+                
+                obj.indexPointSetDropdown.Value = obj.currentIndexPointSet.getCaption();
                 obj.handleIndexPointSetChange(ylimits);
             end
             
-            obj.setDropdown.setCallbacksActive(false);
-            obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(true);
+            
+            obj.setDropdown.Value = obj.currentPreprocessingChain.getCaption();
+            
             obj.refreshPropGrid();
-            obj.setDropdown.setCallbacksActive(true);
             
 %             obj.cyclePointSetDropdown.setCallbacksActive(false);
 %             obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
@@ -988,19 +995,26 @@ classdef Preprocessing < Gui.Modules.GuiModule
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
             time_positions = num2cell(gPoints.getTimePosition());
-            colors = num2cell(gPoints.getPoint().getJavaColor());
-            data = [captions, positions, time_positions, colors];
+            % TODO re-add the colour functionality
+%             colors = num2cell(gPoints.getPoint().getJavaColor());
+%             data = [captions, positions, time_positions, colors];
+            data = [captions, positions, time_positions];
 
             t = obj.cyclePointTable;
-            t.setData(data,{'caption','cycle','time in s','color'});
-            t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','int','double', 'clr'});
-            t.setColumnsEditable([true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(3);
-            t.jTable.setAutoResort(false)
+            t.ColumnName = {'caption','cycle','time in s'};
+%             t.setData(data,{'caption','cycle','time in s','color'});
+%             t.setRowObjects(gPoints);
+            t.ColumnFormat({'char','numeric','numeric'});
+            t.ColumnEditable = [true true true true];
+            t.Data = data;
+            
+%             t.setSortingEnabled(false)
+%             t.setFilteringEnabled(false);
+%             t.setColumnReorderingAllowed(false);
+%             t.jTable.sortColumn(3);
+%             t.jTable.setAutoResort(false)
+            obj.cyclePointTable.CellEditCallback = ...
+                @(src, event) obj.cyclePointTableEditCallback(src, event);
             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
         end
