@@ -463,7 +463,7 @@ classdef MainRework < handle
         function populateSensorSetTable(obj)
             % retrieve sensor information
             s = obj.project.getSensors();
-            data = cell(numel(s),6);
+            data = cell(numel(s),5);
             for i = 1:numel(s)
                 data{i,1} = s(i).isActive();
                 data{i,2} = char(s(i).getCluster().getCaption());
@@ -506,26 +506,6 @@ classdef MainRework < handle
                     case 3
                         sensor.setCaption(event.EditData);
                     case 4
-                        idx = obj.project.poolCyclePointSets.getCaption()...
-                            == string(event.EditData);
-                        sensor.cyclePointSet = obj.project.poolCyclePointSets(idx);
-                        if obj.project.getCurrentSensor() == sensor
-                            obj.project.currentCyclePointSet = ...
-                                obj.project.poolCyclePointSets(idx);
-                            obj.getActiveModule().onCurrentCyclePointSetChanged(...
-                                obj.project.poolCyclePointSets(idx));
-                        end
-                    case 5
-                        idx = obj.project.poolIndexPointSets.getCaption()...
-                            == string(event.EditData);
-                        sensor.indexPointSet = obj.project.poolIndexPointSets(idx);
-                        if obj.project.getCurrentSensor() == sensor
-                            obj.project.currentIndexPointSet = ...
-                                obj.project.poolIndexPointSets(idx);
-                            obj.getActiveModule().onCurrentIndexPointSetChanged(...
-                                obj.project.poolIndexPointSets(idx));
-                        end
-                    case 6
                         idx = obj.project.poolPreprocessingChains.getCaption()...
                             == string(event.EditData);
                         sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
@@ -535,7 +515,7 @@ classdef MainRework < handle
                             obj.getActiveModule().onCurrentPreprocessingChainChanged(...
                                 obj.project.poolPreprocessingChains(idx));
                         end
-                    case 7
+                    case 5
                         idx = obj.project.poolFeatureDefinitionSets.getCaption()...
                             == string(event.EditData);
                         sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
