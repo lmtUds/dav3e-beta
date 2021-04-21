@@ -486,13 +486,10 @@ classdef MainRework < handle
                 [false true true false false];
             
             % make certain columns selectable via a dropdown
-            cycleSets = cellstr(obj.project.poolCyclePointSets.getCaption());
-            indexSets = cellstr(obj.project.poolIndexPointSets.getCaption());
             prepChains = cellstr(obj.project.poolPreprocessingChains.getCaption());
             featSets = cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
             obj.sensorSetTable.ColumnFormat = {...
-                'logical' 'char' 'char'...
-                cycleSets indexSets prepChains featSets};
+                'logical' 'char' 'char' prepChains featSets};
             
 %             obj.sensorSetTable.clear();
 %             obj.sensorSetTable.setData(data,{'use','cluster','sensor','cycle points','index points','preprocessing','feature set'});
