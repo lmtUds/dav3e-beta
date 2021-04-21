@@ -468,22 +468,22 @@ classdef MainRework < handle
                 data{i,1} = s(i).isActive();
                 data{i,2} = char(s(i).getCluster().getCaption());
                 data{i,3} = char(s(i).getCaption());
-                data{i,4} = char(s(i).cyclePointSet.getCaption());
-                data{i,5} = char(s(i).indexPointSet.getCaption());
-                data{i,6} = char(s(i).preprocessingChain.getCaption());
-                data{i,7} = char(s(i).featureDefinitionSet.getCaption());
+                data{i,4} = char(s(i).preprocessingChain.getCaption());
+                data{i,5} = char(s(i).featureDefinitionSet.getCaption());
             end
             
             % prepare the table for display
 %             t = cell2table(data);
-            vars = {'Use','Cluster','Sensor','Cycle points','Index points','Preprocessing','Feature set'};
+            vars = {'Use','Cluster','Sensor','Preprocessing','Feature set'};
 %             t.Properties.VariableNames = vars;
             
             obj.sensorSetTable.Data = data;
             obj.sensorSetTable.ColumnName = vars;
             obj.sensorSetTable.RowName = 'numbered';
             obj.sensorSetTable.ColumnEditable = ...
-                [true true true true true true true];
+                [true true true true true];
+            obj.sensorSetTable.ColumnSortable = ...
+                [false true true false false];
             
             % make certain columns selectable via a dropdown
             cycleSets = cellstr(obj.project.poolCyclePointSets.getCaption());
