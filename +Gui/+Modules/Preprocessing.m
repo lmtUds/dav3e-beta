@@ -1005,11 +1005,12 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             t.setData(data,{'caption','cycle','time in s','color'});
 %             t.setRowObjects(gPoints);
             t.ColumnFormat = {'char' 'numeric' 'numeric'};
-            t.ColumnSortable = [false false true];
+%             t.ColumnSortable = [false false true];
             t.ColumnEditable = [true true true];
             t.Data = data;
-%             t.UserData = gPoints;
-            
+            t.UserData = gPoints;
+
+            tableColSort(t,3,'a');
 %             t.setSortingEnabled(false)
 %             t.setFilteringEnabled(false);
 %             t.setColumnReorderingAllowed(false);
@@ -1027,21 +1028,31 @@ classdef Preprocessing < Gui.Modules.GuiModule
             gPoints = obj.indexPoints;
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
-            colors = num2cell(gPoints.getPoint().getJavaColor());
-            data = [captions, positions, colors];
+%             colors = num2cell(gPoints.getPoint().getJavaColor());
+%             data = [captions, positions, colors];
+            data = [captions, positions];
             
             t = obj.indexPointTable;
-            t.setData(data,{'caption','point','color'});
-            t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','double','clr'});
-            t.setColumnsEditable([true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
-            t.jTable.setAutoResort(false)
-            obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
-            obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
+            
+            t.ColumnName = {'caption','point'};
+            t.ColumnFormat = {'char' 'numeric'};
+            t.ColumnEditable = [true true];
+            t.Data = data;
+            t.UserData = gPoints;
+            tableColSort(t,2,'a');
+%             t.setData(data,{'caption','point','color'});
+%             t.setRowObjects(gPoints);
+%             t.setColumnClasses({'str','double','clr'});
+%             t.setColumnsEditable([true true true]);
+%             t.setSortingEnabled(false)
+%             t.setFilteringEnabled(false);
+%             t.setColumnReorderingAllowed(false);
+%             t.jTable.sortColumn(2);
+%             t.jTable.setAutoResort(false)
+             obj.indexPointTable.CellEditCallback = ...
+                @(src, event) obj.indexPointTableEditCallback(src, event);
+%             obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
+%             obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
         end
         
         function cyclePointDraggedCallback(obj,gPoint)
@@ -1151,7 +1162,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %                     obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
 %                     obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
             end
-            obj.cyclePointTable.jTable.sortColumn(3);
+            tableColSort(obj.cyclePointTable,3,'a');
+%             obj.cyclePointTable.jTable.sortColumn(3);
         end
         
         function cyclePointTableDataChangeCallback(obj,rc,v)
@@ -1178,6 +1190,23 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.cyclePointTable.jTable.sortColumn(3);
         end
         
+        function indexPointTableEditCallback(obj, src, event)
+            row = event.Indices(1);
+            col = event.Indices(2);
+            iPoint = src.UserData(row);
+            switch col
+                case 1
+                    iPoint.getObject().setCaption(event.EditData);
+                case 2
+                    iPoint.setPosition(event.EditData,...
+                        obj.getProject().getCurrentSensor());
+                case 3
+%                     o.setColor(v{i});
+%                     idx = ismember(obj.indexPoints,o);
+%                     obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(obj.indexPoints(idx).getPoint().getColor(),obj.rawColorShade);
+%                     obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
+            end
+        end
         function indexPointTableDataChange(obj,rc,v)
             %%
             % write changes from the table to the point object
