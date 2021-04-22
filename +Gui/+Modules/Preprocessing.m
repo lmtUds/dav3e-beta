@@ -1206,6 +1206,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %                     obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(obj.indexPoints(idx).getPoint().getColor(),obj.rawColorShade);
 %                     obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
             end
+            tableColSort(obj.indexPointTable,2,'a');
         end
         function indexPointTableDataChange(obj,rc,v)
             %%
