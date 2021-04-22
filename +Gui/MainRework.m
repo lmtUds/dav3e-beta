@@ -508,6 +508,16 @@ classdef MainRework < handle
                     case 4
                         idx = obj.project.poolPreprocessingChains.getCaption()...
                             == string(event.EditData);
+                        
+                        % if the edit did not point to a valid chain revert
+                        % the edit and change nothing
+                        if ~idx
+                            src.Data{row, col} = event.PreviousData;
+                            src.ColumnFormat{col} = ...
+                                cellstr(obj.project.poolPreprocessingChains.getCaption());
+                            return
+                        end
+                        
                         sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
                         if obj.project.getCurrentSensor() == sensor
                             obj.project.currentPreprocessingChain = ...
@@ -518,6 +528,16 @@ classdef MainRework < handle
                     case 5
                         idx = obj.project.poolFeatureDefinitionSets.getCaption()...
                             == string(event.EditData);
+                        
+                        % if the edit did not point to a valid set revert
+                        % the edit and change nothing
+                        if ~idx
+                            src.Data{row, col} = event.PreviousData;
+                            src.ColumnFormat{col} = ...
+                                cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
+                            return
+                        end
+                        
                         sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
                         if obj.project.getCurrentSensor() == sensor
                             obj.project.currentFeatureDefinitionSet = ...
