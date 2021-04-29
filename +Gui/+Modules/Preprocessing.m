@@ -423,7 +423,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % preprocessing chain propgrid
 %             obj.propGrid = PropGrid(propGridPanel);
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
-%             obj.propGrid.setShowToolbar(false);
+
             chainElementAdd = uibutton(chainGrid,...
                 'Text','Add',...
                 'ButtonPushedFcn',@(h,e)obj.addPreprocessing);
