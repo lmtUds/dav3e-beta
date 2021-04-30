@@ -31,7 +31,7 @@ classdef uiParameter < matlab.ui.componentcontainer.ComponentContainer
         uiParent
     end
     
-    events
+    events (HasCallbackProperty, NotifyAccess = protected)
         edit
         select
     end
@@ -39,9 +39,31 @@ classdef uiParameter < matlab.ui.componentcontainer.ComponentContainer
     methods
         function obj = uiParameter(uiParent,paramObj)
             %UIPARAMETER Construct an instance of a uiParameter
-            obj.grid = uigridlayout(uiParent);
+            
+            %TODO compute value count from paramObj
+            valueCount = 5;
+            obj.grid = uigridlayout(uiParent,...
+                [valueCount 2],...
+                'RowSpacing',4,...
+                'Padding',[0 0 0 0]);
             obj.uiParent = uiParent;
             obj.paramObject = paramObj;
+            obj.populateUi();
+        end
+    end
+    methods (Access = private)
+        function populateUi(obj)
+            %TODO proper call to parameter values and names
+            for i = 1:numel(obj.paramObj.values)
+                label = uilabel(obj.grid,'Text',obj.paramObj.names(i));
+                label.Layout.Row = i;
+                label.Layout.Column = 1;
+                
+                edit = uieditfield(obj.grid,'Editable','on',...
+                    'Value',obj.paramObj.values(i));
+                edit.Layout.Row = i;
+                edit.Layout.Column = 2;
+            end
         end
     end
 end

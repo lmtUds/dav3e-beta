@@ -29,7 +29,7 @@ classdef uiParameterGrid < matlab.ui.componentcontainer.ComponentContainer
         uiParent
     end
     
-    events
+    events (HasCallbackProperty, NotifyAccess = protected)
         parameterEdit
         parameterSelect
     end
@@ -117,7 +117,16 @@ classdef uiParameterGrid < matlab.ui.componentcontainer.ComponentContainer
         end
         
         function refresh(obj)
-            % TODO
+            % TODO finish and correct
+            obj.grid.delete();
+            obj.grid = uigridlayout(obj.uiParent,...
+                [numel(obj.parameters) 1],...
+                'RowSpacing',4,...
+                'Padding',[0 0 0 0]);
+            for i = 1:numel(obj.parameters)
+                uiParam = uiParameter(obj.grid, obj.parameters(i));
+                uiParam.Layout.Row = i;
+            end
         end
     end
 end
