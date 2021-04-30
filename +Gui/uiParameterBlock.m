@@ -18,17 +18,19 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef uiParameter < matlab.ui.componentcontainer.ComponentContainer
-    %UIPARAMETER A ui container for displaying and editing of a single 
-    %program runtime parameter
+classdef uiParameterBlock < matlab.ui.componentcontainer.ComponentContainer
+    %UIPARAMETER A ui container for displaying and editing parameters of a 
+    %dataprocessingblock
     
     properties
+        block
+    end
+    
+    properties (Access = private)
         category
         displayName
         grid
-        paramObject
         shortName = '';
-        uiParent
     end
     
     events (HasCallbackProperty, NotifyAccess = protected)
@@ -37,25 +39,27 @@ classdef uiParameter < matlab.ui.componentcontainer.ComponentContainer
     end
     
     methods
-        function obj = uiParameter(uiParent,paramObj)
-            %UIPARAMETER Construct an instance of a uiParameter
-            
+    end
+    
+    methods (Access = protected)
+        function setup(obj)
             %TODO compute value count from paramObj
             valueCount = 5;
-            obj.grid = uigridlayout(uiParent,...
+            obj.grid = uigridlayout(obj,...
                 [valueCount 2],...
-                'RowSpacing',4,...
+                'RowSpacing',2,...
                 'Padding',[0 0 0 0]);
-            obj.uiParent = uiParent;
-            obj.paramObject = paramObj;
             obj.populateUi();
+        end
+        function update(obj)
+            
         end
     end
     methods (Access = private)
         function populateUi(obj)
             %TODO proper call to parameter values and names
-            for i = 1:numel(obj.paramObj.values)
-                label = uilabel(obj.grid,'Text',obj.paramObj.names(i));
+            for i = 1:numel(obj.block.values)
+                label = uilabel(obj.grid,'Text',obj.block.names(i));
                 label.Layout.Row = i;
                 label.Layout.Column = 1;
                 

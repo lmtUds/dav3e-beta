@@ -422,6 +422,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             % preprocessing chain propgrid
 %             obj.propGrid = PropGrid(propGridPanel);
+            obj.propGrid = Gui.uiParameterBlockGrid('Parent',propGridPanel);
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
 
             chainElementAdd = uibutton(chainGrid,...
