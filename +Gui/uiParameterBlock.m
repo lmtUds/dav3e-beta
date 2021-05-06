@@ -23,10 +23,11 @@ classdef uiParameterBlock < matlab.ui.componentcontainer.ComponentContainer
     %dataprocessingblock
     
     properties
-        block
+        
     end
     
     properties (Access = private)
+        block
         category
         displayName
         grid
@@ -39,36 +40,42 @@ classdef uiParameterBlock < matlab.ui.componentcontainer.ComponentContainer
     end
     
     methods
+        function setBlock(obj, block)
+            obj.block = block;
+            obj.update();
+        end
+        function block = getBlock(obj)
+            block = obj.block;
+        end
     end
     
     methods (Access = protected)
         function setup(obj)
             %TODO compute value count from paramObj
-            valueCount = 5;
             obj.grid = uigridlayout(obj,...
-                [valueCount 2],...
                 'RowSpacing',2,...
                 'Padding',[0 0 0 0]);
-            obj.populateUi();
         end
         function update(obj)
-            
-        end
-    end
-    methods (Access = private)
-        function populateUi(obj)
             %TODO proper call to parameter values and names
-            for i = 1:numel(obj.block.values)
-                label = uilabel(obj.grid,'Text',obj.block.names(i));
-                label.Layout.Row = i;
+            blockName = uilabel(obj.grid,...
+                'Text',obj.block.shortCaption,'FontWeight','bold');
+            blockName.Layout.Row = 1;
+            blockName.Layout.Column = [1 2];
+            for i = 1:numel(obj.block.parameters)
+                p = obj.block.parameters(i);
+                label = uilabel(obj.grid,'Text',p.shortCaption);
+                label.Layout.Row = i+1;
                 label.Layout.Column = 1;
                 
                 edit = uieditfield(obj.grid,'Editable','on',...
-                    'Value',obj.paramObj.values(i));
-                edit.Layout.Row = i;
+                    'Value',num2str(p.value));
+                edit.Layout.Row = i+1;
                 edit.Layout.Column = 2;
             end
         end
+    end
+    methods (Access = private)
     end
 end
 

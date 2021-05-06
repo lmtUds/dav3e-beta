@@ -25,8 +25,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     properties (Access = private)
         grid
-        blocks
-        selectedBlock
+        blocks = [];
+        selectedBlock = [];
     end
     
     events (HasCallbackProperty, NotifyAccess = protected)
@@ -35,8 +35,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     
     methods
-        function addBlock(obj, block)
-            obj.blocks = [obj.blocks,block];
+        function addBlocks(obj, blocks)
+            obj.blocks = [obj.blocks,blocks];
             obj.update();
         end
         
@@ -79,28 +79,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 index = 1;
             end
         end
-        
-        function moveBlock(obj, block, direction)
-            ind = obj.getBlockIndex(block);
-            switch direction
-                case 'up'
-                    if ind == 1
-                        warning('Top parameter block cannot move further up.')
-                        return
-                    end
-                    obj.blocks(ind) = obj.blocks(ind-1);
-                    obj.blocks(ind-1) = block;
-                case 'down'
-                    if ind == numel(obj.blocks)
-                        warning('Bottom parameter block cannot move further down.')
-                        return
-                    end
-                    obj.blocks(ind) = obj.blocks(ind+1);
-                    obj.blocks(ind+1) = block;
-            end
-            obj.update();
-        end
-        
+                
         function blockEditCallback(obj, src, event)
             % TODO
         end
@@ -120,10 +99,11 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         
         function update(obj)
             % TODO finish and correct
+            obj.grid.Children.delete();
             for i = 1:numel(obj.blocks)
-                uiParam = Gui.uiParameterBlock('Parent',obj.grid,...
-                    'blockObject',obj.blocks(i));
-                uiParam.Layout.Row = i;
+                uiParamBlock = Gui.uiParameterBlock('Parent',obj.grid);
+                uiParamBlock.Layout.Row = i;
+                uiParamBlock.setBlock(obj.blocks(i));
             end
         end
     end

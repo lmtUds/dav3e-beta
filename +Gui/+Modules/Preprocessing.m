@@ -427,7 +427,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
 
             chainElementAdd = uibutton(chainGrid,...
                 'Text','Add',...
-                'ButtonPushedFcn',@(h,e)obj.addPreprocessing);
+                'ButtonPushedFcn',@(src,event)obj.addPreprocessing(src,event));
             chainElementAdd.Layout.Row = 4;
             chainElementAdd.Layout.Column = 1;
             
@@ -1538,9 +1538,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             xlim(obj.hAxQuasistatic,'auto');            
         end
 
-        function addPreprocessing(obj)
-            pp = PreprocessingChain.getAvailableMethods(true)
-            s = keys(pp)
+        function addPreprocessing(obj, src, event)
+            pp = PreprocessingChain.getAvailableMethods(true);
+            s = keys(pp);
             [sel,ok] = listdlg('ListString',s);
             if ~ok
                 return
@@ -1589,9 +1589,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
         
         function refreshPropGrid(obj)
             obj.propGrid.clear();
-            pgf = obj.currentPreprocessingChain.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.changeCurrentPreprocessing);
+            obj.propGrid.addBlocks(obj.currentPreprocessingChain.preprocessings);
+%             pgf = obj.currentPreprocessingChain.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+%             [pgf.onMouseClickedCallback] = deal(@obj.changeCurrentPreprocessing);
         end
         
         function quasistaticAxesButtonDownCallback(obj,varargin)

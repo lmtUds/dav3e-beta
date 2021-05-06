@@ -21,6 +21,7 @@
 classdef Start < Gui.Modules.GuiModule
     properties
         caption = 'Start'
+        mainFigure
     end
     
     methods
@@ -98,6 +99,8 @@ classdef Start < Gui.Modules.GuiModule
             citeLabel.FontSize = 12;
             citeLabel.WordWrap = 'on';
             citeLabel.HorizontalAlignment = 'center';
+            
+            obj.mainFigure = mainFigure;
         end
 
         function importData(obj)
@@ -124,6 +127,11 @@ classdef Start < Gui.Modules.GuiModule
             chosenOne = 'simple';
             if strcmp(chosenOne,'simple')
                 [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
+                % swap invisible shortly to regain window focus after
+                % uigetfile
+                obj.mainFigure.Visible = 'off';
+                obj.mainFigure.Visible = 'on';
+                
                 if path == 0
                     return
                 end
