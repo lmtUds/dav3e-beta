@@ -25,7 +25,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     properties (Access = private)
         blocks
-        grid
         panel
         selectedBlock
     end
@@ -104,24 +103,32 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             
             % compute the number of needed grid rows as dynamic adding to
             % the grid causes unwanted shrinking or stretching of elements
+            % also generate a mapping for all row heights to fit contents
+            % properly into the grid
             rowCount = 0;
+            heights = {};
             for i = 1:numel(obj.blocks)
+                rowCount = rowCount + 1;
+                heights = [heights {15}];
                 for j = 1:numel(obj.blocks(i).parameters)
                     if obj.blocks(i).parameters(j).internal
                         continue
                     end
                     rowCount = rowCount + 1;
+                    heights = [heights {13}];
                 end
                 rowCount = rowCount + 1;
+                heights = [heights {3}];
             end
+            
             if rowCount == 0    % abort if there are no blocks/parameters
                 return
             end
             % initialize a grid of proper size
-            obj.grid = uigridlayout(obj.panel, [rowCount 2],...
+            grid = uigridlayout(obj.panel, [rowCount 2],...                
                 'Scrollable','on',...
-                'ColumnWidth',{'1x'},...
-                'RowHeight',{12},...
+                'ColumnWidth',{'2x','1x'},...
+                'RowHeight',heights,...
                 'RowSpacing',2,...
                 'Padding',[2 2 2 2]);
             % TODO group by category
@@ -131,7 +138,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 b = obj.blocks(i);
                 
                 % create a label for the block name
-                blockName = uilabel(obj.grid,...
+                blockName = uilabel(grid,...
                     'Text',b.shortCaption,...
                     'FontWeight','bold');
                 blockName.Layout.Row = rowCount;
@@ -146,24 +153,37 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                     end
                     
                     %create a label for the parameter
-                    label = uilabel(obj.grid,...
+                    label = uilabel(grid,...
                         'Text',p.shortCaption);
                     label.Layout.Row = rowCount;
                     label.Layout.Column = 1;
                     
                     %create the edit field for the parameter value
-                    edit = uieditfield(obj.grid,...
-                        'Editable','on',...
-                        'Value',num2str(p.value));
+                    if isnumeric(p.value)
+                        edit = uieditfield(grid,...
+                            'numeric',...
+                            'Editable','on',...
+                            'Value',p.value);
+                    else
+                        edit = uieditfield(grid,...
+                            'Editable','on',...
+                            'Value',p.value);
+                    end
                     edit.Layout.Row = rowCount;
                     edit.Layout.Column = 2;
                     
                     rowCount = rowCount + 1;   %advance to the next row
-                end                
-%                 uiParamBlock = Gui.uiParameterBlock('Parent',obj.grid,...
-%                     'block',obj.blocks(i));
-%                 uiParamBlock.Layout.Row = i;
-%                 uiParamBlock.setBlock(obj.blocks(i));
+                end
+                % draw a divider line for better visual separation
+                divLine = repmat('-',1,240);
+                divider = uilabel(grid,...
+                    'Text',divLine,...
+                    'FontSize',2,...
+                    'HorizontalAlignment','center');
+                divider.Layout.Row = rowCount;
+                divider.Layout.Column = [1 2];
+                
+                rowCount = rowCount + 1;   %advance to the next row
             end
         end
     end
