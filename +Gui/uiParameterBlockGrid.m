@@ -24,9 +24,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     properties
     end
     properties (Access = private)
+        blocks
         grid
-        blocks = [];
-        selectedBlock = [];
+        panel
+        selectedBlock
     end
     
     events (HasCallbackProperty, NotifyAccess = protected)
@@ -41,7 +42,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         end
         
         function clear(obj)
-            obj.grid.Children.delete();
+            obj.panel.Children.delete();
             obj.blocks = [];
         end
         
@@ -80,30 +81,89 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             end
         end
                 
-        function blockEditCallback(obj, src, event)
+        function blockEditCallback(obj, src, event, block)
             % TODO
         end
         
-        function blockSelectCallback(obj, src, event)
+        function blockSelectCallback(obj, src, event, block)
             % TODO
         end
     end
     methods (Access = protected)
         function setup(obj)
             % TODO
-            obj.grid = uigridlayout(obj, [1 1],...
-                'RowSpacing',4,...
-                'Padding',[0 0 0 0]);
+            obj.panel = uipanel(obj);
             obj.blocks = [];
         end
         
         function update(obj)
             % TODO finish and correct
-            obj.grid.Children.delete();
+            
+            % empty the exixsting grid
+            obj.panel.Children.delete();
+            
+            % compute the number of needed grid rows as dynamic adding to
+            % the grid causes unwanted shrinking or stretching of elements
+            rowCount = 0;
             for i = 1:numel(obj.blocks)
-                uiParamBlock = Gui.uiParameterBlock('Parent',obj.grid);
-                uiParamBlock.Layout.Row = i;
-                uiParamBlock.setBlock(obj.blocks(i));
+                for j = 1:numel(obj.blocks(i).parameters)
+                    if obj.blocks(i).parameters(j).internal
+                        continue
+                    end
+                    rowCount = rowCount + 1;
+                end
+                rowCount = rowCount + 1;
+            end
+            if rowCount == 0    % abort if there are no blocks/parameters
+                return
+            end
+            % initialize a grid of proper size
+            obj.grid = uigridlayout(obj.panel, [rowCount 2],...
+                'Scrollable','on',...
+                'ColumnWidth',{'1x'},...
+                'RowHeight',{12},...
+                'RowSpacing',2,...
+                'Padding',[2 2 2 2]);
+            % TODO group by category
+            
+            rowCount = 1;    %reuse the counter to fill grid rows correctly
+            for i = 1:numel(obj.blocks) %loop through all blocks
+                b = obj.blocks(i);
+                
+                % create a label for the block name
+                blockName = uilabel(obj.grid,...
+                    'Text',b.shortCaption,...
+                    'FontWeight','bold');
+                blockName.Layout.Row = rowCount;
+                blockName.Layout.Column = [1 2];
+                
+                rowCount = rowCount + 1;   %advance to the next row                
+                for j = 1:numel(b.parameters)   %loop through all parameters
+                    p = b.parameters(j);
+                    
+                    if p.internal   %skip internal parameters
+                        continue
+                    end
+                    
+                    %create a label for the parameter
+                    label = uilabel(obj.grid,...
+                        'Text',p.shortCaption);
+                    label.Layout.Row = rowCount;
+                    label.Layout.Column = 1;
+                    
+                    %create the edit field for the parameter value
+                    edit = uieditfield(obj.grid,...
+                        'Editable','on',...
+                        'Value',num2str(p.value));
+                    edit.Layout.Row = rowCount;
+                    edit.Layout.Column = 2;
+                    
+                    rowCount = rowCount + 1;   %advance to the next row
+                end                
+%                 uiParamBlock = Gui.uiParameterBlock('Parent',obj.grid,...
+%                     'block',obj.blocks(i));
+%                 uiParamBlock.Layout.Row = i;
+%                 uiParamBlock.setBlock(obj.blocks(i));
             end
         end
     end

@@ -414,15 +414,17 @@ classdef Preprocessing < Gui.Modules.GuiModule
             chainRem.Layout.Row = 2;
             chainRem.Layout.Column = 4;
             
-            propGridPanel = uipanel(chainGrid);
-            propGridPanel.Layout.Row = 3;
-            propGridPanel.Layout.Column = [1 4];
+%             propGridPanel = uipanel(chainGrid,'Scrollable','on');
+%             propGridPanel.Layout.Row = 3;
+%             propGridPanel.Layout.Column = [1 4];
             % preprocessing chain set dropdown
             obj.setDropdown = chainDropdown;
             
             % preprocessing chain propgrid
 %             obj.propGrid = PropGrid(propGridPanel);
-            obj.propGrid = Gui.uiParameterBlockGrid('Parent',propGridPanel);
+            obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid);
+            obj.propGrid.Layout.Row = 3;
+            obj.propGrid.Layout.Column = [1 4];
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
 
             chainElementAdd = uibutton(chainGrid,...

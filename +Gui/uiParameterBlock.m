@@ -23,11 +23,11 @@ classdef uiParameterBlock < matlab.ui.componentcontainer.ComponentContainer
     %dataprocessingblock
     
     properties
-        
+        block
     end
     
     properties (Access = private)
-        block
+%         block
         category
         displayName
         grid
@@ -59,19 +59,26 @@ classdef uiParameterBlock < matlab.ui.componentcontainer.ComponentContainer
         function update(obj)
             %TODO proper call to parameter values and names
             blockName = uilabel(obj.grid,...
-                'Text',obj.block.shortCaption,'FontWeight','bold');
+                'Text',obj.block.shortCaption,...
+                'FontWeight','bold',...
+                'FontSize',8);
             blockName.Layout.Row = 1;
             blockName.Layout.Column = [1 2];
             for i = 1:numel(obj.block.parameters)
                 p = obj.block.parameters(i);
-                label = uilabel(obj.grid,'Text',p.shortCaption);
+                label = uilabel(obj.grid,...
+                    'Text',p.shortCaption,...
+                    'FontSize',8);
                 label.Layout.Row = i+1;
                 label.Layout.Column = 1;
                 
-                edit = uieditfield(obj.grid,'Editable','on',...
-                    'Value',num2str(p.value));
+                edit = uieditfield(obj.grid,...
+                    'Editable','on',...
+                    'Value',num2str(p.value),...
+                    'FontSize',8);
                 edit.Layout.Row = i+1;
                 edit.Layout.Column = 2;
+                drawnow;
             end
         end
     end
