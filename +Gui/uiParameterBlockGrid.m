@@ -99,26 +99,48 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % empty the exixsting grid
             obj.panel.Children.delete();
             
+            % group all blocks into their respective categories
+            categories = [];
+            groupedBlocks = {};
+            for i = 1:numel(obj.blocks) %loop through all blocks
+               c = obj.blocks(i).type; 
+               cmp = c == categories;   %check if category is known
+               if sum(cmp) == 0 % append if not
+                   categories = [categories c];
+                   cmp = [cmp 1];
+               end
+               % append the current block to its appropriate category group
+               if isempty(groupedBlocks)
+                  groupedBlocks{cmp} = obj.blocks(i);
+               elseif isempty(groupedBlocks{cmp})
+                  groupedBlocks{cmp} = obj.blocks(i); 
+               else
+                  groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
+               end
+            end
             % compute the number of needed grid rows as dynamic adding to
             % the grid causes unwanted shrinking or stretching of elements
             % also generate a mapping for all row heights to fit contents
             % properly into the grid
             rowCount = 0;
             heights = {};
-            for i = 1:numel(obj.blocks)
+            for k = 1:numel(categories)
                 rowCount = rowCount + 1;
-                heights = [heights {15}];
-                for j = 1:numel(obj.blocks(i).parameters)
-                    if obj.blocks(i).parameters(j).internal
-                        continue
+                heights = [heights {18}];
+                for i = 1:numel(groupedBlocks{k})
+                    rowCount = rowCount + 1;
+                    heights = [heights {15}];
+                    for j = 1:numel(groupedBlocks{k}(i).parameters)
+                        if groupedBlocks{k}(i).parameters(j).internal
+                            continue
+                        end
+                        rowCount = rowCount + 1;
+                        heights = [heights {13}];
                     end
                     rowCount = rowCount + 1;
-                    heights = [heights {13}];
+                    heights = [heights {3}];
                 end
-                rowCount = rowCount + 1;
-                heights = [heights {3}];
             end
-            
             if rowCount == 0    % abort if there are no blocks/parameters
                 return
             end
@@ -132,56 +154,69 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % TODO group by category
             
             rowCount = 1;    %reuse the counter to fill grid rows correctly
-            for i = 1:numel(obj.blocks) %loop through all blocks
-                b = obj.blocks(i);
+            for k = 1:numel(categories) %loop through all categories
+                category = uilabel(grid,...
+                        'Text',char(categories(k)),...
+                        'FontSize',14,...
+                        'FontWeight','bold',...
+                        'BackgroundColor',[1 1 1]);
+                category.Layout.Row = rowCount;
+                category.Layout.Column = [1 2];
                 
-                % create a label for the block name
-                blockName = uilabel(grid,...
-                    'Text',b.shortCaption,...
-                    'FontWeight','bold');
-                blockName.Layout.Row = rowCount;
-                blockName.Layout.Column = [1 2];
-                
-                rowCount = rowCount + 1;   %advance to the next row                
-                for j = 1:numel(b.parameters)   %loop through all parameters
-                    p = b.parameters(j);
-                    
-                    if p.internal   %skip internal parameters
-                        continue
+                rowCount = rowCount + 1;   %advance to the next row 
+                for i = 1:numel(groupedBlocks{k}) %loop through all blocks
+                    b = groupedBlocks{k}(i);
+
+                    % create a label for the block name
+                    blockName = uilabel(grid,...
+                        'Text',b.shortCaption,...
+                        'FontWeight','bold',...
+                        'HorizontalAlignment','center');
+                    blockName.Layout.Row = rowCount;
+                    blockName.Layout.Column = 1;
+
+                    rowCount = rowCount + 1;   %advance to the next row                
+                    for j = 1:numel(b.parameters)   %loop through all parameters
+                        p = b.parameters(j);
+
+                        if p.internal   %skip internal parameters
+                            continue
+                        end
+
+                        %create a label for the parameter
+                        label = uilabel(grid,...
+                            'Text',p.shortCaption,...
+                            'HorizontalAlignment','right');
+                        label.Layout.Row = rowCount;
+                        label.Layout.Column = 1;
+
+                        %create the edit field for the parameter value
+                        if isnumeric(p.value)
+                            edit = uieditfield(grid,...
+                                'numeric',...
+                                'Editable','on',...
+                                'Value',p.value);
+                        else
+                            edit = uieditfield(grid,...
+                                'Editable','on',...
+                                'Value',p.value);
+                        end
+                        edit.Layout.Row = rowCount;
+                        edit.Layout.Column = 2;
+
+                        rowCount = rowCount + 1;   %advance to the next row
                     end
-                    
-                    %create a label for the parameter
-                    label = uilabel(grid,...
-                        'Text',p.shortCaption);
-                    label.Layout.Row = rowCount;
-                    label.Layout.Column = 1;
-                    
-                    %create the edit field for the parameter value
-                    if isnumeric(p.value)
-                        edit = uieditfield(grid,...
-                            'numeric',...
-                            'Editable','on',...
-                            'Value',p.value);
-                    else
-                        edit = uieditfield(grid,...
-                            'Editable','on',...
-                            'Value',p.value);
-                    end
-                    edit.Layout.Row = rowCount;
-                    edit.Layout.Column = 2;
-                    
+                    % draw a divider line for better visual separation
+                    divLine = repmat('-',1,240);
+                    divider = uilabel(grid,...
+                        'Text',divLine,...
+                        'FontSize',2,...
+                        'HorizontalAlignment','center');
+                    divider.Layout.Row = rowCount;
+                    divider.Layout.Column = [1 2];
+
                     rowCount = rowCount + 1;   %advance to the next row
                 end
-                % draw a divider line for better visual separation
-                divLine = repmat('-',1,240);
-                divider = uilabel(grid,...
-                    'Text',divLine,...
-                    'FontSize',2,...
-                    'HorizontalAlignment','center');
-                divider.Layout.Row = rowCount;
-                divider.Layout.Column = [1 2];
-                
-                rowCount = rowCount + 1;   %advance to the next row
             end
         end
     end
