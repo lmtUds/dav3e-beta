@@ -96,8 +96,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         end
         
         function update(obj)
-            % TODO finish and correct
-            
             % empty the exixsting grid
             obj.panel.Children.delete();
             
