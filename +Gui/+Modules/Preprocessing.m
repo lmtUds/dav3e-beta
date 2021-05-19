@@ -241,7 +241,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             compareDropdown = uidropdown(compareGrid,...
                 'Items',{'1','2'},...
-                'ValueChangedFcn',@obj.compareWithSensorPopup);
+                'ValueChangedFcn',@(src,event)obj.compareWithSensorPopup(src,event));
             compareDropdown.Layout.Column = 2;
             
             obj.hCompareWith.hCompareWithCheckbox = compareCheckbox;
@@ -435,19 +435,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             chainElementDel = uibutton(chainGrid,...
                 'Text','Delete',...
-                'ButtonPushedFcn',@(h,e)obj.removePreprocessing);
+                'ButtonPushedFcn',@(src,event)obj.removePreprocessing(src,event));
             chainElementDel.Layout.Row = 4;
             chainElementDel.Layout.Column = 2;
             
             chainElementUp = uibutton(chainGrid,...
                 'Text','/\',...
-                'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
+                'ButtonPushedFcn',@(src,event)obj.movePreprocessingUp(src,event));
             chainElementUp.Layout.Row = 4;
             chainElementUp.Layout.Column = 3;
             
             chainElementDwn = uibutton(chainGrid,...
                 'Text','\/',...
-                'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
+                'ButtonPushedFcn',@(src,event)obj.movePreprocessingDown(src,event));
             chainElementDwn.Layout.Row = 4;
             chainElementDwn.Layout.Column = 4;
             
@@ -558,7 +558,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             cSensors = cellfun(@(x) char(x), cSensors, 'UniformOutput', false);
 %             obj.hCompareWith.hSensorPopup.Items = cSensors;
 %             obj.hCompareWith.hSensorPopup.Value = cSensors{1};
-            obj.hCompareWith.hSensorPopup.String = obj.getProject().getSensors().getCaption('cluster');
+            obj.hCompareWith.hSensorPopup.Items = obj.getProject().getSensors().getCaption('cluster');
 
             if isempty(obj.compareSensor)
                 sensors = obj.getProject().getSensors();
@@ -1307,18 +1307,18 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.deleteSensorPlot('compare','pp');
             end
 %             obj.compareSensor.preComputePreprocessedData();
-            disp(checked)
+%             disp(checked)
         end
         
-        function compareWithSensorPopup(obj,~,~)
-            value = obj.hCompareWith.hSensorPopup.Value;
+        function compareWithSensorPopup(obj, src, event)
+            sensorInd = cellfun(@(x) strcmp(x,event.Value), src.Items);
             if obj.compareSensor ~= obj.getCurrentSensor()
                 obj.compareSensor.deletePreprocessedData();
             end
             sensors = obj.getProject().getSensors();
-            obj.compareSensor = sensors(value);
+            obj.compareSensor = sensors(sensorInd);
             obj.compareSensor.preComputePreprocessedData();
-            disp(value)
+%             disp(value)
             if obj.hCompareWith.hCompareWithCheckbox.Value
 %                 obj.deleteSensorPlot('compare','raw');
                 obj.deleteSensorPlot('compare','pp');
