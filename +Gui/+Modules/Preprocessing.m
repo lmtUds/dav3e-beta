@@ -276,19 +276,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             periodEdit = uieditfield(clusterGrid,'numeric',...
                 'Value',0.1,...
-                'ValueChangedFcn',@obj.samplingPeriodEditCallback);
+                'ValueChangedFcn',@(src,event)obj.samplingPeriodEditCallback(src,event));
             periodEdit.Layout.Row = 2;
             periodEdit.Layout.Column = 2;
             
             offsetEdit = uieditfield(clusterGrid,'numeric',...
                 'Value',100,...
-                'ValueChangedFcn',@obj.offsetEditCallback);
+                'ValueChangedFcn',@(src,event)obj.offsetEditCallback(src,event));
             offsetEdit.Layout.Row = 3;
             offsetEdit.Layout.Column = 2;
             
             virtOffsetEdit = uieditfield(clusterGrid,'numeric',...
                 'Value',0,...
-                'ValueChangedFcn',@obj.virtualOffsetEditCallback);
+                'ValueChangedFcn',@(src,event)obj.virtualOffsetEditCallback(src,event));
             virtOffsetEdit.Layout.Row = 4;
             virtOffsetEdit.Layout.Column = 2;
                         
@@ -314,19 +314,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % cycle point set dropdown and buttons
             cyclePointsDropdown = uidropdown(cyclePointsGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@obj.dropdowCyclePointSetCallback);
+                'ValueChangedFcn',@(src,event)obj.dropdownCyclePointSetCallback(src,event));
             cyclePointsDropdown.Layout.Row = 2;
             cyclePointsDropdown.Layout.Column = [1 2];
             
             cPointSetAdd = uibutton(cyclePointsGrid,...
                 'Text','+',...
-                'ButtonPushedFcn',@obj.dropdownNewCyclePointSet);
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewCyclePointSet(src,event,cyclePointsDropdown));
             cPointSetAdd.Layout.Row = 2;
             cPointSetAdd.Layout.Column = 3;
                        
             cPointSetRem = uibutton(cyclePointsGrid,...
                 'Text','-',...
-                'ButtonPushedFcn',@obj.dropdownRemoveCyclePointSet);
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemoveCyclePointSet(src,event,cyclePointsDropdown));
             cPointSetRem.Layout.Row = 2;
             cPointSetRem.Layout.Column = 4;
             
@@ -798,18 +798,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         %% dropdown callbacks for cycle point sets
-        function dropdownNewCyclePointSet(obj,h)
+        function dropdownNewCyclePointSet(obj,src,event,dropdown)
             cps = obj.getProject().addCyclePointSet();
             obj.currentCyclePointSet = cps;
-%             obj.addCyclePoint(0);
-            h.appendItem(cps.getCaption());
-            h.selectLastItem();
-%             obj.handleCyclePointSetChange();
-%             obj.main.populateSensorSetTable();
+            dropdown.Items{end+1} = char(cps.getCaption());
+            dropdown.Value = char(cps.getCaption());
         end
         
-        function dropdownRemoveCyclePointSet(obj,h)
-            idx = h.getSelectedIndex();
+        function dropdownRemoveCyclePointSet(obj,src,event,dropdown)
+            idx = src.getSelectedIndex();
             cpss = obj.getProject().poolCyclePointSets;
             cps = cpss(idx);
             sensorsWithFds = obj.getProject().checkForSensorsWithCyclePointSet(cps);
@@ -835,7 +832,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         newCps = cpss(sel);
                     case 'Replace with new'
                         newCps = obj.getProject().addCyclePointSet();
-                        h.appendItem(newCps.getCaption());
+                        src.appendItem(newCps.getCaption());
                         obj.getProject().replaceCyclePointSetInSensors(cps,newCps);
                     case 'Cancel'
                         return
@@ -845,7 +842,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolCyclePointSets) == 1
                     newCps = obj.getProject().addCyclePointSet();
-                    h.appendItem(newCps.getCaption());
+                    src.appendItem(newCps.getCaption());
                 else
                     if idx == 1
                         newCps = obj.getProject().poolCyclePointSets(2);
@@ -858,32 +855,28 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentCyclePointSet = newCps;
             obj.getProject().removeCyclePointSet(cps);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentCyclePointSet.getCaption());
+            src.removeItemAt(idx);
+            src.setSelectedItem(obj.currentCyclePointSet.getCaption());
             obj.handleCyclePointSetChange();
             obj.main.populateSensorSetTable();
         end
-        function dropdownCyclePointSetCallback(obj,event)
+        function dropdownCyclePointSetCallback(obj, src, event)
            if event.Edited
-               dropdownCyclePointSetRename(obj,h,newName,index)
+               index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+               newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolCyclePointSets.getCaption()));
+               obj.getProject().poolCyclePointSets(index).setCaption(newName);
+               src.Items{index} = newName;
+               obj.handleCyclePointSetChange();
+               obj.main.populateSensorSetTable();
            else 
-               dropdownCyclePointSetChange(obj,h,newItem,newIndex)
+               index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+               obj.currentCyclePointSet = ...
+                   obj.getProject().poolCyclePointSets(index);
+               obj.handleCyclePointSetChange();
+               obj.main.populateSensorSetTable();
            end
-        end
-        function dropdownCyclePointSetRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolCyclePointSets.getCaption()));
-            obj.getProject().poolCyclePointSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.handleCyclePointSetChange();
-            obj.main.populateSensorSetTable();
-        end
-        
-        function dropdownCyclePointSetChange(obj,h,newItem,newIndex)
-            obj.currentCyclePointSet = ...
-                obj.getProject().poolCyclePointSets(newIndex);
-            obj.handleCyclePointSetChange();
-            obj.main.populateSensorSetTable();
-        end        
+        end       
         
         %% dropdown callbacks for index point sets
         function dropdownNewIndexPointSet(obj,h)
@@ -1327,49 +1320,26 @@ classdef Preprocessing < Gui.Modules.GuiModule
             end            
         end        
         
-        function samplingPeriodEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hSamplingPeriodEdit.String);
-            if (~isnumeric(newNum)) || isnan(newNum)
-                obj.hCompareWith.hSamplingPeriodEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().samplingPeriod);
-                return
-            end
-            obj.getCurrentCluster().samplingPeriod = newNum;
+        function samplingPeriodEditCallback(obj,src,event)
+            obj.getCurrentCluster().samplingPeriod = event.Value;
             obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
             obj.updatePlotsInPlace();
             obj.populateCyclePointsTable();
             obj.populateIndexPointsTable();
         end
         
-        function offsetEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hOffsetEdit.String);
-            if ~isnumeric(newNum) || isnan(newNum)
-                obj.hCompareWith.hOffsetEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().offset);
-                return
-            end
-            obj.getProject().getCurrentCluster().offset = newNum;
+        function offsetEditCallback(obj,src,event)
+            obj.getProject().getCurrentCluster().offset = event.Value;
             iOffset = obj.getProject().getCurrentCluster().getAutoIndexOffset(obj.getProject().clusters);
             obj.getProject().getCurrentCluster().indexOffset = iOffset;
-            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(iOffset);
+            obj.hCompareWith.hVirtualOffsetEdit.Value = iOffset;
             obj.updatePlotsInPlace();
             obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
-            for i = 1:numel(obj.cyclePoints)
-                id = obj.cyclePointTable.getRowObjectRow(obj.cyclePoints(i));
-                gPoint = obj.cyclePoints(i);
-                obj.cyclePointTable.setValue(gPoint.getTimePosition(),id,3);
-                obj.cyclePointTable.setValue(gPoint.getPosition(),id,2);
-            end
+            obj.populateCyclePointsTable();
         end
         
-        function virtualOffsetEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hVirtualOffsetEdit.String);
-            if ~isnumeric(newNum) || isnan(newNum)
-                obj.hCompareWith.hVirtualOffsetEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().indexOffset);
-                return
-            end
-            obj.getProject().getCurrentCluster().indexOffset = newNum;
+        function virtualOffsetEditCallback(obj,src,event)
+            obj.getProject().getCurrentCluster().indexOffset = event.Value;
             obj.updatePlotsInPlace();
         end
         
