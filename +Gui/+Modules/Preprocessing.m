@@ -1022,6 +1022,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             t.jTable.setAutoResort(false)
             obj.cyclePointTable.CellEditCallback = ...
                 @(src, event) obj.cyclePointTableEditCallback(src, event);
+            obj.cyclePointTable.CellSelectionCallback = ...
+                @(src, event) obj.cyclePointTableClickCallback(src, event);
 %             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
 %             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
         end
@@ -1170,28 +1172,30 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.cyclePointTable.jTable.sortColumn(3);
         end
         
-        function cyclePointTableDataChangeCallback(obj,rc,v)
+        function cyclePointTableClickCallback(obj,src,event)
+            % check if a single color picker was selected
+            row = event.Indices(1);
+            col = event.Indices(2);
+            cPoint = src.UserData(row);
+            clr = cPoint.getObject.getColor();
+        end
+                
+        function cyclePointPositionChangedCallback(obj,point,~)
             %%
-            % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.cyclePointTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition(v{i},obj.getProject().getCurrentSensor());
-                        obj.cyclePointTable.setValue(o.getTimePosition(),rc(i,1),3);
-                    case 3
-                        o.setTimePosition(v{i});
-                        obj.cyclePointTable.setValue(o.getPosition(),rc(i,1),2);
-                    case 4
-                        o.setColor(v{i});
-                        idx = ismember(obj.cyclePoints,o);
-                        obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
-                        obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
-                end
+            % update the corresponding lines in cyclic plot when a
+            % point selector in the quasistatic plot has moved
+            idx = ismember(obj.cyclePoints.getPoint(),point);
+            cycle_point = point.getCyclePosition(point.currentCluster);
+            if ~isnan(cycle_point)
+                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster));
+                obj.hLines.current.raw.cycle(idx).YData = d;
+                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster),true);
+                obj.hLines.current.pp.cycle(idx).YData = d;
             end
-            obj.cyclePointTable.jTable.sortColumn(3);
+%             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster));
+%             obj.hLines.compare.raw.cycle(idx).YData = d;
+%             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster),true);
+%             obj.hLines.compare.pp.cycle(idx).YData = d;            
         end
         
         function indexPointTableEditCallback(obj, src, event)
@@ -1212,6 +1216,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             end
             tableColSort(obj.indexPointTable,2,'a');
         end
+        
         function indexPointTableDataChange(obj,rc,v)
             %%
             % write changes from the table to the point object
@@ -1229,25 +1234,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
                 end
             end
-        end
-        
-        function cyclePointPositionChangedCallback(obj,point,~)
-            %%
-            % update the corresponding lines in cyclic plot when a
-            % point selector in the quasistatic plot has moved
-            idx = ismember(obj.cyclePoints.getPoint(),point);
-            cycle_point = point.getCyclePosition(point.currentCluster);
-            if ~isnan(cycle_point)
-                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster));
-                obj.hLines.current.raw.cycle(idx).YData = d;
-                d = obj.getProject().getCurrentSensor().getCycleAt(point.getCyclePosition(point.currentCluster),true);
-                obj.hLines.current.pp.cycle(idx).YData = d;
-            end
-%             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster));
-%             obj.hLines.compare.raw.cycle(idx).YData = d;
-%             d = obj.compareSensor.getCycleAt(point.getCyclePosition(point.currentCluster),true);
-%             obj.hLines.compare.pp.cycle(idx).YData = d;            
-        end
+        end      
         
         function indexPointPositionChangedCallback(obj,point,~)
             %%
@@ -1263,16 +1250,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             d = obj.compareSensor.getQuasistaticSignalAtIndex(point.getIndexPosition(point.currentCluster),true);
 %             obj.hLines.compare.pp.quasistatic(idx).YData = d;            
         end
-        
-        function cyclePointTableMouseClickedCallback(obj,visRC,actRC)
-            %%
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.cyclePointTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.cyclePointTable.onMouseReleasedCallback = @()obj.cyclePointTableMouseReleasedCallback(o);
-        end
-        
+              
         function indexPointTableMouseClickedCallback(obj,visRC,actRC)
             %%
             % highlight the corresponding graphics object when the mouse
@@ -1281,15 +1259,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             o.setHighlight(true);
             obj.indexPointTable.onMouseReleasedCallback = @()obj.indexPointTableMouseReleasedCallback(o);
         end
-        
-        function cyclePointTableMouseReleasedCallback(obj,gObject)
-            %%
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.cyclePointTable.onMouseReleasedCallback = [];
-        end
-        
+                
         function indexPointTableMouseReleasedCallback(obj,gObject)
             %%
             % un-highlight the previously highlighted graphics object when
