@@ -806,30 +806,37 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         function dropdownRemoveCyclePointSet(obj,src,event,dropdown)
-            idx = src.getSelectedIndex();
-            cpss = obj.getProject().poolCyclePointSets;
-            cps = cpss(idx);
-            sensorsWithFds = obj.getProject().checkForSensorsWithCyclePointSet(cps);
+            cPointSets = obj.getProject().poolCyclePointSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),cPointSets);
+            cps = cPointSets(idx);
+            sensorsWithCps = obj.getProject().checkForSensorsWithCyclePointSet(cps);
             
-            if numel(sensorsWithFds) > 1  % the current sensor always has the FDS to delete
+            if numel(sensorsWithCps) > 1  % the current sensor always has the Cps to delete
                 choices = {};
-                if numel(cpss) > 1
+                if numel(cPointSets) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The cycle point set "' char(cps.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Cycle point set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        cpss(idx) = [];
-                        [sel,ok] = listdlg('ListString',cpss.getCaption(), 'SelectionMode','single');
+                        cPointSets(idx) = [];
+                        [sel,ok] = listdlg('PromptString','Please select a replacement cycle point set',...
+                            'ListString',cPointSets.getCaption(),...
+                            'SelectionMode','single');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceCyclePointSetInSensors(cps,cpss(sel));
-                        newCps = cpss(sel);
+                        obj.getProject().replaceCyclePointSetInSensors(cps,cPointSets(sel));
+                        newCps = cPointSets(sel);
                     case 'Replace with new'
                         newCps = obj.getProject().addCyclePointSet();
                         src.appendItem(newCps.getCaption());
@@ -842,12 +849,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolCyclePointSets) == 1
                     newCps = obj.getProject().addCyclePointSet();
-                    src.appendItem(newCps.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newCps.getCaption())];
+                else    %select a CPS we already have
+                    if idx(1)   %the first logical index had the true
                         newCps = obj.getProject().poolCyclePointSets(2);
                     else
-                        newCps = obj.getProject().poolCyclePointSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newCps = obj.getProject().poolCyclePointSets(circshift(idx,-1));
                     end
                 end
             end
@@ -855,8 +863,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentCyclePointSet = newCps;
             obj.getProject().removeCyclePointSet(cps);
                 
-            src.removeItemAt(idx);
-            src.setSelectedItem(obj.currentCyclePointSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newCps.caption);  %set the new one
             obj.handleCyclePointSetChange();
             obj.main.populateSensorSetTable();
         end
