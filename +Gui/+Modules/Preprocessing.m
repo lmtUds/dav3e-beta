@@ -1169,22 +1169,42 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 case 3
                     cPoint.setTimePosition(event.EditData);
                     src.Data(row,2) = cPoint.getPosition();
-%                 case 4
-%                     o.setColor(v{i});
-%                     idx = ismember(obj.cyclePoints,o);
-%                     obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
-%                     obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
+                case 4
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    cPoint.setColor(rgbClr);
+                    idx = ismember(obj.cyclePoints,cPoint);
+                    obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                    obj.hLines.current.pp.cycle(idx).Color = rgbClr;
             end
             tableColSort(obj.cyclePointTable,3,'a');
-%             obj.cyclePointTable.jTable.sortColumn(3);
         end
         
         function cyclePointTableClickCallback(obj,src,event)
             % check if a single color picker was selected
-            row = event.Indices(1);
-            col = event.Indices(2);
-            cPoint = src.UserData(row);
-            clr = cPoint.getObject.getColor();
+            if size(event.Indices,1) == 1 && event.Indices(2) == 4
+                row = event.Indices(1);
+                col = event.Indices(2);
+                cPoint = src.UserData(row);
+                origClr = cPoint.getObject.getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                
+                cPoint.setColor(rgbClr);
+                idx = ismember(obj.cyclePoints,cPoint);
+                obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                obj.hLines.current.pp.cycle(idx).Color = rgbClr;
+            end
         end
                 
         function cyclePointPositionChangedCallback(obj,point,~)
