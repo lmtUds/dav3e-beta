@@ -38,6 +38,8 @@ if any(rgbClr >1) || any(rgbClr <0)
 end
 
 % as we asserted integrity we can generate the final string
-clrStr = [num2str(rgbClr(1)),',',num2str(rgbClr(2)),',',num2str(rgbClr(3))];
+precision = 2;
+clrStr = [num2str(rgbClr(1),precision),',',...
+    num2str(rgbClr(2),precision),',',num2str(rgbClr(3),precision)];
 end
 
