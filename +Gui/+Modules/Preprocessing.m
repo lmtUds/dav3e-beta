@@ -1000,17 +1000,24 @@ classdef Preprocessing < Gui.Modules.GuiModule
             positions = num2cell(gPoints.getPosition());
             time_positions = num2cell(gPoints.getTimePosition());
             % TODO re-add the colour functionality
-%             colors = num2cell(gPoints.getPoint().getJavaColor());
-%             data = [captions, positions, time_positions, colors];
-            data = [captions, positions, time_positions];
+            clrArray = gPoints.getObject.getColor();
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
+            data = [captions, positions, time_positions, colors];
+%             data = [captions, positions, time_positions];
 
             t = obj.cyclePointTable;
-            t.ColumnName = {'caption','cycle','time in s'};
-%             t.setData(data,{'caption','cycle','time in s','color'});
+%             t.ColumnName = {'caption','cycle','time in s'};
+            t.ColumnName = {'caption','cycle','time in s','color'};
 %             t.setRowObjects(gPoints);
-            t.ColumnFormat = {'char' 'numeric' 'numeric'};
+%             t.ColumnFormat = {'char' 'numeric' 'numeric'};
+            t.ColumnFormat = {'char' 'numeric' 'numeric' 'char'};
 %             t.ColumnSortable = [false false true];
-            t.ColumnEditable = [true true true];
+%             t.ColumnEditable = [true true true];
+            t.ColumnEditable = [true true true true];
+            t.ColumnWidth = {'auto' 'fit' 'fit' 'fit'};
             t.Data = data;
             t.UserData = gPoints;
 
