@@ -999,7 +999,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
             time_positions = num2cell(gPoints.getTimePosition());
-            % TODO re-add the colour functionality
+            
             clrArray = gPoints.getObject.getColor();
             colors = cell(size(clrArray,1),1);
             for i = 1:size(clrArray,1)
@@ -1041,15 +1041,20 @@ classdef Preprocessing < Gui.Modules.GuiModule
             gPoints = obj.indexPoints;
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
-%             colors = num2cell(gPoints.getPoint().getJavaColor());
-%             data = [captions, positions, colors];
-            data = [captions, positions];
+            
+            clrArray = gPoints.getObject.getColor();
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
+            data = [captions, positions, colors];
+%             data = [captions, positions];
             
             t = obj.indexPointTable;
             
-            t.ColumnName = {'caption','point'};
-            t.ColumnFormat = {'char' 'numeric'};
-            t.ColumnEditable = [true true];
+            t.ColumnName = {'caption','point','color'};
+            t.ColumnFormat = {'char' 'numeric' 'char'};
+            t.ColumnEditable = [true true true];
             t.Data = data;
             t.UserData = gPoints;
             tableColSort(t,2,'a');
@@ -1062,8 +1067,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             t.setColumnReorderingAllowed(false);
 %             t.jTable.sortColumn(2);
 %             t.jTable.setAutoResort(false)
-             obj.indexPointTable.CellEditCallback = ...
+            obj.indexPointTable.CellEditCallback = ...
                 @(src, event) obj.indexPointTableEditCallback(src, event);
+            obj.indexPointTable.CellSelectionCallback = ...
+                @(src, event) obj.indexPointTableClickCallback(src, event);
 %             obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
 %             obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
         end
@@ -1236,12 +1243,41 @@ classdef Preprocessing < Gui.Modules.GuiModule
                     iPoint.setPosition(event.EditData,...
                         obj.getProject().getCurrentSensor());
                 case 3
-%                     o.setColor(v{i});
-%                     idx = ismember(obj.indexPoints,o);
-%                     obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(obj.indexPoints(idx).getPoint().getColor(),obj.rawColorShade);
-%                     obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    iPoint.setColor(rgbClr);
+                    idx = ismember(obj.indexPoints,iPoint);
+                    obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                    obj.hLines.current.pp.quasistatic(idx).Color = rgbClr;
             end
             tableColSort(obj.indexPointTable,2,'a');
+        end
+        
+        function indexPointTableClickCallback(obj, src, event)
+            % check if a single color picker was selected
+            if size(event.Indices,1) == 1 && event.Indices(2) == 3
+                row = event.Indices(1);
+                col = event.Indices(2);
+                iPoint = src.UserData(row);
+                origClr = iPoint.getObject.getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                
+                iPoint.setColor(rgbClr);
+                idx = ismember(obj.indexPoints,iPoint);
+                obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                obj.hLines.current.pp.quasistatic(idx).Color = rgbClr;
+            end
         end
         
         function indexPointTableDataChange(obj,rc,v)
@@ -1276,23 +1312,6 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.hLines.compare.raw.quasistatic(idx).YData = d;
 %             d = obj.compareSensor.getQuasistaticSignalAtIndex(point.getIndexPosition(point.currentCluster),true);
 %             obj.hLines.compare.pp.quasistatic(idx).YData = d;            
-        end
-              
-        function indexPointTableMouseClickedCallback(obj,visRC,actRC)
-            %%
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.indexPointTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.indexPointTable.onMouseReleasedCallback = @()obj.indexPointTableMouseReleasedCallback(o);
-        end
-                
-        function indexPointTableMouseReleasedCallback(obj,gObject)
-            %%
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.indexPointTable.onMouseReleasedCallback = [];
         end
         
         function compareWithCheckboxCallback(obj,~,~)
