@@ -1170,12 +1170,12 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 case 1
                     cPoint.getObject().setCaption(event.EditData);
                 case 2
-                    cPoint.setPosition(event.EditData,...
+                    cPoint.setPosition(event.NewData,...
                         obj.getProject().getCurrentSensor());
-                    src.Data(row,3) = cPoint.getTimePosition();
+                    src.Data{row,3} = cPoint.getTimePosition();
                 case 3
-                    cPoint.setTimePosition(event.EditData);
-                    src.Data(row,2) = cPoint.getPosition();
+                    cPoint.setTimePosition(event.NewData);
+                    src.Data{row,2} = cPoint.getPosition();
                 case 4
                     try %to convert the edited string to a color triplet
                         rgbClr = str2clr(event.EditData);
@@ -1240,7 +1240,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 case 1
                     iPoint.getObject().setCaption(event.EditData);
                 case 2
-                    iPoint.setPosition(event.EditData,...
+                    iPoint.setPosition(event.NewData,...
                         obj.getProject().getCurrentSensor());
                 case 3
                     try %to convert the edited string to a color triplet
