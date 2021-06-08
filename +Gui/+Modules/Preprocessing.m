@@ -1548,7 +1548,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.setGlobalYLimits();
         end
         
-        function removePreprocessing(obj)
+        function removePreprocessing(obj, src, event)
             pp = obj.currentPreprocessingChain.preprocessings;
             captions = pp.getCaption();
             %uniqueTags = unique(captions);
@@ -1564,14 +1564,14 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.setGlobalYLimits();
         end
         
-        function movePreprocessingUp(obj)
+        function movePreprocessingUp(obj, src, event)
             obj.currentPreprocessing.moveUp();
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
         end
         
-        function movePreprocessingDown(obj)
+        function movePreprocessingDown(obj, src, event)
             obj.currentPreprocessing.moveDown();
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
@@ -1591,12 +1591,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             [pgf.onMouseClickedCallback] = deal(@obj.changeCurrentPreprocessing);
         end
         
-        function quasistaticAxesButtonDownCallback(obj,varargin)
+        function quasistaticAxesButtonDownCallback(obj,src, event)
             switch get(gcf,'SelectionType')
                 case 'open' % double-click
-                    coord = get(gca,'Currentpoint');
-                    x = coord(1,1);
-                    obj.addCyclePoint(x);
+                    obj.addCyclePoint(event.IntersectionPoint(1))
             end
         end
         
@@ -1652,12 +1650,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.updateSensorPlots();
         end
         
-        function cycleAxesButtonDownCallback(obj,varargin)
+        function cycleAxesButtonDownCallback(obj,src,event)
             switch get(gcf,'SelectionType')
                 case 'open' % double-click
-                    coord = get(gca,'Currentpoint');
-                    x = coord(1,1);
-                    obj.addIndexPoint(x);
+                    obj.addIndexPoint(event.IntersectionPoint(1));
             end
         end
         
