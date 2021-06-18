@@ -27,6 +27,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         blocks
         panel
         selectedBlock
+        skippedBlocks
     end
     
     events (HasCallbackProperty, NotifyAccess = protected)
@@ -84,14 +85,22 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % TODO
         end
         
-        function blockSelectCallback(obj, src, event, block)
+        function blockSelectCallback(obj, src, event)
+            % TODO
+        end
+        
+        function collapseCallback(obj, src, event)
+            % TODO
+        end
+        
+        function expandCallback(obj, src, event)
             % TODO
         end
     end
     methods (Access = protected)
         function setup(obj)
             % TODO
-            obj.panel = uipanel(obj);
+            obj.panel = uipanel(obj);%,'BorderType','none');
             obj.blocks = [];
         end
         
@@ -125,19 +134,19 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             rowCount = 0;
             heights = {};
             for k = 1:numel(categories)
-                rowCount = rowCount + 1;
+                rowCount = rowCount + 1; %row per category header
                 heights = [heights {18}];
                 for i = 1:numel(groupedBlocks{k})
-                    rowCount = rowCount + 1;
+                    rowCount = rowCount + 1;    %row per block in the category
                     heights = [heights {15}];
                     for j = 1:numel(groupedBlocks{k}(i).parameters)
                         if groupedBlocks{k}(i).parameters(j).internal
                             continue
                         end
-                        rowCount = rowCount + 1;
+                        rowCount = rowCount + 1; %row per parameter in the block
                         heights = [heights {13}];
                     end
-                    rowCount = rowCount + 1;
+                    rowCount = rowCount + 1; %row for the block separator line
                     heights = [heights {3}];
                 end
             end
@@ -147,11 +156,18 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % initialize a grid of proper size
             grid = uigridlayout(obj.panel, [rowCount 2],...                
                 'Scrollable','on',...
-                'ColumnWidth',{'2x','1x'},...
+                'ColumnWidth',{'3x','1x'},...
                 'RowHeight',heights,...
                 'RowSpacing',2,...
                 'Padding',[2 2 2 2]);
-            % TODO group by category
+            
+            % fill the left column with the tree structure
+            tree = uitree(grid,'SelectionChangedFcn',...
+                @(src, event) obj.blockSelectCallback(src, event),...
+                'NodeExpandedFcn',@(src,event) obj.expandCallback(src,event),...
+                'NodeCollapsedFcn',@(src,event) obj.collapseCallback(src,event));
+            tree.Layout.Row = [1 rowCount];
+            tree.Layout.Column = 1;
             
             rowCount = 1;    %reuse the counter to fill grid rows correctly
             for k = 1:numel(categories) %loop through all categories
