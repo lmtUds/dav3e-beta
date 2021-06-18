@@ -31,13 +31,16 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     
     events (HasCallbackProperty, NotifyAccess = protected)
-        blockEdit %might not be needed
-        blockSelect
+        ValueChanged
+        SelectionChanged
     end
     
     methods
         function addBlocks(obj, blocks)
             obj.blocks = [obj.blocks,blocks];
+            if length(obj.blocks)>=1
+                obj.selectedBlock = obj.blocks(1);
+            end
             obj.update();
         end
         
@@ -51,6 +54,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             obj.blocks = ...
                 [obj.blocks(1:ind-1),obj.blocks(ind+1:end)];
             obj.update();
+            
+            % TODO handle selected block deletion
         end
         
         function blocks = getAllBlocks(obj)
@@ -64,6 +69,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                % TODO
                block = 'foo'; 
             end
+        end
+        
+        function selectedblock = getSelectedBlock(obj)
+            selectedblock = obj.selectedBlock;
         end
         
         function index = getBlockIndex(obj, block)
@@ -81,12 +90,15 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             end
         end
                 
-        function blockEditCallback(obj, src, event, block)
-            % TODO
+        function valueEditCallback(obj, src, event, param)
+            param.value = event.Value;
+            notify(obj,'ValueChanged');
         end
         
         function blockSelectCallback(obj, src, event)
-            % TODO
+            node = event.SelectedNodes;
+            obj.selectedBlock = node.NodeData(1);
+            notify(obj,'SelectionChanged');
         end
         
         function collapseCallback(obj, src, event)
@@ -100,7 +112,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     methods (Access = protected)
         function setup(obj)
             % TODO
-            obj.panel = uipanel(obj);%,'BorderType','none');
+            obj.panel = uipanel(obj,'BorderType','none');
             obj.blocks = [];
         end
         
@@ -147,8 +159,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         rowCount = rowCount + 1; %row per parameter in the block
                         heights = [heights charHeight];
                     end
-%                     rowCount = rowCount + 1; %row for the block separator line
-%                     heights = [heights {3}];
                 end
             end
             if rowCount == 0    % abort if there are no blocks/parameters
@@ -177,12 +187,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             for k = 1:numel(categories) %loop through all categories
                 category = uitreenode(tree,...
                         'Text',char(categories(k)),...
-                        'NodeData',groupedBlocks{k});%,...
-%                         'FontSize',14,...
-%                         'FontWeight','bold');%,...
-%                         'BackgroundColor',[1 1 1]);
-%                 category.Layout.Row = rowCount;
-%                 category.Layout.Column = [1 2];
+                        'NodeData',groupedBlocks{k});
                 
                 rowCount = rowCount + 1;   %advance to the next row 
                 for i = 1:numel(groupedBlocks{k}) %loop through all blocks
@@ -191,11 +196,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                     % create a label for the block name
                     block = uitreenode(category,...
                         'Text',b.shortCaption,...
-                        'NodeData',b);%,...
-%                         'FontWeight','bold',...
-%                         'HorizontalAlignment','center');
-%                     blockName.Layout.Row = rowCount;
-%                     blockName.Layout.Column = 1;
+                        'NodeData',b);
 
                     rowCount = rowCount + 1;   %advance to the next row                
                     for j = 1:numel(b.parameters)   %loop through all parameters
@@ -206,39 +207,30 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         end
 
                         %create a label for the parameter
-                        label = uitreenode(block,...
+                        param = uitreenode(block,...
                             'Text',p.shortCaption,...
-                            'NodeData',p);
-%                             'HorizontalAlignment','right');
-%                         label.Layout.Row = rowCount;
-%                         label.Layout.Column = 1;
+                            'NodeData',b);
 
                         %create the edit field for the parameter value
                         if isnumeric(p.value)
                             edit = uieditfield(grid,...
                                 'numeric',...
                                 'Editable','on',...
-                                'Value',p.value);
+                                'HorizontalAlignment','left',...
+                                'Value',p.value,...
+                                'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                         else
                             edit = uieditfield(grid,...
                                 'Editable','on',...
-                                'Value',p.value);
+                                'HorizontalAlignment','left',...
+                                'Value',p.value,...
+                                'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                         end
                         edit.Layout.Row = rowCount;
                         edit.Layout.Column = 2;
 
                         rowCount = rowCount + 1;   %advance to the next row
                     end
-                    % draw a divider line for better visual separation
-%                     divLine = repmat('-',1,240);
-%                     divider = uilabel(grid,...
-%                         'Text',divLine,...
-%                         'FontSize',2,...
-%                         'HorizontalAlignment','center');
-%                     divider.Layout.Row = rowCount;
-%                     divider.Layout.Column = 2;
-% 
-%                     rowCount = rowCount + 1;   %advance to the next row
                 end
             end
             expand(tree,'all');
