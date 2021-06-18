@@ -205,11 +205,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
             % create a grid layout for the preprocessing panel
-            moduleLayout = uigridlayout(uiParent,[12 2],...
+            moduleLayout = uigridlayout(uiParent,[22 3],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
-                'ColumnWidth',{'1x','3x'},...
-                'RowHeight',{'fit'},...
+                'ColumnWidth',{'8x','7x','17x'},...
+                'RowHeight',{'1x'},...
                 'RowSpacing',7);
             
             % create the menu bar dropdown
@@ -225,7 +225,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'RowHeight',{'fit'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            compareGrid.Layout.Row = 1;
+            compareGrid.Layout.Row = [1 2];
             compareGrid.Layout.Column = 1;
             
             compareLabel = uilabel(compareGrid,...
@@ -253,7 +253,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'RowHeight',{'fit'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            clusterGrid.Layout.Row = [2 3];
+            clusterGrid.Layout.Row = [3 6];
             clusterGrid.Layout.Column = 1;
             
             clusterLabel = uilabel(clusterGrid,...
@@ -302,7 +302,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'RowHeight',{'1x','1x','4x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            cyclePointsGrid.Layout.Row = [4 6];
+            cyclePointsGrid.Layout.Row = [7 14];
             cyclePointsGrid.Layout.Column = 1;
             
             cyclePointsLabel = uilabel(cyclePointsGrid,...
@@ -344,7 +344,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'RowHeight',{'1x','1x','4x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            qsPointsGrid.Layout.Row = [7 9];
+            qsPointsGrid.Layout.Row = [15 22];
             qsPointsGrid.Layout.Column = 1;
             
             qsPointsLabel = uilabel(qsPointsGrid,...
@@ -382,13 +382,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             
             % create and fill the grid layout of the 'preprocessing chain' section
-            chainGrid = uigridlayout(moduleLayout, [4 4],...
+            chainGrid = uigridlayout(moduleLayout, [22 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
                 'RowHeight',{'1x','1x','4x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            chainGrid.Layout.Row = [10 12];
-            chainGrid.Layout.Column = 1;
+            chainGrid.Layout.Row = [1 22];
+            chainGrid.Layout.Column = 2;
             
             chainLabel = uilabel(chainGrid,...
                 'Text','Preprocessing Chain',...
@@ -423,32 +423,32 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % preprocessing chain propgrid
 %             obj.propGrid = PropGrid(propGridPanel);
             obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid);
-            obj.propGrid.Layout.Row = 3;
+            obj.propGrid.Layout.Row = [3 21];
             obj.propGrid.Layout.Column = [1 4];
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
 
             chainElementAdd = uibutton(chainGrid,...
                 'Text','Add',...
                 'ButtonPushedFcn',@(src,event)obj.addPreprocessing(src,event));
-            chainElementAdd.Layout.Row = 4;
+            chainElementAdd.Layout.Row = 22;
             chainElementAdd.Layout.Column = 1;
             
             chainElementDel = uibutton(chainGrid,...
                 'Text','Delete',...
                 'ButtonPushedFcn',@(src,event)obj.removePreprocessing(src,event));
-            chainElementDel.Layout.Row = 4;
+            chainElementDel.Layout.Row = 22;
             chainElementDel.Layout.Column = 2;
             
             chainElementUp = uibutton(chainGrid,...
                 'Text','/\',...
                 'ButtonPushedFcn',@(src,event)obj.movePreprocessingUp(src,event));
-            chainElementUp.Layout.Row = 4;
+            chainElementUp.Layout.Row = 22;
             chainElementUp.Layout.Column = 3;
             
             chainElementDwn = uibutton(chainGrid,...
                 'Text','\/',...
                 'ButtonPushedFcn',@(src,event)obj.movePreprocessingDown(src,event));
-            chainElementDwn.Layout.Row = 4;
+            chainElementDwn.Layout.Row = 22;
             chainElementDwn.Layout.Column = 4;
             
             qsAx = uiaxes(moduleLayout);
@@ -456,8 +456,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
             qsAx.XLabel.String = 'Cycle number';
             qsAx.YLabel.String = 'Data / a.u.';
-            qsAx.Layout.Row = [1 6];
-            qsAx.Layout.Column = 2;
+            qsAx.Layout.Row = [1 11];
+            qsAx.Layout.Column = 3;
             
             obj.hAxQuasistatic = qsAx;
             
@@ -466,8 +466,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             cyAx.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
             cyAx.XLabel.String = 'Time /s';
             cyAx.YLabel.String = 'Data / a.u.';
-            cyAx.Layout.Row = [7 12];
-            cyAx.Layout.Column = 2;
+            cyAx.Layout.Row = [12 22];
+            cyAx.Layout.Column = 3;
             
             obj.hAxCycle = cyAx;
         end

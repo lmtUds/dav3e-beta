@@ -135,7 +135,7 @@ classdef MainRework < handle
 %             mainLayout = uiextras.VBoxFlex('Parent',f, 'Spacing',5);
             mainLayout = uigridlayout(f,[2 2]);
             mainLayout.RowHeight = {'3x','1x'};
-            mainLayout.ColumnWidth = {'1x','6x'};
+            mainLayout.ColumnWidth = {'1x','7x'};
 %             content = uiextras.HBox('Parent',mainLayout);
 %             content = uigridlayout(mainlayout,[4 4]);
 %             content.Layout.Row = 1;
