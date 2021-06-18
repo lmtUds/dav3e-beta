@@ -133,32 +133,36 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % properly into the grid
             rowCount = 0;
             heights = {};
+            charHeight = {22};
             for k = 1:numel(categories)
                 rowCount = rowCount + 1; %row per category header
-                heights = [heights {18}];
+                heights = [heights charHeight];
                 for i = 1:numel(groupedBlocks{k})
                     rowCount = rowCount + 1;    %row per block in the category
-                    heights = [heights {15}];
+                    heights = [heights charHeight];
                     for j = 1:numel(groupedBlocks{k}(i).parameters)
                         if groupedBlocks{k}(i).parameters(j).internal
                             continue
                         end
                         rowCount = rowCount + 1; %row per parameter in the block
-                        heights = [heights {13}];
+                        heights = [heights charHeight];
                     end
-                    rowCount = rowCount + 1; %row for the block separator line
-                    heights = [heights {3}];
+%                     rowCount = rowCount + 1; %row for the block separator line
+%                     heights = [heights {3}];
                 end
             end
             if rowCount == 0    % abort if there are no blocks/parameters
                 return
             end
+            rowCount = rowCount + 1; % append a blank row to fill space
+            heights = [heights {'1x'}];
+            
             % initialize a grid of proper size
             grid = uigridlayout(obj.panel, [rowCount 2],...                
                 'Scrollable','on',...
                 'ColumnWidth',{'3x','1x'},...
+                'RowSpacing',0,...
                 'RowHeight',heights,...
-                'RowSpacing',2,...
                 'Padding',[0 0 0 0]);
             
             % fill the left column with the tree structure
@@ -226,17 +230,18 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         rowCount = rowCount + 1;   %advance to the next row
                     end
                     % draw a divider line for better visual separation
-                    divLine = repmat('-',1,240);
-                    divider = uilabel(grid,...
-                        'Text',divLine,...
-                        'FontSize',2,...
-                        'HorizontalAlignment','center');
-                    divider.Layout.Row = rowCount;
-                    divider.Layout.Column = 2;
-
-                    rowCount = rowCount + 1;   %advance to the next row
+%                     divLine = repmat('-',1,240);
+%                     divider = uilabel(grid,...
+%                         'Text',divLine,...
+%                         'FontSize',2,...
+%                         'HorizontalAlignment','center');
+%                     divider.Layout.Row = rowCount;
+%                     divider.Layout.Column = 2;
+% 
+%                     rowCount = rowCount + 1;   %advance to the next row
                 end
             end
+            expand(tree,'all');
         end
     end
 end
