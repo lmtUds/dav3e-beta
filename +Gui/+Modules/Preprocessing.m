@@ -422,7 +422,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             % preprocessing chain propgrid
 %             obj.propGrid = PropGrid(propGridPanel);
-            obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid);
+            obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid,...
+                'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
             obj.propGrid.Layout.Row = [3 21];
             obj.propGrid.Layout.Column = [1 4];
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
@@ -1578,9 +1580,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.updatePlotsInPlace();
         end
         
-        function changeCurrentPreprocessing(obj,prop)
-            prop.userData
-            obj.currentPreprocessing = prop.userData;
+        function changeCurrentPreprocessing(obj,src,event)
+            obj.currentPreprocessing = src.getSelectedBlock;
         end
         
         function refreshPropGrid(obj)
@@ -1661,7 +1662,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             val = logical(obj.hCompareWith.hCompareWithCheckbox.Value);
         end
         
-        function onParameterChangedCallback(obj,prop,param)
+        function onParameterChangedCallback(obj,src,event)
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.compareSensor.preComputePreprocessedData();
             obj.updatePlotsInPlace();
