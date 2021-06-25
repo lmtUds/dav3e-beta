@@ -25,6 +25,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     properties (Access = private)
         blocks
+        categories
+        collapsedCategories
         panel
         selectedBlock
         skippedBlocks
@@ -102,11 +104,27 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         end
         
         function collapseCallback(obj, src, event)
-            % TODO
+            % get the data stored in the relevant tree node
+            dat = event.Node.NodeData;
+            if size(dat,2) > 1  %handle a category
+                cmp = event.Node.Text == obj.categories;
+                obj.collapsedCategories(cmp) = 1;
+            else %handle a block
+                dat.collapsed = 1;
+            end
+            obj.update();
         end
         
         function expandCallback(obj, src, event)
-            % TODO
+            % get the data stored in the relevant tree node
+            dat = event.Node.NodeData;
+            if size(dat,2) > 1  %handle a category
+                cmp = event.Node.Text == obj.categories;
+                obj.collapsedCategories(cmp) = 0;
+            else %handle a block
+                dat.collapsed = 0;
+            end
+            obj.update();
         end
     end
     methods (Access = protected)
@@ -121,13 +139,13 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             obj.panel.Children.delete();
             
             % group all blocks into their respective categories
-            categories = [];
             groupedBlocks = {};
             for i = 1:numel(obj.blocks) %loop through all blocks
                c = obj.blocks(i).type; 
-               cmp = c == categories;   %check if category is known
+               cmp = c == obj.categories;   %check if category is known
                if sum(cmp) == 0 % append if not
-                   categories = [categories c];
+                   obj.categories = [obj.categories c];
+                   obj.collapsedCategories = [obj.collapsedCategories 0];
                    cmp = [cmp 1];
                end
                % append the current block to its appropriate category group
@@ -139,6 +157,14 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                   groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
                end
             end
+            % eliminate empty(containing no blocks) categories
+            delInd = [];
+            for k = 1:numel(obj.categories)
+               if isempty(groupedBlocks{k})
+                   delInd = [delInd k];
+               end
+            end
+            obj.categories(delInd) = [];
             % compute the number of needed grid rows as dynamic adding to
             % the grid causes unwanted shrinking or stretching of elements
             % also generate a mapping for all row heights to fit contents
@@ -146,12 +172,18 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             rowCount = 0;
             heights = {};
             charHeight = {22};
-            for k = 1:numel(categories)
+            for k = 1:numel(obj.categories)
                 rowCount = rowCount + 1; %row per category header
                 heights = [heights charHeight];
+                if obj.collapsedCategories(k) %no lines for collapsed children
+                    continue
+                end
                 for i = 1:numel(groupedBlocks{k})
                     rowCount = rowCount + 1;    %row per block in the category
                     heights = [heights charHeight];
+                    if groupedBlocks{k}(i).collapsed %no lines for collapsed children
+                        continue
+                    end
                     for j = 1:numel(groupedBlocks{k}(i).parameters)
                         if groupedBlocks{k}(i).parameters(j).internal
                             continue
@@ -184,9 +216,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             tree.Layout.Column = 1;
             
             rowCount = 1;    %reuse the counter to fill grid rows correctly
-            for k = 1:numel(categories) %loop through all categories
+            for k = 1:numel(obj.categories) %loop through all categories
                 category = uitreenode(tree,...
-                        'Text',char(categories(k)),...
+                        'Text',char(obj.categories(k)),...
                         'NodeData',groupedBlocks{k});
                 
                 rowCount = rowCount + 1;   %advance to the next row 
@@ -197,8 +229,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                     block = uitreenode(category,...
                         'Text',b.shortCaption,...
                         'NodeData',b);
-
-                    rowCount = rowCount + 1;   %advance to the next row                
+                    if ~obj.collapsedCategories(k)
+                        rowCount = rowCount + 1;   %advance to the next row                
+                    end
                     for j = 1:numel(b.parameters)   %loop through all parameters
                         p = b.parameters(j);
 
@@ -210,30 +243,42 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         param = uitreenode(block,...
                             'Text',p.shortCaption,...
                             'NodeData',b);
+                        %create the edit field for the parameter value for
+                        %non collapsed blocks
+                        if ~b.collapsed && ~obj.collapsedCategories(k)
+                            if isnumeric(p.value)
+                                edit = uieditfield(grid,...
+                                    'numeric',...
+                                    'Editable','on',...
+                                    'HorizontalAlignment','left',...
+                                    'Value',p.value,...
+                                    'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
+                            else
+                                edit = uieditfield(grid,...
+                                    'Editable','on',...
+                                    'HorizontalAlignment','left',...
+                                    'Value',p.value,...
+                                    'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
+                            end
+                            edit.Layout.Row = rowCount;
+                            edit.Layout.Column = 2;
 
-                        %create the edit field for the parameter value
-                        if isnumeric(p.value)
-                            edit = uieditfield(grid,...
-                                'numeric',...
-                                'Editable','on',...
-                                'HorizontalAlignment','left',...
-                                'Value',p.value,...
-                                'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
-                        else
-                            edit = uieditfield(grid,...
-                                'Editable','on',...
-                                'HorizontalAlignment','left',...
-                                'Value',p.value,...
-                                'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
+                            rowCount = rowCount + 1;   %advance to the next row
                         end
-                        edit.Layout.Row = rowCount;
-                        edit.Layout.Column = 2;
-
-                        rowCount = rowCount + 1;   %advance to the next row
+                    end
+                    if b.collapsed
+                        collapse(block);
+                    else
+                        expand(block);
                     end
                 end
+                if obj.collapsedCategories(k)
+                    collapse(category);
+                else 
+                    expand(category);
+                end
             end
-            expand(tree,'all');
+%             expand(tree,'all');
         end
     end
 end

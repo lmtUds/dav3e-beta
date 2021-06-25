@@ -39,6 +39,8 @@ classdef DataProcessingBlock < Descriptions
         data
         
         empty = false
+        
+        collapsed = 0;
     end
     
     methods
