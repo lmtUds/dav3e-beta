@@ -1080,16 +1080,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function cyclePointDraggedCallback(obj,gPoint)
             %%
             % update the position in the table when the point is dragged
-            row = obj.cyclePointTable.getRowObjectRow(gPoint);
-            obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
-            obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
+%             row = obj.cyclePointTable.getRowObjectRow(gPoint);
+%             obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
+%             obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
+            obj.cyclePointTable.Data{gPoint.nPos,2} = gPoint.getPosition();
+            obj.cyclePointTable.Data{gPoint.nPos,3} = gPoint.getTimePosition();
         end
         
         function indexPointDraggedCallback(obj,gPoint)
             %%
             % update the position in the table when the point is dragged
-            row = obj.indexPointTable.getRowObjectRow(gPoint);
-            obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
+%             row = obj.indexPointTable.getRowObjectRow(gPoint);
+%             obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
+            obj.indexPointTable.Data{gPoint.nPos,2} = gPoint.getPosition();
         end
 
         function cyclePointDragStartCallback(obj,gObj)
@@ -1097,9 +1100,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
-            obj.cyclePointTable.setCallbacksActive(false);
-            objRow = obj.cyclePointTable.getRowObjectRow(gObj);
-            obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.cyclePointTable.setCallbacksActive(false);
+%             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
+%             obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
             idx = ismember(obj.cyclePoints,gObj);
             obj.hLines.current.raw.cycle(idx).LineWidth = 2;
             obj.hLines.current.pp.cycle(idx).LineWidth = 2;
@@ -1122,10 +1125,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.cycle(idx).LineWidth = 1;
                 obj.hLines.compare.pp.cycle(idx).LineWidth = 1;
             end
-            objRow = obj.cyclePointTable.getRowObjectRow(gObj);
-            obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-%             obj.cyclePointTable.setRowHeader();
-            obj.cyclePointTable.setCallbacksActive(true);
+%             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
+%             obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+% %             obj.cyclePointTable.setRowHeader();
+%             obj.cyclePointTable.setCallbacksActive(true);
         end
         
         function indexPointDragStartCallback(obj,gObj)
@@ -1133,9 +1136,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding quasistatic line bold
-            obj.indexPointTable.setCallbacksActive(false);
-            objRow = obj.indexPointTable.getRowObjectRow(gObj);
-            obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.indexPointTable.setCallbacksActive(false);
+%             objRow = obj.indexPointTable.getRowObjectRow(gObj);
+%             obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
             idx = ismember(obj.indexPoints,gObj);
             obj.hLines.current.raw.quasistatic(idx).LineWidth = 2;
             obj.hLines.current.pp.quasistatic(idx).LineWidth = 2;
@@ -1158,10 +1161,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.quasistatic(idx).LineWidth = 1;
                 obj.hLines.compare.pp.quasistatic(idx).LineWidth = 1;
             end
-            objRow = obj.indexPointTable.getRowObjectRow(gObj);
-            obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-%             obj.indexPointTable.setRowHeader();
-            obj.indexPointTable.setCallbacksActive(true);
+%             objRow = obj.indexPointTable.getRowObjectRow(gObj);
+%             obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+% %             obj.indexPointTable.setRowHeader();
+%             obj.indexPointTable.setCallbacksActive(true);
         end
         
         function cyclePointTableEditCallback(obj, src, event)

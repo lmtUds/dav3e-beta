@@ -278,7 +278,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                     expand(category);
                 end
             end
-%             expand(tree,'all');
         end
     end
 end
