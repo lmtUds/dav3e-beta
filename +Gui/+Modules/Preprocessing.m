@@ -623,7 +623,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         function handleSensorChange(obj,newSensor,oldSensor)
-            newSensor.getCaption()
+            newSensor.getCaption();
             newSensor.preComputePreprocessedData();
             
 %             obj.plotSensor('current','raw');
