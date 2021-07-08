@@ -555,7 +555,7 @@ classdef MainRework < handle
                 prevSensor = obj.project.getCurrentSensor();
                 prevCluster = prevSensor.getCluster();
                 
-                newSensor.setCurrent()
+                newSensor.setCurrent();
                 newSensor.getCluster().setCurrent();
                 
                 if prevCluster ~= newSensor.getCluster()
