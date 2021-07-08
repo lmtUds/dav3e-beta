@@ -356,19 +356,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % cycle point set dropdown and buttons
             qsPointsDropdown = uidropdown(qsPointsGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@obj.dropdowIndexPointSetCallback);
+                'ValueChangedFcn',@(src,event)obj.dropdowIndexPointSetCallback(src,event));
             qsPointsDropdown.Layout.Row = 2;
             qsPointsDropdown.Layout.Column = [1 2];
             
             qsPointSetAdd = uibutton(qsPointsGrid,...
                 'Text','+',...
-                'ButtonPushedFcn',@obj.dropdownNewIndexPointSet);
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewIndexPointSet(src,event,qsPointsDropdown));
             qsPointSetAdd.Layout.Row = 2;
             qsPointSetAdd.Layout.Column = 3;
                        
             qsPointSetRem = uibutton(qsPointsGrid,...
                 'Text','-',...
-                'ButtonPushedFcn',@obj.dropdownRemoveIndexPointSet);
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemoveIndexPointSet(src,event,qsPointsDropdown));
             qsPointSetRem.Layout.Row = 2;
             qsPointSetRem.Layout.Column = 4;
             
@@ -841,7 +841,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         newCps = cPointSets(sel);
                     case 'Replace with new'
                         newCps = obj.getProject().addCyclePointSet();
-                        src.appendItem(newCps.getCaption());
+                        dropdown.Items = [dropdown.Items char(newCps.getCaption())];
                         obj.getProject().replaceCyclePointSetInSensors(cps,newCps);
                     case 'Cancel'
                         return
@@ -889,59 +889,64 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end       
         
         %% dropdown callbacks for index point sets
-        function dropdownNewIndexPointSet(obj,h)
+        function dropdownNewIndexPointSet(obj,src,event,dropdown)
             ips = obj.getProject().addIndexPointSet();
             obj.currentIndexPointSet = ips;
-%             obj.addIndexPoint(0);
-            h.appendItem(ips.getCaption());
-            h.selectLastItem();
-%             obj.handleIndexPointSetChange();
-%             obj.main.populateSensorSetTable();
+            dropdown.Items{end+1} = char(ips.getCaption());
+            dropdown.Value = char(ips.getCaption());
         end
         
-        function dropdownRemoveIndexPointSet(obj,h)
-            idx = h.getSelectedIndex();
-            ipss = obj.getProject().poolIndexPointSets;
-            ips = ipss(idx);
-            sensorsWithFds = obj.getProject().checkForSensorsWithIndexPointSet(ips);
+        function dropdownRemoveIndexPointSet(obj,src,event,dropdown)
+            iPointSets = obj.getProject().poolIndexPointSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),iPointSets);
+            ips = iPointSets(idx);
+            sensorsWithIps = obj.getProject().checkForSensorsWithIndexPointSet(ips);
             
-            if numel(sensorsWithFds) > 1  % the current sensor always has the IPS to delete
+            if numel(sensorsWithIps) > 1  % the current sensor always has the IPS to delete
                 choices = {};
-                if numel(ipss) > 1
+                if numel(iPointSets) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The index point set "' char(ips.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Index point set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        ipss(idx) = [];
-                        [sel,ok] = listdlg('ListString',ipss.getCaption(), 'SelectionMode','single');
+                        iPointSets(idx) = [];
+                        [sel,ok] = listdlg('PromptString','Please select a replacement index point set',...
+                            'ListString',iPointSets.getCaption(),...
+                            'SelectionMode','single');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceIndexPointSetInSensors(ips,ipss(sel));
-                        newIps = ipss(sel);
+                        obj.getProject().replaceIndexPointSetInSensors(ips,iPointSets(sel));
+                        newIps = iPointSets(sel);
                     case 'Replace with new'
                         newIps = obj.getProject().addIndexPointSet();
-                        h.appendItem(newIps.getCaption());
+                        dropdown.Items = [dropdown.Items char(newIps.getCaption())];
                         obj.getProject().replaceIndexPointSetInSensors(ips,newIps);
                     case 'Cancel'
                         return
                 end
             else
-                % if there is only one FDS, it will now be deleted
+                % if there is only one IPS, it will now be deleted
                 % so we have to add a new one
                 if numel(obj.getProject().poolIndexPointSets) == 1
                     newIps = obj.getProject().addIndexPointSet();
-                    h.appendItem(newIps.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newIps.getCaption())];
+                else    %select an IPS we already have
+                    if idx(1)   %the first logical index had the true
                         newIps = obj.getProject().poolIndexPointSets(2);
                     else
-                        newIps = obj.getProject().poolIndexPointSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newIps = obj.getProject().poolIndexPointSets(circshift(idx,-1));
                     end
                 end
             end
@@ -949,34 +954,29 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentIndexPointSet = newIps;
             obj.getProject().removeIndexPointSet(ips);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentIndexPointSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newIps.caption);  %set the new one
             obj.handleIndexPointSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownIndexPointSetCallback(obj,event)
+        function dropdownIndexPointSetCallback(obj, src, event)
            if event.Edited
-               dropdownIndexPointSetRename(obj,h,newName,index)
-           else
-               dropdownIndexPointSetChange(obj,h,newItem,newIndex)
+               index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+               newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolIndexPointSets.getCaption()));
+               obj.getProject().poolIndexPointSets(index).setCaption(newName);
+               src.Items{index} = newName;
+               obj.handleIndexPointSetChange();
+               obj.main.populateSensorSetTable();
+           else 
+               index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+               obj.currentIndexPointSet = ...
+                   obj.getProject().poolIndexPointSets(index);
+               obj.handleIndexPointSetChange();
+               obj.main.populateSensorSetTable();
            end
         end
-        function dropdownIndexPointSetRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolIndexPointSets.getCaption()));
-            obj.getProject().poolIndexPointSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.handleIndexPointSetChange();
-            obj.main.populateSensorSetTable();
-        end
-        
-        function dropdownIndexPointSetChange(obj,h,newItem,newIndex)
-            obj.currentIndexPointSet = ...
-                obj.getProject().poolIndexPointSets(newIndex);
-            obj.handleIndexPointSetChange();
-            obj.main.populateSensorSetTable();
-        end
-        
         %%
         function val = get.currentCyclePointSet(obj)
             val = obj.getProject().currentCyclePointSet;
