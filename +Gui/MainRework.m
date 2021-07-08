@@ -442,8 +442,7 @@ classdef MainRework < handle
             panelChildSelect(obj.modulePanel,i);
             obj.modules(i).onOpen();
             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
-            c = obj.moduleSidebar.Children(end:-1:1);
-            c(i).FontWeight = 'bold';
+            obj.moduleSidebar.Children(i).FontWeight = 'bold';
 %             statusbar(obj.hFigure,'Ready.');
         end
         
