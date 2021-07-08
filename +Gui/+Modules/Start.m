@@ -145,7 +145,7 @@ classdef Start < Gui.Modules.GuiModule
 %                 set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
 
                 obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
-                obj.getProject().clusters.getCaption()
+                obj.getProject().clusters.getCaption();
                 obj.main.populateSensorSetTable();
 
                 % statusbar (Ready)
