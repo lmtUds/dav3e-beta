@@ -473,10 +473,12 @@ classdef MainRework < handle
             
             % prepare the table for display
             vars = {'Use','Cluster','Sensor','Preprocessing','Feature set'};
+            widths = {'1x','4x','4x','4x','4x'};
             
             obj.sensorSetTable.Data = data;
-            obj.sensorSetTable.ColumnName = vars;
             obj.sensorSetTable.RowName = 'numbered';
+            obj.sensorSetTable.ColumnName = vars;
+            obj.sensorSetTable.ColumnWidth = widths;
             obj.sensorSetTable.ColumnEditable = ...
                 [true true true true true];
             obj.sensorSetTable.ColumnSortable = ...
