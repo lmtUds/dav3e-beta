@@ -398,19 +398,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             chainDropdown = uidropdown(chainGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@obj.dropdownPreprocessingChainCallback);
+                'ValueChangedFcn',@(src,event)obj.dropdownPreprocessingChainCallback(src,event));
             chainDropdown.Layout.Row = 2;
             chainDropdown.Layout.Column = [1 2];
             
             chainAdd = uibutton(chainGrid,...
                 'Text','+',...
-                'ButtonPushedFcn',@obj.dropdownNewPreprocessingChain);
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewPreprocessingChain(src,event,chainDropdown));
             chainAdd.Layout.Row = 2;
             chainAdd.Layout.Column = 3;
             
             chainRem = uibutton(chainGrid,...
                 'Text','-',...
-                'ButtonPushedFcn',@obj.dropdownRemovePreprocessingChain);
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemovePreprocessingChain(src,event,chainDropdown));
             chainRem.Layout.Row = 2;
             chainRem.Layout.Column = 4;
             
@@ -708,42 +708,53 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
 
         %% dropdown callbacks for preprocessing chains
-        function dropdownNewPreprocessingChain(obj,h)
+        function dropdownNewPreprocessingChain(obj,src,event,dropdown)
             ppc = obj.getProject().addPreprocessingChain();
             obj.currentPreprocessingChain = ppc;
-            h.appendItem(ppc.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(ppc.getCaption());
+            dropdown.Value = char(ppc.getCaption());
+            
             obj.main.populateSensorSetTable();
+            obj.refreshPropGrid();
+            obj.getCurrentSensor().preComputePreprocessedData();
+            obj.updatePlotsInPlace();
         end
         
-        function dropdownRemovePreprocessingChain(obj,h)
-            idx = h.getSelectedIndex();
-            ppcs = obj.getProject().poolPreprocessingChains;
-            ppc = ppcs(idx);
+        function dropdownRemovePreprocessingChain(obj,src,event,dropdown)
+            prepChains = obj.getProject().poolPreprocessingChains;
+            idx = arrayfun(@(chain) strcmp(chain.caption,dropdown.Value),prepChains);
+            ppc = prepChains(idx);
             sensorsWithPPC = obj.getProject().checkForSensorsWithPreprocessingChain(ppc);
             
             if numel(sensorsWithPPC) > 1  % the current sensor always has the PPC to delete
                 choices = {};
-                if numel(ppcs) > 1
+                if numel(prepChains) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The preprocessing chain is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The preprocessing chain "' char(ppc.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Preprocessing chain usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        ppcs(idx) = [];
-                        [sel,ok] = listdlg('ListString',ppcs.getCaption(), 'SelectionMode','single');
+                        prepChains(idx) = [];
+                        [sel,ok] = listdlg('PromptString','Please select a replacement preprocessing chain',...
+                            'ListString',prepChains.getCaption(),...
+                            'SelectionMode','single');
                         if ~ok
                             return
                         end
-                        obj.getProject().replacePreprocessingChainInSensors(ppc,ppcs(sel));
-                        newPPC = ppcs(sel);
+                        obj.getProject().replacePreprocessingChainInSensors(ppc,prepChains(sel));
+                        newPPC = prepChains(sel);
                     case 'Replace with new'
                         newPPC = obj.getProject().addPreprocessingChain();
-                        h.appendItem(newPPC.getCaption());
+                        dropdown.Items = [dropdown.Items char(newPPC.getCaption())];
                         obj.getProject().replacePreprocessingChainInSensors(ppc,newPPC);
                     case 'Cancel'
                         return
@@ -753,12 +764,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolPreprocessingChains) == 1
                     newPPC = obj.getProject().addPreprocessingChain();
-                    h.appendItem(newPPC.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newPPC.getCaption())];
+                else    %select a PPC we already have
+                    if idx(1)     %the first logical index had the true
                         newPPC = obj.getProject().poolPreprocessingChains(2);
                     else
-                        newPPC = obj.getProject().poolPreprocessingChains(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newPPC = obj.getProject().poolPreprocessingChains(circshift(idx,-1));
                     end
                 end
             end
@@ -766,39 +778,33 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentPreprocessingChain = newPPC;
             obj.getProject().removePreprocessingChain(ppc);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newPPC.caption);  %set the new one
+            
             obj.main.populateSensorSetTable();
-%             obj.refreshPropGrid();
-%             obj.getCurrentSensor().preComputePreprocessedData();
-%             obj.updatePlotsInPlace();
-        end
-        
-        function dropdownPreprocessingChainCallback(obj, event)
-            if event.Edited
-                dropdownPreprocessingChainRename(obj,h,newName,index)
-            else
-                dropdownPreprocessingChainChange(obj,h,newItem,newIndex)
-            end
-        end
-        
-        function dropdownPreprocessingChainRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolPreprocessingChains.getCaption()));
-            obj.getProject().poolPreprocessingChains(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.main.populateSensorSetTable();
-        end
-        
-        function dropdownPreprocessingChainChange(obj,h,newItem,newIndex)
-            obj.currentPreprocessingChain = ...
-                obj.getProject().poolPreprocessingChains(newIndex);
-            disp('callback')
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
-            obj.main.populateSensorSetTable();
         end
         
+        function dropdownPreprocessingChainCallback(obj, src, event)
+            if event.Edited                
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolCyclePointSets.getCaption()));
+                obj.getProject().poolPreprocessingChains(index).setCaption(newName);
+                src.Items{index} = newName;
+                obj.main.populateSensorSetTable();
+            else
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentPreprocessingChain = ...
+                    obj.getProject().poolPreprocessingChains(index);
+                obj.refreshPropGrid();
+                obj.getCurrentSensor().preComputePreprocessedData();
+                obj.updatePlotsInPlace();
+                obj.main.populateSensorSetTable();
+            end
+        end        
         %% dropdown callbacks for cycle point sets
         function dropdownNewCyclePointSet(obj,src,event,dropdown)
             cps = obj.getProject().addCyclePointSet();
