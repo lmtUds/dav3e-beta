@@ -137,6 +137,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         function update(obj)
             % empty the exixsting grid
             obj.panel.Children.delete();
+            % do nothing if we have no blocks
+            if isempty(obj.blocks)
+                return
+            end
             
             % group all blocks into their respective categories
             groupedBlocks = {};
