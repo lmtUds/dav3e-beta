@@ -66,6 +66,7 @@ classdef MainRework < handle
                 'Position', [.2 .2 .7 .7],...
                 'Color','w',...
                 'CloseReq',@(h,e)obj.delete);
+            f.Units = 'pixels';
             obj.hFigure = f;
         
             % remove some buttons that are not needed

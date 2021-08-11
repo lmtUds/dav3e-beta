@@ -454,22 +454,22 @@ classdef Preprocessing < Gui.Modules.GuiModule
             chainElementDwn.Layout.Column = 4;
             
             qsAx = uiaxes(moduleLayout);
-            qsAx.Title.String = 'Quasistatic signal';
-            qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
-            qsAx.XLabel.String = 'Cycle number';
-            qsAx.YLabel.String = 'Data / a.u.';
             qsAx.Layout.Row = [1 11];
             qsAx.Layout.Column = 3;
+            qsAx.Title.String = 'Quasistatic signal';
+            qsAx.XLabel.String = 'Cycle number';
+            qsAx.YLabel.String = 'Data / a.u.';
+            qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
             
             obj.hAxQuasistatic = qsAx;
             
             cyAx = uiaxes(moduleLayout);
-            cyAx.Title.String = 'Selected cycles';
-            cyAx.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
-            cyAx.XLabel.String = 'Time /s';
-            cyAx.YLabel.String = 'Data / a.u.';
             cyAx.Layout.Row = [12 22];
             cyAx.Layout.Column = 3;
+            cyAx.Title.String = 'Selected cycles';
+            cyAx.XLabel.String = 'Time /s';
+            cyAx.YLabel.String = 'Data / a.u.';
+            cyAx.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
             
             obj.hAxCycle = cyAx;
         end
