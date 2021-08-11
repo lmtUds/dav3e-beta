@@ -1089,8 +1089,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             row = obj.cyclePointTable.getRowObjectRow(gPoint);
 %             obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
 %             obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
-            obj.cyclePointTable.Data{gPoint.nPos,2} = gPoint.getPosition();
-            obj.cyclePointTable.Data{gPoint.nPos,3} = gPoint.getTimePosition();
+            idx = ismember(obj.cyclePoints,gPoint);
+            obj.cyclePointTable.Data{idx,2} = gPoint.getPosition();
+            obj.cyclePointTable.Data{idx,3} = gPoint.getTimePosition();
         end
         
         function indexPointDraggedCallback(obj,gPoint)
@@ -1098,7 +1099,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % update the position in the table when the point is dragged
 %             row = obj.indexPointTable.getRowObjectRow(gPoint);
 %             obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
-            obj.indexPointTable.Data{gPoint.nPos,2} = gPoint.getPosition();
+            idx = ismember(obj.indexPoints,gPoint);
+            obj.indexPointTable.Data{idx,2} = gPoint.getPosition();
         end
 
         function cyclePointDragStartCallback(obj,gObj)
@@ -1606,7 +1608,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function quasistaticAxesButtonDownCallback(obj,src, event)
             switch get(gcf,'SelectionType')
                 case 'open' % double-click
-                    obj.addCyclePoint(event.IntersectionPoint(1))
+                    obj.addCyclePoint(event.IntersectionPoint(1));
             end
         end
         

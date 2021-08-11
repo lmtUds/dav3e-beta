@@ -109,7 +109,7 @@ classdef GraphicsObject < handle
         end
         
         function setTimePosition(objArray, pos)
-            objArray.object.setTimePosition(pos)
+            objArray.object.setTimePosition(pos);
             sensor = objArray(1).currentSensor;
             objArray.updatePosition(sensor);
         end
