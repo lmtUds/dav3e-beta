@@ -28,6 +28,7 @@ classdef FeatureSelectorInterface < handle
         rank = [];
         nFeat = [];
         err = [];
+        RegrOrClass = [];
         classifier = 'LDA';
     end
     
