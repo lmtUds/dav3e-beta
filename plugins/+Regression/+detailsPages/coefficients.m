@@ -18,6 +18,8 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
+% !!! Only works for PLSR as regressor
+
 function [panel,updateFun] = coefficients(parent,project,dataprocessingblock)
     [panel,elements] = makeGui(parent);
     populateGui(elements,project,dataprocessingblock);
@@ -37,12 +39,19 @@ function populateGui(elements,project,dataprocessingblock)
     if ~dataprocessingblock.parameters.getByCaption('trained').value
         return
     end
-    coeffs = dataprocessingblock.parameters.getByCaption('beta0').getValue();
-    coeffs = coeffs(:,end);
+    try 
+        coeffs = dataprocessingblock.parameters.getByCaption('beta0').getValue();
+        coeffs = coeffs(:,end);
+    end
     if isempty(coeffs)
         return
     end
-    featCap = project.currentModel.fullModelData.featureCaptions;
+    try
+        featCap = project.currentModel.fullModelData.featureCaptions(dataprocessingblock.parameters.getByCaption('rank').value);
+    catch
+        featCap = project.currentModel.fullModelData.featureCaptions;
+    end
+    
     [~,idx] = sort(abs(coeffs),'descend');
     coeffs = coeffs(idx);
     featCap = cellstr(featCap(idx));

@@ -53,7 +53,7 @@ function populateGui(elements,project,dataprocessingblock)
     
     trainSel = project.currentModel.fullModelData.trainingSelection;
     testSel = project.currentModel.fullModelData.testingSelection;
-    find(diff(trainSel | testSel) > 0)
+    find(diff(trainSel | testSel) > 0);
 
     trainData = dataParam.getValue().training;
     if isfield(dataParam.getValue(),'testing')
@@ -64,8 +64,10 @@ function populateGui(elements,project,dataprocessingblock)
     trainTarget = project.currentModel.fullModelData.getSelectedTarget('training');
     testTarget = project.currentModel.fullModelData.getSelectedTarget('testing');
     
-    trainData = dataprocessingblock.revertChain(trainData);
-    testData = dataprocessingblock.revertChain(testData);    
+    try
+        trainData = dataprocessingblock.revertChain(trainData);
+        testData = dataprocessingblock.revertChain(testData);
+    end
     
     hold(elements.hAx,'on');
     setpoint = plot(elements.hAx,trainOffsets,trainTarget,'--k','LineWidth',1.5);

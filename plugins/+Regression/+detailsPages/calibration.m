@@ -66,6 +66,14 @@ function populateGui(elements,project,dataprocessingblock)
     valError = project.currentModel.getErrorsForTrainedIndexSet().validation;
     testError = project.currentModel.getErrorsForTrainedIndexSet().testing;
     
+    try 
+        if ~isempty(dataParam.value.errorTest)
+            testError = dataParam.value.errorTest;
+            valError = dataParam.value.errorVal;
+        end
+    catch
+    end
+    
     trainData = dataprocessingblock.revertChain(trainData);
 %     trainTarget = dataprocessingblock.revertChain(trainTarget);
     testData = dataprocessingblock.revertChain(testData);
@@ -115,6 +123,8 @@ function populateGui(elements,project,dataprocessingblock)
             test.MarkerFaceColor = blue; % [.2 .2 .9]
             test.MarkerEdgeColor = blue ./ 2; % [.2 .2 .9]
             test.MarkerFaceAlpha = .8;
+            rmseTest = plot(elements.hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
+            plot(elements.hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
         else
             rmseTest = plot(elements.hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
             plot(elements.hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
