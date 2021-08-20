@@ -205,10 +205,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
             % create a grid layout for the preprocessing panel
-            moduleLayout = uigridlayout(uiParent,[22 3],...
+            moduleLayout = uigridlayout(uiParent,[22 2],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
-                'ColumnWidth',{'8x','7x','17x'},...
+                'ColumnWidth',{'3x','8x'},...
                 'RowHeight',{'1x'},...
                 'RowSpacing',7);
             
@@ -220,12 +220,20 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
                         
             % create and fill the grid layout of the 'compare with' section
-            compareGrid = uigridlayout(moduleLayout,...
+            mainTabGp = uitabgroup(moduleLayout);
+            mainTabGp.Layout.Row = [1 22];
+            mainTabGp.Layout.Column = 1;
+            
+            cmpTab = uitab(mainTabGp,'Title','Compare/Points');
+            cmpTabGrid = uigridlayout(cmpTab,[3 1],...
+                'Padding',[0 0 0 0],'RowHeight',{'1x','2x','9x'});
+            
+            compareGrid = uigridlayout(cmpTabGrid,...moduleLayout,...
                 'ColumnWidth',{'1x','4x'},...
                 'RowHeight',{'fit'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            compareGrid.Layout.Row = [1 2];
+            compareGrid.Layout.Row = 1;
             compareGrid.Layout.Column = 1;
             
             compareLabel = uilabel(compareGrid,...
@@ -248,12 +256,12 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.hCompareWith.hSensorPopup = compareDropdown;
             
             % create and fill the grid layout of the 'cluster' section
-            clusterGrid = uigridlayout(moduleLayout, [4 2],...
+            clusterGrid = uigridlayout(cmpTabGrid, [4 2],...
                 'ColumnWidth',{'1x','1x'},...
                 'RowHeight',{'fit'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            clusterGrid.Layout.Row = [3 6];
+            clusterGrid.Layout.Row = 2;
             clusterGrid.Layout.Column = 1;
             
             clusterLabel = uilabel(clusterGrid,...
@@ -296,122 +304,124 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.hCompareWith.hOffsetEdit = offsetEdit;
             obj.hCompareWith.hVirtualOffsetEdit = virtOffsetEdit;
             
+            pointsTabGp = uitabgroup(cmpTabGrid);
+            cycleTab = uitab(pointsTabGp,'Title','Cycle Points');
             % create and fill the grid layout of the 'cycle points' section
-            cyclePointsGrid = uigridlayout(moduleLayout, [4 4],...
+            cyclePointsGrid = uigridlayout(cycleTab, [2 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowHeight',{'1x','11x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            cyclePointsGrid.Layout.Row = [7 14];
-            cyclePointsGrid.Layout.Column = 1;
+%             cyclePointsGrid.Layout.Row = [7 14];
+%             cyclePointsGrid.Layout.Column = 1;
             
-            cyclePointsLabel = uilabel(cyclePointsGrid,...
-                'Text','Cycle points',...
-                'FontWeight','bold');
-            cyclePointsLabel.Layout.Row = 1;
-            cyclePointsLabel.Layout.Column = [1 4];
+%             cyclePointsLabel = uilabel(cyclePointsGrid,...
+%                 'Text','Cycle points',...
+%                 'FontWeight','bold');
+%             cyclePointsLabel.Layout.Row = 1;
+%             cyclePointsLabel.Layout.Column = [1 4];
             
             % cycle point set dropdown and buttons
             cyclePointsDropdown = uidropdown(cyclePointsGrid,...
                 'Editable','on',...
                 'ValueChangedFcn',@(src,event)obj.dropdownCyclePointSetCallback(src,event));
-            cyclePointsDropdown.Layout.Row = 2;
+            cyclePointsDropdown.Layout.Row = 1;
             cyclePointsDropdown.Layout.Column = [1 2];
             
             cPointSetAdd = uibutton(cyclePointsGrid,...
                 'Text','+',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownNewCyclePointSet(src,event,cyclePointsDropdown));
-            cPointSetAdd.Layout.Row = 2;
+            cPointSetAdd.Layout.Row = 1;
             cPointSetAdd.Layout.Column = 3;
                        
             cPointSetRem = uibutton(cyclePointsGrid,...
                 'Text','-',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownRemoveCyclePointSet(src,event,cyclePointsDropdown));
-            cPointSetRem.Layout.Row = 2;
+            cPointSetRem.Layout.Row = 1;
             cPointSetRem.Layout.Column = 4;
             
             cyclePointsTable = uitable(cyclePointsGrid);
-            cyclePointsTable.Layout.Row = [3 4];
+            cyclePointsTable.Layout.Row = 2;
             cyclePointsTable.Layout.Column = [1 4];
                        
             obj.cyclePointSetDropdown = cyclePointsDropdown;
             obj.cyclePointTable = cyclePointsTable;
             
-            
+            qsTab = uitab(pointsTabGp,'Title','Quasistatic Points');
             % create and fill the grid layout of the 'quasistatic points' section
-            qsPointsGrid = uigridlayout(moduleLayout, [4 4],...
+            qsPointsGrid = uigridlayout(qsTab, [2 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowHeight',{'1x','11x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            qsPointsGrid.Layout.Row = [15 22];
-            qsPointsGrid.Layout.Column = 1;
+%             qsPointsGrid.Layout.Row = [15 22];
+%             qsPointsGrid.Layout.Column = 1;
             
-            qsPointsLabel = uilabel(qsPointsGrid,...
-                'Text','Quasistatic points',...
-                'FontWeight','bold');
-            qsPointsLabel.Layout.Row = 1;
-            qsPointsLabel.Layout.Column = [1 4];
+%             qsPointsLabel = uilabel(qsPointsGrid,...
+%                 'Text','Quasistatic points',...
+%                 'FontWeight','bold');
+%             qsPointsLabel.Layout.Row = 1;
+%             qsPointsLabel.Layout.Column = [1 4];
             
             % cycle point set dropdown and buttons
             qsPointsDropdown = uidropdown(qsPointsGrid,...
                 'Editable','on',...
                 'ValueChangedFcn',@(src,event)obj.dropdowIndexPointSetCallback(src,event));
-            qsPointsDropdown.Layout.Row = 2;
+            qsPointsDropdown.Layout.Row = 1;
             qsPointsDropdown.Layout.Column = [1 2];
             
             qsPointSetAdd = uibutton(qsPointsGrid,...
                 'Text','+',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownNewIndexPointSet(src,event,qsPointsDropdown));
-            qsPointSetAdd.Layout.Row = 2;
+            qsPointSetAdd.Layout.Row = 1;
             qsPointSetAdd.Layout.Column = 3;
                        
             qsPointSetRem = uibutton(qsPointsGrid,...
                 'Text','-',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownRemoveIndexPointSet(src,event,qsPointsDropdown));
-            qsPointSetRem.Layout.Row = 2;
+            qsPointSetRem.Layout.Row = 1;
             qsPointSetRem.Layout.Column = 4;
             
             qsPointsTable = uitable(qsPointsGrid);
-            qsPointsTable.Layout.Row = [3 4];
+            qsPointsTable.Layout.Row = 2;
             qsPointsTable.Layout.Column = [1 4];
                         
             % index point set dropdown
             obj.indexPointSetDropdown = qsPointsDropdown;
             obj.indexPointTable = qsPointsTable;
             
-            
+            chainTab = uitab(mainTabGp,'Title','Preprocessing Chain');
             % create and fill the grid layout of the 'preprocessing chain' section
-            chainGrid = uigridlayout(moduleLayout, [22 4],...
+            chainGrid = uigridlayout(chainTab, [21 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','4x','1x'},...
+                'RowHeight',{'1x','4x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
-            chainGrid.Layout.Row = [1 22];
-            chainGrid.Layout.Column = 2;
+%             chainGrid.Layout.Row = [1 22];
+%             chainGrid.Layout.Column = 2;
             
-            chainLabel = uilabel(chainGrid,...
-                'Text','Preprocessing Chain',...
-                'FontWeight','bold');
-            chainLabel.Layout.Row = 1;
-            chainLabel.Layout.Column = [1 4];
+%             chainLabel = uilabel(chainGrid,...
+%                 'Text','Preprocessing Chain',...
+%                 'FontWeight','bold');
+%             chainLabel.Layout.Row = 1;
+%             chainLabel.Layout.Column = [1 4];
             
             chainDropdown = uidropdown(chainGrid,...
                 'Editable','on',...
                 'ValueChangedFcn',@(src,event)obj.dropdownPreprocessingChainCallback(src,event));
-            chainDropdown.Layout.Row = 2;
+            chainDropdown.Layout.Row = 1;
             chainDropdown.Layout.Column = [1 2];
             
             chainAdd = uibutton(chainGrid,...
                 'Text','+',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownNewPreprocessingChain(src,event,chainDropdown));
-            chainAdd.Layout.Row = 2;
+            chainAdd.Layout.Row = 1;
             chainAdd.Layout.Column = 3;
             
             chainRem = uibutton(chainGrid,...
                 'Text','-',...
                 'ButtonPushedFcn',@(src,event)obj.dropdownRemovePreprocessingChain(src,event,chainDropdown));
-            chainRem.Layout.Row = 2;
+            chainRem.Layout.Row = 1;
             chainRem.Layout.Column = 4;
             
 %             propGridPanel = uipanel(chainGrid,'Scrollable','on');
@@ -425,37 +435,37 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid,...
                 'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
                 'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
-            obj.propGrid.Layout.Row = [3 21];
+            obj.propGrid.Layout.Row = [2 20];
             obj.propGrid.Layout.Column = [1 4];
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
 
             chainElementAdd = uibutton(chainGrid,...
                 'Text','Add',...
                 'ButtonPushedFcn',@(src,event)obj.addPreprocessing(src,event));
-            chainElementAdd.Layout.Row = 22;
+            chainElementAdd.Layout.Row = 21;
             chainElementAdd.Layout.Column = 1;
             
             chainElementDel = uibutton(chainGrid,...
                 'Text','Delete',...
                 'ButtonPushedFcn',@(src,event)obj.removePreprocessing(src,event));
-            chainElementDel.Layout.Row = 22;
+            chainElementDel.Layout.Row = 21;
             chainElementDel.Layout.Column = 2;
             
             chainElementUp = uibutton(chainGrid,...
                 'Text','/\',...
                 'ButtonPushedFcn',@(src,event)obj.movePreprocessingUp(src,event));
-            chainElementUp.Layout.Row = 22;
+            chainElementUp.Layout.Row = 21;
             chainElementUp.Layout.Column = 3;
             
             chainElementDwn = uibutton(chainGrid,...
                 'Text','\/',...
                 'ButtonPushedFcn',@(src,event)obj.movePreprocessingDown(src,event));
-            chainElementDwn.Layout.Row = 22;
+            chainElementDwn.Layout.Row = 21;
             chainElementDwn.Layout.Column = 4;
             
             qsAx = uiaxes(moduleLayout);
             qsAx.Layout.Row = [1 11];
-            qsAx.Layout.Column = 3;
+            qsAx.Layout.Column = 2;
             qsAx.Title.String = 'Quasistatic signal';
             qsAx.XLabel.String = 'Cycle number';
             qsAx.YLabel.String = 'Data / a.u.';
@@ -465,7 +475,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             cyAx = uiaxes(moduleLayout);
             cyAx.Layout.Row = [12 22];
-            cyAx.Layout.Column = 3;
+            cyAx.Layout.Column = 2;
             cyAx.Title.String = 'Selected cycles';
             cyAx.XLabel.String = 'Time /s';
             cyAx.YLabel.String = 'Data / a.u.';
