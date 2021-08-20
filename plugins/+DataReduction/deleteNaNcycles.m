@@ -18,27 +18,47 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = interpolateNaN()
-    info.type = DataProcessingBlockTypes.RawDataPreprocessing;
-    info.caption = 'interpolate nan values';
+function info = deleteNaNcycles()
+    info.type = DataProcessingBlockTypes.DataReduction;
+    info.caption = 'deleteNaNcycles';
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
-        Parameter('shortCaption','maxNaNValuesInCycle', 'value',int32(100)),... 
+        Parameter('shortCaption','a', 'value',[], 'internal',true),...
     ];
     info.apply = @apply;
 end
 
 function [data,params] = apply(data,params)
-    max_values = params.maxNaNValuesInCycle;
-    cycle_with_nan = find(sum(isnan(data'))>0);
-    for i=1:length(cycle_with_nan)
-        if sum(isnan(data(cycle_with_nan(i),:))) > max_values
-           warning(['nan cycle: '+ string(cycle_with_nan(i))]+' more nan cycles than desired');
-        end
-        data(cycle_with_nan(i),:) = fillmissing(data(cycle_with_nan(i),:),'linear');
-    end
-    sum(sum(isnan(data)))
-    
+%     paramOut = struct();
+%     h = data.featureCaptions(params.a);
+%     params.b = [h{:}]; 
+%     
+%     data.data(:,params.a) = [];
+%     data.featureSelection(params.a) = [];
+%     data.featureCaptions(params.a) = [];
+%     warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
+    d = data.data; 
+    t = data.target;
+    [nanCyc,~] = find(isnan(d)==1);
+    nanTar = find(isnan(t)==1);
+    params.a = unique([nanCyc;nanTar]);
+    data.reduceData(@reduceFun, params.a);
+end
 
+% function params = train(data,params)
+%     d = data.getSelectedData();
+%     [params.a,~] = find(isnan(d)==1);
+% end
+
+function [newData,newGrouping,newTarget,newOffsets] = reduceFun(data,grouping,target,offsets,varargin)
+    n = varargin{1};
+    data(n,:)=[];
+    newData = data;
+    grouping(n,:)=[];
+    newGrouping = grouping;
+    target(n,:)=[];
+    newTarget = target;
+    offsets(n,:)=[];
+    newOffsets = offsets;
 end

@@ -28,18 +28,26 @@ function info = autoFeatureSelect()
     info.type = DataProcessingBlockTypes.DimensionalityReduction;
     info.caption = 'automated feature selection';
     info.shortCaption = mfilename;
-    info.description = '';
+    info.description = ['Feature selection methods for classification an regression cases.', ...
+        'Ranking for Classification can be done with the methods (RFESVM, RELIEFF, Pearson)', ...
+        'with a fixed number of features or with an automated optimization of the number of features.', ...
+        'Ranking for Regression can be done with all methods, but only with a fixed number of features.', ...
+        'For the automated optimization of the number of features use "automatedSelection" in the section "Regression"'];
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true),...    
         Parameter('shortCaption','ranks', 'internal',true),... 
         Parameter('shortCaption','featureCaptions', 'internal',true),... 
-        Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:3), 'selectionType','multiple'),...
+        Parameter('shortCaption','methods', 'value',int32(1), 'enum',int32(1:6), 'selectionType','multiple'),...
         Parameter('shortCaption','autoNumFeat','value',true),...
+        Parameter('shortCaption','RegrOrClass','value','Classification','enum',{'Classification','Regression'})...
         Parameter('shortCaption','numFeat', 'value',int32(3), 'enum',int32(1:50), 'selectionType','multiple'),...
         Parameter('shortCaption','evaluator','value','LDA','enum',{'LDA','1NN'})...
         Parameter('shortCaption','RFESVM', 'value',int32(1),'editable',false),...                                   %just for display
         Parameter('shortCaption','RELIEFF', 'value',int32(2),'editable',false),...                                  %just for display
         Parameter('shortCaption','Pearson', 'value',int32(3),'editable',false)...                                   %just for display  
+        Parameter('shortCaption','NCA', 'value',int32(4),'editable',false),...                                   %just for display
+        Parameter('shortCaption','RFEplsr', 'value',int32(5),'editable',false),...                                  %just for display
+        Parameter('shortCaption','RFEleastsquares', 'value',int32(6),'editable',false)... 
         ];
 %         Keep these for potential later use
 %         Parameter('shortCaption','RFESVM', 'value',int32(1),'editable',false),...                                   %just for display
@@ -49,7 +57,7 @@ function info = autoFeatureSelect()
     info.apply = @apply;
     info.train = @train;
     info.updateParameters = @updateParameters;
-    info.detailsPages = {'scatter', 'ranking'};
+    info.detailsPages = {'scatter', 'ranking','selectedFeatures'};
 end
 
 function [data,params] = apply(data,params)
@@ -75,8 +83,19 @@ function params = train(data,params)
             method = 'RELIEFF';
         case 3
             method = 'Pearson';
+        case 4
+            method = 'NCA';
+        case 5
+            method = 'RFEplsr';
+        case 6
+            method = 'RFEleastsquares';
         otherwise
             method = 'wrong';
+    end
+    if params.autoNumFeat && strcmp(params.RegrOrClass, 'Regression')
+        error('For autoNumFeat in case of Regression, use the autoSelection-method from section "Regression"');
+    elseif strcmp(params.RegrOrClass, 'Classification') && (strcmp(method, 'NCA') || strcmp(method, 'RFEplsr') || strcmp(method, 'RFEleastsquares'))
+        error('This method is only for Regression');
     end
     %compute the ranking by the desired method
     [ranks,params] = rankByMethod(data,params,method);
@@ -118,9 +137,18 @@ function [ranks,params]  = rankByMethod(data,params,method)
             [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
             params.numFeat = sum(subsInd);
         else 
-            mySel = DimensionalityReduction.autoTools.RFESVMSelector();
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            if strcmp(params.RegrOrClass, 'Regression')
+                mySel = DimensionalityReduction.autoTools.RFESVMSelector();
+                mySel.RegrOrClass = params.RegrOrClass;
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            elseif strcmp(params.RegrOrClass, 'Classification')
+                mySel = DimensionalityReduction.autoTools.RFESVMSelector();
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            else
+                error('Invalid RegrOrClass specified, cannot compute feature ranks');
+            end
         end
     elseif method == string('RELIEFF')
         disp(method);
@@ -130,9 +158,19 @@ function [ranks,params]  = rankByMethod(data,params,method)
             [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
             params.numFeat = sum(subsInd);
         else 
-            mySel = DimensionalityReduction.autoTools.RELIEFFSelector();
-            dTarget = double(data.getSelectedTarget());
-            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            if strcmp(params.RegrOrClass, 'Regression')
+                mySel = DimensionalityReduction.autoTools.RELIEFFSelector();
+                mySel.RegrOrClass = params.RegrOrClass;
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            elseif strcmp(params.RegrOrClass, 'Classification')
+                mySel = DimensionalityReduction.autoTools.RELIEFFSelector();
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            else
+                error('Invalid RegrOrClass specified, cannot compute feature ranks');
+            end
+            
         end
     elseif method == string('Pearson')
         disp(method);
@@ -142,10 +180,47 @@ function [ranks,params]  = rankByMethod(data,params,method)
             [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget);
             params.numFeat = sum(subsInd);
         else 
-            mySel = DimensionalityReduction.autoTools.PearsonSelector();
+            if strcmp(params.RegrOrClass, 'Regression')
+                mySel = DimensionalityReduction.autoTools.PearsonSelector();
+                mySel.RegrOrClass = params.RegrOrClass;
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            elseif strcmp(params.RegrOrClass, 'Classification')
+                mySel = DimensionalityReduction.autoTools.PearsonSelector();
+                dTarget = double(data.getSelectedTarget());
+                [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+            else
+                error('Invalid RegrOrClass specified, cannot compute feature ranks');
+            end
+            
+        end 
+    elseif method == string('NCA')
+        disp(method);
+        if ~params.autoNumFeat && strcmp(params.RegrOrClass, 'Regression') 
+            mySel = DimensionalityReduction.autoTools.NCASelector();
+            dTarget = double(data.getSelectedTarget());
+           [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat); 
+        else
+            error('Something went wrong with NCA');
+        end
+    elseif method == string('RFEplsr')
+        disp(method);
+        if ~params.autoNumFeat && strcmp(params.RegrOrClass, 'Regression') 
+            mySel = DimensionalityReduction.autoTools.RFEplsrSelector();
             dTarget = double(data.getSelectedTarget());
             [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
-        end    
+        else
+            error('Something went wrong with RFEplsr');
+        end
+    elseif method == string('RFEleastsquares')
+        disp(method);
+        if ~params.autoNumFeat && strcmp(params.RegrOrClass, 'Regression') 
+            mySel = DimensionalityReduction.autoTools.RFEleastsquaresSelector();
+            dTarget = double(data.getSelectedTarget());
+            [subsInd,ranks] = mySel.train(data.getSelectedData(),dTarget,[],params.numFeat);
+        else
+            error('Something went wrong with RFEleastsquares');
+        end
     else
         error('Invalid method specified, cannot compute feature ranks');
     end
