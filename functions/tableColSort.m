@@ -18,7 +18,7 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function tableColSort(table,column,direction)
+function ind = tableColSort(table,column,direction)
 %TABLECOLSORT Sort a table in the specified direction by a given column,
 %will also sort user data
 %   table       a uitable created for a uifigure
