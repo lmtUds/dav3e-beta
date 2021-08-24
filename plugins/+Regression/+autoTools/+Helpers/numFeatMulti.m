@@ -148,9 +148,9 @@ helpVar = data.trainingSelection;
     % rank = this.rank;
     % testing with the computed number of features before and save
     % results
-    data.trainingSelection(:) = true;      % reset trainingSelection
-    data.trainingSelection(data.testingSelection) = false;
-    dat = data.getSelectedData('training');
+    % data.trainingSelection(:) = true;      % reset trainingSelection
+    % data.trainingSelection(data.testingSelection) = false;
+    dat = data.data(this.projectedData.trainingSelection,:);
    
     if strcmp(this.classifier, 'PLSR')
         [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
@@ -158,7 +158,7 @@ helpVar = data.trainingSelection;
             idxnComp=length(ptest.offset);
         end
         predTr = dat(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on training data
-        tar = data.getSelectedData('testing');
+        tar = data.data(this.projectedData.testingSelection,:);
         predTe = tar(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on testing data
 
         this.beta0 = ptest.beta0;
@@ -189,7 +189,7 @@ helpVar = data.trainingSelection;
 
         predTr = predict(ptest.mdl,dat(:,rank(1:this.nFeat))); % train plsr on training data
         % predTr = dat(:,rank(1:this.nFeat))*ptest.mdl.Beta+ptest.mdl.Bias;
-        tar = data.getSelectedData('testing');
+        tar = data.data(this.projectedData.testingSelection,:);
         predTe = predict(ptest.mdl,tar(:,rank(1:this.nFeat))); % train plsr on testing data
 
         this.projectedData.testing = predTe;
