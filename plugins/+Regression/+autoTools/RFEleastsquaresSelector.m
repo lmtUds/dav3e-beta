@@ -70,7 +70,7 @@ classdef RFEleastsquaresSelector < Regression.autoTools.FeatureSelectorInterface
                 data.trainingSelection = cvTest.training;
                 data.testingSelection = cvTest.test;
             elseif this.groupbasedTest == 1 && strcmp(this.Testing, 'holdout')
-                actualTargetT = data.target;
+                % actualTargetT = data.target;
                 selT = data.availableSelection;
                 gT = data.getGroupingByName(this.groupingTest);
                 tT = categories(removecats(gT(selT)));
@@ -79,9 +79,9 @@ classdef RFEleastsquaresSelector < Regression.autoTools.FeatureSelectorInterface
                 trainSelT = cvTest.training;
                 testSelT = cvTest.test;
                 if this.groupbasedTest == 1
-                    trainSelNewT = true(size(actualTargetT));
-                    testSelNewT = false(size(actualTargetT));
-                    if isnumeric(actualTargetT)
+                    trainSelNewT = true(size(tT));
+                    testSelNewT = false(size(tT));
+                    if isnumeric(tT)
                         trainSelNewT = double(trainSelNewT);
                         testSelNewT = double(testSelNewT);
                     end
@@ -91,8 +91,17 @@ classdef RFEleastsquaresSelector < Regression.autoTools.FeatureSelectorInterface
                         trainSelNewT(gT==tT(cidxT)) = trainSelT(cidxT);
                         testSelNewT(gT==tT(cidxT)) = testSelT(cidxT);
                     end
-                    data.trainingSelection = logical(trainSelNewT);
-                    data.testingSelection = logical(testSelNewT);
+                    trainSelFinal = false(size(data.cycleSelection,1),1);
+                    trainSelFinal(selT) = trainSelNewT;
+                    testSelFinal = false(size(data.cycleSelection,1),1);
+                    testSelFinal(selT) = testSelNewT;
+                    
+                    data.trainingSelection = logical(trainSelFinal);
+                    data.testingSelection = logical(testSelFinal);
+                    
+%                     testSelFinal = false(size(obj.testingSelection,1),1);
+%                     testSelFinal(sel) = testSel;
+%                     obj.testingSelection(:,teststep,testit) = testSelFinal;
                 end
             elseif strcmp(this.Testing, 'none')
             else
