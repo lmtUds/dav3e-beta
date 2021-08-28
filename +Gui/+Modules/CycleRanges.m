@@ -315,24 +315,31 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
                 time_positions = num2cell(gRanges.getTimePosition());
-                colors = num2cell(gRanges.getRange().getJavaColor());
-                data = [captions, positions, time_positions, colors];
+%                 colors = num2cell(gRanges.getRange().getJavaColor());
+%                 data = [captions, positions, time_positions, colors];
+                data = [captions, positions, time_positions];
             else
                 data = {};
             end
-
+            
             t = obj.rangeTable;
-            t.setData(data,{'caption','begin','end','time begin in s','time end in s','color'});
-            t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','int','int','double','double','clr'});
-            t.setColumnsEditable([true true true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(4);
-            t.jTable.setAutoResort(false)
-            obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
-            obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
+            t.Data = data;
+            t.UserData = gRanges;
+            
+%             t.ColumnName = {'caption','begin','end','time begin in s','time end in s','color'};
+%             t.ColumnFormat({'char','numeric','numeric','numeric','numeric','char'});
+%             t.ColumnEditable = [true true true true true true];
+            
+            t.ColumnName = {'caption','begin','end','time begin in s','time end in s'};
+            t.ColumnFormat = {'char','numeric','numeric','numeric','numeric'};
+            t.ColumnEditable = [true true true true true];
+            
+            if ~isempty(gRanges) %only sort if there is a range
+                ind = tableColSort(t,4,'a');
+                gRanges = gRanges(ind);
+            end
+%             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
+%             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
         end
         
         function cycleRangeDraggedCallback(obj,gRange)
