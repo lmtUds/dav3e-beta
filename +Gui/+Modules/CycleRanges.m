@@ -277,7 +277,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 hold(obj.hAx,'on');
                 obj.quasistaticLines = plot(obj.hAx,x,d,'-k');
                 hold(obj.hAx,'off');
-                uistack(obj.quasistaticLines,'bottom');
+%                 uistack(obj.quasistaticLines,'bottom');
                 cClr = newSensor.getIndexPoints().getColorCell();
                 l = [obj.quasistaticLines];
                 [l.Color] = deal(cClr{:});
