@@ -1127,7 +1127,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % the corresponding cycle line bold
 %             obj.cyclePointTable.setCallbacksActive(false);
 %             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
-%             obj.cyclePointTable.Enable = 'off';
+            obj.cyclePointTable.Enable = 'off';
             idx = ismember(obj.cyclePoints,gObj);
             obj.hLines.current.raw.cycle(idx).LineWidth = 2;
             obj.hLines.current.pp.cycle(idx).LineWidth = 2;
@@ -1150,7 +1150,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.cycle(idx).LineWidth = 1;
                 obj.hLines.compare.pp.cycle(idx).LineWidth = 1;
             end
-%             obj.cyclePointTable.Enable = 'on';
+            obj.cyclePointTable.Enable = 'on';
 %             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
 %             obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
 % %             obj.cyclePointTable.setRowHeader();
@@ -1164,7 +1164,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % the corresponding quasistatic line bold
 %             obj.indexPointTable.setCallbacksActive(false);
 %             objRow = obj.indexPointTable.getRowObjectRow(gObj);
-%             obj.indexPointTable.Enable = 'off';
+            obj.indexPointTable.Enable = 'off';
             idx = ismember(obj.indexPoints,gObj);
             obj.hLines.current.raw.quasistatic(idx).LineWidth = 2;
             obj.hLines.current.pp.quasistatic(idx).LineWidth = 2;
@@ -1187,7 +1187,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.quasistatic(idx).LineWidth = 1;
                 obj.hLines.compare.pp.quasistatic(idx).LineWidth = 1;
             end
-%             obj.indexPointTable.Enable = 'on';
+            obj.indexPointTable.Enable = 'on';
 %             objRow = obj.indexPointTable.getRowObjectRow(gObj);
 %             obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
 % %             obj.indexPointTable.setRowHeader();
