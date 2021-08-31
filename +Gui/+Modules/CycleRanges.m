@@ -346,7 +346,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             %%
             % update the position in the table when the point is dragged
 %             row = obj.rangeTable.getRowObjectRow(gRange);
-            row = ismember(gRange,obj.rangeTable.UserData);
+            row = ismember(obj.rangeTable.UserData,gRange);
             pos = gRange.getPosition();
             time_pos = gRange.getTimePosition();
             obj.rangeTable.Data{row,2} = pos(1);
