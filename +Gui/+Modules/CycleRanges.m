@@ -338,8 +338,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 ind = tableColSort(t,4,'a');
                 gRanges = gRanges(ind);
             end
-%             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
-%             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
+            obj.rangeTable.CellEditCallback = @(src,event) obj.rangeTableDataChangeCallback(src,event);
+%             obj.rangeTable.CellSelectionCallback = @(src,event) obj.rangeTableMouseClickedCallback(src,event);
         end
         
         function cycleRangeDraggedCallback(obj,gRange)
@@ -380,50 +380,43 @@ classdef CycleRanges < Gui.Modules.GuiModule
 %             obj.rangeTable.jTable.sortColumn(4);
         end
         
-        function rangeTableDataChangeCallback(obj,rc,v)
+        function rangeTableDataChangeCallback(obj,src,event)
             %% Called when any data in the table changes.
             % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.rangeTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition([v{i} nan],obj.getProject().getCurrentSensor());
-                    case 3
-                        o.setPosition([nan v{i}],obj.getProject().getCurrentSensor());
-                    case 4
-                        o.setTimePosition([v{i} nan]);
-                    case 5
-                        o.setTimePosition([nan v{i}]);
-                    case 6
-                        o.setColor(v{i});
-                end
-                pos = o.getPosition();
-                time_pos = o.getTimePosition();
-                obj.rangeTable.setValue(pos(1),rc(i,1),2);
-                obj.rangeTable.setValue(pos(2),rc(i,1),3);
-                obj.rangeTable.setValue(time_pos(1),rc(i,1),4);
-                obj.rangeTable.setValue(time_pos(2),rc(i,1),5);
+            row = event.Indices(1);
+            column = event.Indices(2);
+            rangeObj = src.UserData(row);
+            switch column
+                case 1
+                    rangeObj.getObject().setCaption(event.NewData);
+                case 2
+                    rangeObj.setPosition([event.NewData nan],obj.getProject().getCurrentSensor());
+                    time_pos = rangeObj.getTimePosition();
+                    src.Data{row,4} = time_pos(1);
+                case 3
+                    rangeObj.setPosition([nan event.NewData],obj.getProject().getCurrentSensor());
+                    time_pos = rangeObj.getTimePosition();
+                    src.Data{row,5} = time_pos(2);
+                case 4
+                    rangeObj.setTimePosition([event.NewData nan]);
+                    pos = rangeObj.getPosition();
+                    src.Data{row,2} = pos(1);
+                case 5
+                    rangeObj.setTimePosition([nan event.NewData]);
+                    pos = rangeObj.getPosition();
+                    src.Data{row,3} = pos(2);
+%                 case 6
+%                     %TODO fill in proper colour edit
+%                     rangeObj.setColor(event{i});
             end
-            obj.rangeTable.jTable.sortColumn(4);
+            tableColSort(src,4,'a');
         end
                 
-        function rangeTableMouseClickedCallback(obj,visRC,actRC)
+        function rangeTableMouseClickedCallback(obj,src,event)
             %% Called when the mouse is clicked in the table.
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.rangeTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.rangeTable.onMouseReleasedCallback = @()obj.rangeTableMouseReleasedCallback(o);
-        end
-        
-        function rangeTableMouseReleasedCallback(obj,gObject)
-            %% Called when the mouse is released in the table.
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.rangeTable.onMouseReleasedCallback = [];
+            % catch interaction with the colour column to show a colour
+            % picker, we dont need anything else
+            % TODO
         end
         
         function axesButtonDownCallback(obj,varargin)
