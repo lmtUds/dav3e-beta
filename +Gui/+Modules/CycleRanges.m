@@ -245,7 +245,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
             obj.ranges.updateYLimits();
-            set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
+            set(obj.main.hFigure,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
         
         function onClose(obj)
@@ -461,13 +461,16 @@ classdef CycleRanges < Gui.Modules.GuiModule
 
         function scrollWheelCallback(obj,~,e)
             %%
+            if isempty(obj.ranges)  %stop if there are no ranges
+                return;
+            end
             dir = e.VerticalScrollCount;
             p = get(gca,'CurrentPoint');
             x = p(1,1); y = p(1,2); ylimits = ylim;
             pos = obj.ranges.getPosition();
             onRange = (x >= pos(:,1)) & (x <= pos(:,2));
             inYLimits = (y >= ylimits(1)) && (y <= ylimits(2));
-            if ~inYLimits || ~any(onRange)
+            if ~inYLimits || ~any(onRange)  %stop if we hit no range
                 return
             end
             affectedRanges = obj.ranges(onRange);
