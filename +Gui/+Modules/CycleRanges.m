@@ -361,6 +361,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
+            obj.rangeTable.Enable = 'off';
 %             obj.rangeTable.setCallbacksActive(false);
 %             idx = ismember(gObj,obj.rangeTable.UserData);
 %             objRow = obj.rangeTable.getRowObjectRow(gObj);
@@ -377,6 +378,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
 %             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
 %             obj.rangeTable.setCallbacksActive(true);
             tableColSort(obj.rangeTable,4,'a');
+            obj.rangeTable.Enable = 'on';
 %             obj.rangeTable.jTable.sortColumn(4);
         end
         
