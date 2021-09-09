@@ -350,10 +350,11 @@ classdef Grouping < Gui.Modules.GuiModule
 %             t.setColumnObjects(gps);
 %             t.setColumnClasses({'str','int','clr'});
             
-%             t.onColumnSelectionChangedCallback = @obj.groupingTableColumnSelectionChanged;
+            t.CellSelectionCallback = @(src,event) obj.groupingTableColumnSelectionChanged(src,event);
+            t.CellEditCallback = @(src,event) obj.groupingTableDataChanged(src,event);
+            
 %             t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
 %             t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
-%             t.onDataChangedCallback = @obj.groupingTableDataChanged;
 %             t.onMouseClickedCallback = @obj.groupingTableMouseClickedCallback;
 
 %             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
@@ -384,7 +385,8 @@ classdef Grouping < Gui.Modules.GuiModule
             t.ColumnFormat = {'char','char'};
             t.ColumnEditable = [true true];
             
-%             t.onDataChangedCallback = @obj.groupsTableDataChanged;
+            t.CellEditCallback = @(src,event) obj.groupsTableDataChanged(src,event);
+            t.CellSelectionCallback = @(src,event) obj.groupsTableClicked(src,event);
             
             if ~isempty(obj.ranges)
                 obj.ranges.setColor(grouping.getColorsForRanges(obj.getCurrentCluster().getCycleRanges()));
@@ -456,30 +458,62 @@ classdef Grouping < Gui.Modules.GuiModule
             p.groupings.getCaption()
         end
         
-        function groupingTableDataChanged(obj,rc,v)
-            for i = 1:size(rc)
-                g = obj.groupingTable.getColumnObjectsAt(rc(i,2));
-                r = obj.groupingTable.getRowObjectsAt(rc(i,1));
-                g.setValue(v{i},r);
+        function groupingTableDataChanged(obj,src,event)
+%             row = event.Indices(1);
+%             column = event.Indices(2);
+%             key = src.UserData(row);
+%             key = key{1};
+            for i = 1:size(src)
+                g = obj.groupingTable.getColumnObjectsAt(src(i,2));
+                r = obj.groupingTable.getRowObjectsAt(src(i,1));
+                g.setValue(event{i},r);
                 g.updateColors();
                 obj.populateGroupsTable(g);
             end
         end
         
-        function groupsTableDataChanged(obj,rc,v)
-            for i = 1:size(rc,1)
-                g = obj.groupsTable.getRowObjectsAt(rc(i,1));
-                g = g{1};
-                switch rc(i,2)
-                    case 1
-                        obj.currentGrouping.replaceGroup(g,v{i});
-                    case 2
-                        obj.currentGrouping.setColor(g,v{i});
-                        obj.currentGrouping.updateColors();
-                        obj.updateRangeColors();
-                end
+        function groupsTableDataChanged(obj,src,event)
+            row = event.Indices(1);
+            column = event.Indices(2);
+            key = src.UserData(row);
+            key = key{1};
+            switch column
+                case 1
+                    obj.currentGrouping.replaceGroup(key,event.NewData);
+                case 2
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    obj.currentGrouping.setColor(key,rgbClr);
+                    obj.currentGrouping.updateColors();
+                    obj.updateRangeColors();
             end
             obj.populateGroupingTable();
+        end
+        
+        function groupsTableClicked(obj,src,event)
+            % catch interaction with the colour column to show a colour
+            % picker, we dont need anything else
+            if size(event.Indices,1) == 1 && event.Indices(2) == 2
+                row = event.Indices(1);
+                col = event.Indices(2);
+                key = src.UserData(row);
+%                 key = key{1};
+                clrArray = values(obj.currentGrouping.colors,key);
+                origClr = clrArray{:};
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                obj.currentGrouping.setColor(key{:},rgbClr);
+            end
         end
         
         function updateRangeColors(obj)
