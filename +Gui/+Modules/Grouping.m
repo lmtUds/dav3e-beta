@@ -342,7 +342,8 @@ classdef Grouping < Gui.Modules.GuiModule
             
             t = obj.groupingTable;
             t.Data = data;
-            t.UserData = r;
+%             t.UserData = r;
+            t.UserData = gps;
             
             t.ColumnName = header;
             t.ColumnEditable = true;
@@ -414,12 +415,10 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.groupingTable.onMouseReleasedCallback = [];
         end
         
-        function groupingTableColumnSelectionChanged(obj,visC,actC)
-            if visC(2) == 0
-                obj.groupingTable.jTable.getColumnModel().getSelectionModel().setSelectionInterval(visC(1),visC(1));
-                return
-            end
-            g = obj.groupingTable.getColumnObjectsAt(actC(2));
+        function groupingTableColumnSelectionChanged(obj,src,event)
+            row = event.Indices(1);
+            column = event.Indices(2);
+            g = src.UserData(column);
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
@@ -459,17 +458,14 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function groupingTableDataChanged(obj,src,event)
-%             row = event.Indices(1);
-%             column = event.Indices(2);
-%             key = src.UserData(row);
-%             key = key{1};
-            for i = 1:size(src)
-                g = obj.groupingTable.getColumnObjectsAt(src(i,2));
-                r = obj.groupingTable.getRowObjectsAt(src(i,1));
-                g.setValue(event{i},r);
-                g.updateColors();
-                obj.populateGroupsTable(g);
-            end
+            row = event.Indices(1);
+            column = event.Indices(2);
+            grouping = src.UserData(column);
+            range = grouping.ranges(row);
+            
+            grouping.setValue(event.EditData,range);
+            grouping.updateColors();
+            obj.populateGroupsTable(grouping);
         end
         
         function groupsTableDataChanged(obj,src,event)
@@ -512,7 +508,8 @@ classdef Grouping < Gui.Modules.GuiModule
                     disp(ME)
                     rgbClr = origClr;
                 end
-                obj.currentGrouping.setColor(key{:},rgbClr);
+                obj.currentGrouping.setColor(key{:},rgbClr);                
+                obj.updateRangeColors();
             end
         end
         
