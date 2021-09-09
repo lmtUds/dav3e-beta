@@ -315,9 +315,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
                 time_positions = num2cell(gRanges.getTimePosition());
-%                 colors = num2cell(gRanges.getRange().getJavaColor());
-%                 data = [captions, positions, time_positions, colors];
-                data = [captions, positions, time_positions];
+
+                clrArray = gRanges.getRange().getColor();
+                colors = cell(size(clrArray,1),1);
+                for i = 1:size(clrArray,1)
+                    colors{i} = clr2str(clrArray(i,:));
+                end
+                data = [captions, positions, time_positions, colors];
+%                 data = [captions, positions, time_positions];
             else
                 data = {};
             end
@@ -326,20 +331,20 @@ classdef CycleRanges < Gui.Modules.GuiModule
             t.Data = data;
             t.UserData = gRanges;
             
-%             t.ColumnName = {'caption','begin','end','time begin in s','time end in s','color'};
-%             t.ColumnFormat({'char','numeric','numeric','numeric','numeric','char'});
-%             t.ColumnEditable = [true true true true true true];
+            t.ColumnName = {'caption','begin','end','time begin in s','time end in s','color'};
+            t.ColumnFormat = {'char','numeric','numeric','numeric','numeric','char'};
+            t.ColumnEditable = [true true true true true true];
             
-            t.ColumnName = {'caption','begin','end','time begin in s','time end in s'};
-            t.ColumnFormat = {'char','numeric','numeric','numeric','numeric'};
-            t.ColumnEditable = [true true true true true];
+%             t.ColumnName = {'caption','begin','end','time begin in s','time end in s'};
+%             t.ColumnFormat = {'char','numeric','numeric','numeric','numeric'};
+%             t.ColumnEditable = [true true true true true];
             
             if ~isempty(gRanges) %only sort if there is a range
                 ind = tableColSort(t,4,'a');
                 gRanges = gRanges(ind);
             end
             obj.rangeTable.CellEditCallback = @(src,event) obj.rangeTableDataChangeCallback(src,event);
-%             obj.rangeTable.CellSelectionCallback = @(src,event) obj.rangeTableMouseClickedCallback(src,event);
+            obj.rangeTable.CellSelectionCallback = @(src,event) obj.rangeTableMouseClickedCallback(src,event);
         end
         
         function cycleRangeDraggedCallback(obj,gRange)
@@ -407,9 +412,15 @@ classdef CycleRanges < Gui.Modules.GuiModule
                     rangeObj.setTimePosition([nan event.NewData]);
                     pos = rangeObj.getPosition();
                     src.Data{row,3} = pos(2);
-%                 case 6
-%                     %TODO fill in proper colour edit
-%                     rangeObj.setColor(event{i});
+                case 6
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    rangeObj.setColor(rgbClr);
             end
             tableColSort(src,4,'a');
         end
@@ -418,7 +429,21 @@ classdef CycleRanges < Gui.Modules.GuiModule
             %% Called when the mouse is clicked in the table.
             % catch interaction with the colour column to show a colour
             % picker, we dont need anything else
-            % TODO
+            if size(event.Indices,1) == 1 && event.Indices(2) == 6
+                row = event.Indices(1);
+                col = event.Indices(2);
+                rangeObj = src.UserData(row);
+                origClr = rangeObj.getRange().getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                
+                rangeObj.setColor(rgbClr);
+            end
         end
         
         function axesButtonDownCallback(obj,varargin)
