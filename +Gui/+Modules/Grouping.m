@@ -140,6 +140,12 @@ classdef Grouping < Gui.Modules.GuiModule
             groupingTable = uitable(moduleLayout);
             groupingTable.Layout.Row = [2 3];
             groupingTable.Layout.Column = 1;
+            
+            groupingCM = uicontextmenu(mainFigure);
+            renameMenu = uimenu(groupingCM,...
+                'Text','Rename Groupings',...
+                'MenuSelectedFcn',@(src,event) obj.renameGroupings(src,event));
+            groupingTable.ContextMenu = groupingCM;
 
             obj.groupingTable = groupingTable;
             
@@ -353,10 +359,10 @@ classdef Grouping < Gui.Modules.GuiModule
             
             t.CellSelectionCallback = @(src,event) obj.groupingTableColumnSelectionChanged(src,event);
             t.CellEditCallback = @(src,event) obj.groupingTableDataChanged(src,event);
+%             t.ButtonDownFcn = @(src,event) obj.groupingTableMouseClickedCallback(src,event);
             
 %             t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
 %             t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
-%             t.onMouseClickedCallback = @obj.groupingTableMouseClickedCallback;
 
 %             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
 %             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
@@ -396,12 +402,12 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.deleteButton.Text = sprintf('Delete "%s"',grouping.getCaption());
         end
         
-        function groupingTableMouseClickedCallback(obj,visRC,actRC)
+        function groupingTableMouseClickedCallback(obj,src,event)
             %%
             % highlight the corresponding graphics object when the mouse
             % button is pressed on a table row
 %             o = obj.groupingTable.getRowObjectsAt(visRC(1));
-            o = obj.ranges(visRC(1));
+            o = obj.ranges(src(1));
             o.setHighlight(true);
 %             obj.ranges(visRC(1)).setHighlight(true);
             obj.groupingTable.onMouseReleasedCallback = @()obj.groupingTableMouseReleasedCallback(o);
@@ -416,13 +422,26 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function groupingTableColumnSelectionChanged(obj,src,event)
-            row = event.Indices(1);
-            column = event.Indices(2);
+            row = event.Indices(1,1);
+            column = event.Indices(1,2);
             g = src.UserData(column);
+            
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
             obj.colorGradientDialog.update(deStar(g.getDestarredCategories()));
+            
+            % if a double click on the whole column happended
+            % rename the grouping
+            if strcmp(get(gcf,'SelectionType'),'open') ...
+                    && size(event.Indices,1) == size(src.Data,1)
+                prompt = {'Enter a new grouping name:'};
+                dlgtitle = 'Grouping Renaming';
+                dims = [1 35];
+                definput = {g.caption};
+                answer = inputdlg(prompt,dlgtitle,dims,definput);
+                g.setCaption(answer);
+            end
         end
         
         function addGroupingButtonCallback(obj,varargin)
@@ -518,6 +537,20 @@ classdef Grouping < Gui.Modules.GuiModule
 %                 r = obj.getCurrentCluster().getCycleRanges();
                 obj.ranges.setColor(obj.currentGrouping.getColorsForRanges(obj.ranges.getObject()));
             end
+        end
+        
+        function renameGroupings(obj,src,event)
+            gps = obj.getProject().groupings;
+            caps = gps.getCaption();            
+            prompt = cellfun(@char,caps,'UniformOutput',false);
+            dlgtitle = 'Grouping Renaming';
+            dims = [1 35];
+            definput = cellfun(@char,caps,'UniformOutput',false);
+            answer = inputdlg(prompt,dlgtitle,dims,definput);
+            gps.setCaption(answer);
+            
+%             obj.populateGroupsTable(grouping);
+            obj.populateGroupingTable();
         end
     end
 end
