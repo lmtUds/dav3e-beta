@@ -119,7 +119,7 @@ classdef Grouping < Gui.Modules.GuiModule
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
                 'ColumnWidth',{'4x','1x'},...
-                'RowHeight',{'1x','1x','2x'},...
+                'RowHeight',{'2x','1x','3x'},...
                 'RowSpacing',7);
             
             moduleMenu = uimenu(mainFigure,'Label','Grouping');
@@ -250,7 +250,7 @@ classdef Grouping < Gui.Modules.GuiModule
 %             obj.populateGroupingTable();
             
             obj.populateGroupsTable(obj.currentGrouping);
-            obj.deleteButton.String = sprintf('delete "%s"',obj.currentGrouping.getCaption());
+            obj.deleteButton.Text = sprintf('Delete "%s"',obj.currentGrouping.getCaption());
             
             % TODO: needs to check for any change in cycle ranges
 %             if obj.clusterHasChanged()
@@ -334,25 +334,27 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.handleSensorChange(obj.getProject().getCurrentSensor());
         end
         
-        function populateGroupingTable(obj)
-            t = obj.groupingTable;
-            g = obj.getProject().groupings;
-            header = g.getCaption();
+        function populateGroupingTable(obj)            
+            gps = obj.getProject().groupings;
+            header = gps.getCaption();
             r = obj.getCurrentCluster().getCycleRanges();
-            data = cellstr(g.getValues(r));
-            t.setData(data,header);
-            t.setColumnObjects(g);
-            t.setRowObjects(r);
-%             t.setColumnClasses({'str','int','clr'});
-            t.setColumnsEditable(true(1,numel(g)));
-            t.setColumnReorderingAllowed(true);
-            t.jTable.setAutoResizeMode(t.jTable.AUTO_RESIZE_OFF);
+            data = cellstr(gps.getValues(r));
             
-            t.onColumnSelectionChangedCallback = @obj.groupingTableColumnSelectionChanged;
-            t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
-            t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
-            t.onDataChangedCallback = @obj.groupingTableDataChanged;
-            t.onMouseClickedCallback = @obj.groupingTableMouseClickedCallback;
+            t = obj.groupingTable;
+            t.Data = data;
+            t.UserData = r;
+            
+            t.ColumnName = header;
+            t.ColumnEditable = true;
+            
+%             t.setColumnObjects(gps);
+%             t.setColumnClasses({'str','int','clr'});
+            
+%             t.onColumnSelectionChangedCallback = @obj.groupingTableColumnSelectionChanged;
+%             t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
+%             t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
+%             t.onDataChangedCallback = @obj.groupingTableDataChanged;
+%             t.onMouseClickedCallback = @obj.groupingTableMouseClickedCallback;
 
 %             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
 %             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
@@ -362,28 +364,33 @@ classdef Grouping < Gui.Modules.GuiModule
             if nargin < 2
                 grouping = obj.currentGrouping;
             end
-            t = obj.groupsTable;
-            c = grouping.getJavaColors();
-            header = {'group','color'};
+            
+            c = grouping.colors;
             keys = grouping.getSortedColorKeys();
-            data = [keys' values(c,keys)'];
-            %data = [keys(c)' values(c)'];
-            t.setData(data,header);
-            t.setRowObjects(keys);
-            t.setColumnClasses({'str','clr'});
-            t.setColumnsEditable([true true]);
-            t.setSortingEnabled(true)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.repaint();
+            clrArray = values(c,keys);
+            clrArray = vertcat(clrArray{:});
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
             
-            t.onDataChangedCallback = @obj.groupsTableDataChanged;
+            data = [keys' colors];
             
-%             if ~isempty(obj.ranges)
-%                 obj.ranges.setColor(grouping.getColorsForRanges(obj.getCurrentCluster().getCycleRanges()));
-%             end
+            t = obj.groupsTable;
+            t.Data = data;
+            t.UserData = keys;
             
-            obj.deleteButton.String = sprintf('delete "%s"',grouping.getCaption());
+            t.ColumnName = {'group','color'};
+            t.ColumnFormat = {'char','char'};
+            t.ColumnEditable = [true true];
+            
+%             t.onDataChangedCallback = @obj.groupsTableDataChanged;
+            
+            if ~isempty(obj.ranges)
+                obj.ranges.setColor(grouping.getColorsForRanges(obj.getCurrentCluster().getCycleRanges()));
+            end
+            
+            obj.deleteButton.Text = sprintf('Delete "%s"',grouping.getCaption());
         end
         
         function groupingTableMouseClickedCallback(obj,visRC,actRC)
