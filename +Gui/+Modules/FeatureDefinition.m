@@ -239,6 +239,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             defsDropdown.Layout.Row = 2;
             defsDropdown.Layout.Column = [1 2];
             
+            obj.setDropdown = defsDropdown;
+            
             defsAdd = uibutton(defsGrid,...
                 'Text','+',...
                 'ButtonPushedFcn',@obj.dropdownNewFeatureDefinitionSet);
@@ -251,40 +253,38 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             defsRem.Layout.Row = 2;
             defsRem.Layout.Column = 4;
             
-            propGridPanel = uipanel(defsGrid);
-            propGridPanel.Layout.Row = 3;
-            propGridPanel.Layout.Column = [1 4];
+            propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid,...
+                'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
+            propGrid.Layout.Row = 3;
+            propGrid.Layout.Column = [1 4];
+            
+            obj.propGrid = propGrid;
             
             defsElementAdd = uibutton(defsGrid,...
                 'Text','Add',...
                 'ButtonPushedFcn',@(h,e)obj.addFeatureDefinition);
             defsElementAdd.Layout.Row = 4;
-            defsElementAdd.Layout.Column = [1 2];
+            defsElementAdd.Layout.Column = 1;
             
             defsElementDel = uibutton(defsGrid,...
                 'Text','Delete',...
                 'ButtonPushedFcn',@(h,e)obj.removeFeatureDefinition);
             defsElementDel.Layout.Row = 4;
-            defsElementDel.Layout.Column = [3 4];
+            defsElementDel.Layout.Column = 2;
             
-%             defsElementUp = uibutton(defsGrid,...
-%                 'Text','/\',...
-%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
-%             defsElementUp.Layout.Row = 4;
-%             defsElementUp.Layout.Column = 3;
+            defsElementUp = uibutton(defsGrid,...
+                'Text','/\',...
+                'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
+            defsElementUp.Layout.Row = 4;
+            defsElementUp.Layout.Column = 3;
             
-%             defsElementDwn = uibutton(defsGrid,...
-%                 'Text','\/',...
-%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
-%             defsElementDwn.Layout.Row = 4;
-%             defsElementDwn.Layout.Column = 4;
-            
-            
-            obj.setDropdown = defsDropdown;
-            
-            % prop grid
-            obj.propGrid = propGridPanel;
-            
+            defsElementDwn = uibutton(defsGrid,...
+                'Text','\/',...
+                'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
+            defsElementDwn.Layout.Row = 4;
+            defsElementDwn.Layout.Column = 4;
+                        
             rangeGrid = uigridlayout(moduleLayout, [4 2],...
                 'ColumnWidth',{'2x','1x'},...
                 'RowHeight',{'1x','1x','5x','1x'},...
