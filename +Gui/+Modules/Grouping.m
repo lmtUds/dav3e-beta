@@ -542,14 +542,22 @@ classdef Grouping < Gui.Modules.GuiModule
         function renameGroupings(obj,src,event)
             gps = obj.getProject().groupings;
             caps = gps.getCaption();            
-            prompt = cellfun(@char,caps,'UniformOutput',false);
+            prompt = cellfun(@char,caps,'UniformOutput',false)';
             dlgtitle = 'Grouping Renaming';
             dims = [1 35];
             definput = cellfun(@char,caps,'UniformOutput',false);
+            
             answer = inputdlg(prompt,dlgtitle,dims,definput);
             gps.setCaption(answer);
             
-%             obj.populateGroupsTable(grouping);
+            %check for renamed groupings 
+            %then choose the first renamed one as active
+            idx = ~strcmp(answer,prompt);
+            if any(idx)
+                [~,ind] = max(idx);
+                obj.populateGroupsTable(gps(ind));
+                obj.currentGrouping = gps(ind);
+            end
             obj.populateGroupingTable();
         end
     end
