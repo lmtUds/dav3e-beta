@@ -439,9 +439,15 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function handleFeatureDefinitionSetChange(obj)
             fds = obj.currentFeatureDefinitionSet;
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
+%             [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
             fdefs = fds.getFeatureDefinitions();
             if ~isempty(fdefs)
                 obj.changeFeatureDefinition(fdefs(1));
@@ -814,6 +820,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % write data to the table, style and configure it, activate callbacks
             if isempty(gRanges)
                 data = {};
+                return
             else
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
@@ -825,17 +832,16 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
 
             t = obj.rangeTable;
             
-            t.setData(data,{'caption','begin','end','divs','form'});
-            t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','double','double','int',{'lin','log','invlog'}});
-            t.setColumnsEditable([true true true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
-            t.jTable.setAutoResort(false);
-            obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
-            obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
+            t.Data = data;
+            t.UserData= gRanges;
+            
+            t.ColumnName = {'caption','begin','end','divs','form'};
+            t.ColumnFormat = {'char','numeric','numeric','numeric',{'lin','log','invlog'}};
+            t.ColumnEditable = [true true true true true true];
+            ind = tableColSort(t,2,'a');
+            
+%             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
+%             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
         end
         
         function updateFeaturePreview(obj)
