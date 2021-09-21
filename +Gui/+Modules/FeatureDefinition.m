@@ -399,9 +399,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 fds(end+1) = fd;
             end
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
             obj.changeFeatureDefinition(fds(end));
         end
         
@@ -663,8 +667,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
             end
             
-            obj.setDropdown.setItems(obj.getProject().poolFeatureDefinitionSets.getCaption());
-            obj.setDropdown.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolFeatureDefinitionSets.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentFeatureDefinitionSet.getCaption();
             if obj.featureDefinitionSetHasChanged()
                 obj.handleFeatureDefinitionSetChange();
             end
@@ -769,7 +775,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 obj.ranges.updatePosition(newSensor);
                 obj.ranges.setYLimits(ylimits);
             else
-                obj.setDropdown.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+                obj.setDropdown.Value = obj.currentFeatureDefinitionSet.getCaption();
 %                 obj.handleFeatureDefinitionSetChange();
 %                 fds = newSensor.featureDefinitionSet.getFeatureDefinitions();
 %                 if numel(fds) > 0
