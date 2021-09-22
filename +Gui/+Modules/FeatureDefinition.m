@@ -235,7 +235,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % feature definition set dropdown
             defsDropdown = uidropdown(defsGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@obj.dropdownFeatureDefinitionSetCallback);
+                'ValueChangedFcn',@(src,event) obj.dropdownFeatureDefinitionSetCallback(src,event));
             defsDropdown.Layout.Row = 2;
             defsDropdown.Layout.Column = [1 2];
             
@@ -243,13 +243,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             defsAdd = uibutton(defsGrid,...
                 'Text','+',...
-                'ButtonPushedFcn',@obj.dropdownNewFeatureDefinitionSet);
+                'ButtonPushedFcn',@(src,event) obj.dropdownNewFeatureDefinitionSet(src,event,defsDropdown));
             defsAdd.Layout.Row = 2;
             defsAdd.Layout.Column = 3;
             
             defsRem = uibutton(defsGrid,...
                 'Text','-',...
-                'ButtonPushedFcn',@obj.dropdownRemoveFeatureDefinitionSet);
+                'ButtonPushedFcn',@(src,event) obj.dropdownRemoveFeatureDefinitionSet(src,event,defsDropdown));
             defsRem.Layout.Row = 2;
             defsRem.Layout.Column = 4;
             
@@ -431,8 +431,14 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             end
             
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
             [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
         end
         
@@ -456,18 +462,18 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             end
         end
         
-        function dropdownNewFeatureDefinitionSet(obj,h)
+        function dropdownNewFeatureDefinitionSet(obj,src,event,dropdown)
             fds = obj.getProject().addFeatureDefinitionSet();
             obj.currentFeatureDefinitionSet = fds;
-            h.appendItem(fds.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(fds.getCaption());
+            dropdown.Value = char(fds.getCaption());
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownRemoveFeatureDefinitionSet(obj,h)
-            idx = h.getSelectedIndex();
+        function dropdownRemoveFeatureDefinitionSet(obj,src,event,dropdown)
             fdss = obj.getProject().poolFeatureDefinitionSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),fdss);
             fds = fdss(idx);
             sensorsWithFds = obj.getProject().checkForSensorsWithFeatureDefinitionSet(fds);
             
@@ -478,13 +484,20 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The feature definition set "' char(fds.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Feature Definition set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
                         fdss(idx) = [];
-                        [sel,ok] = listdlg('ListString',fdss.getCaption(), 'SelectionMode','single');
+                        [sel,ok] = listdlg('PromptString','Please select a replacement feature definition set',...
+                            'ListString',fdss.getCaption(),...
+                            'SelectionMode','single');
                         if ~ok
                             return
                         end
@@ -492,7 +505,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                         newFds = fdss(sel);
                     case 'Replace with new'
                         newFds = obj.getProject().addFeatureDefinitionSet();
-                        h.appendItem(newFds.getCaption());
+                        dropdown.Items = [dropdown.Items char(newFds.getCaption())];
                         obj.getProject().replaceFeatureDefinitionSetInSensors(fds,newFds);
                     case 'Cancel'
                         return
@@ -502,12 +515,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolFeatureDefinitionSets) == 1
                     newFds = obj.getProject().addFeatureDefinitionSet();
-                    h.appendItem(newFds.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newFds.getCaption())];
+                else %select a FDS we already have
+                    if idx(1)   %the first logical index had the true
                         newFds = obj.getProject().poolFeatureDefinitionSets(2);
                     else
-                        newFds = obj.getProject().poolFeatureDefinitionSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newFds = obj.getProject().poolFeatureDefinitionSets(circshift(idx,-1));
                     end
                 end
             end
@@ -515,24 +529,34 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.currentFeatureDefinitionSet = newFds;
             obj.getProject().removeFeatureDefinitionSet(fds);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newFds.caption);  %set the new one
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownFeatureDefinitionSetCallback(obj,event)
+        function dropdownFeatureDefinitionSetCallback(obj,src,event)
             if event.Edited
-                dropdownFeatureDefinitionSetRename(obj,h,newName,index)
-            else
-                dropdownFeatureDefinitionSetChange(obj,h,newItem,newIndex)
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                    cellstr(obj.getProject().poolFeatureDefinitionSets.getCaption()));
+                obj.getProject().poolFeatureDefinitionSets(index).setCaption(newName);
+                src.Items{index} = newName;
+                obj.handleFeatureDefinitionSetChange();
+                obj.main.populateSensorSetTable();
+            else 
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentFeatureDefinitionSet = ...
+                    obj.getProject().poolFeatureDefinitionSets(index);
+                obj.handleFeatureDefinitionSetChange();
+                obj.main.populateSensorSetTable();
             end
         end
         
-        function dropdownFeatureDefinitionSetRename(obj,h,newName,index)
+        function dropdownFeatureDefinitionSetRename(obj,src,newName,index)
             newName = matlab.lang.makeUniqueStrings(newName,obj.getProject().poolFeatureDefinitionSets.getCaption());
             obj.getProject().poolFeatureDefinitionSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
+            src.renameItemAt(newName,src.getSelectedIndex());
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
