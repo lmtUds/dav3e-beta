@@ -253,9 +253,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             defsRem.Layout.Row = 2;
             defsRem.Layout.Column = 4;
             
-            propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid,...
-                'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
-                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
+            propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid,...'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+                'SelectionChangedFcn',@(src,event) obj.propGridFieldClickedCallback(src,event));
             propGrid.Layout.Row = 3;
             propGrid.Layout.Column = [1 4];
             
@@ -632,8 +631,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.updateFeaturePreview();
         end        
         
-        function propGridFieldClickedCallback(obj,pgf)
-            obj.changeFeatureDefinition(pgf.getMatlabObj());
+        function propGridFieldClickedCallback(obj,src,event)
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            blk = src.getSelectedBlock;
+            idx = arrayfun(@(fDef) strcmp(fDef.caption,blk.caption),fdSetDefs);
+            obj.changeFeatureDefinition(fdSetDefs(idx));
         end
         
         function changeFeatureDefinition(obj,fd)
