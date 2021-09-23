@@ -48,6 +48,9 @@ function f = computeFeature(y,x,prm)
     fTemp = [];
     for i = 1:size(y,1)
         [~,loc]= findpeaks(y(i,:),'NPEAKS',1);
+        if isempty(loc)
+            loc = 1;
+        end
         fTemp(i,:) = loc;
     end
     f = horzcat(f,fTemp);
