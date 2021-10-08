@@ -58,65 +58,97 @@ classdef RFESVMSelector < DimensionalityReduction.autoTools.FeatureSelectorInter
         end
         
         function [subsInd, rank, err] = train(this, X, Y, varargin)
-            %this.data = X;
-            nOriginal = size(X,2);
-            %this.target = Y;
-            
-            c = corr(X,Y);
-            c = abs(c);
-            [~, this.secondaryRank] = sort(c,'descend');
-            ind = false(1, size(X,2));
-            ind(this.secondaryRank(1:min([size(X, 2), 500]))) = true;
-            %X = X(:, this.secondaryRank(1:min([size(X, 2), 500])));
-            X = X(:, ind);
-            
-            X = zscore(X);
-            subsInd = true(1, size(X,2));
-            nSelected = size(X,2);
-            
-            numToSel = 1;
-            rank = zeros(1,size(X,2));
+            if strcmp(this.RegrOrClass,'Regression')
+                Y = cat2num(Y); %Regression.
+                nSelected = size(X,2); 
+                numToSel = 1;
+                rank = zeros(1,size(X,2));
+                ind = false(1, size(X,2));
+                subsInd = true(1, size(X,2));
 
-            %delete features that have nan values
-            while any(any(isnan(X(:,subsInd)))) && (nSelected > numToSel)
-                ind = find(subsInd);
-                ex = find(any(isnan(X(:,subsInd)), 1));
-                ex = ex(1);
-                subsInd(ind(ex)) = false;
-                nSelected = nSelected - 1;
-                if nargout == 2
+                while nSelected > numToSel
+                    %train linear SVM
+                    %Mdl = fitrsvm(X(:, subsInd), Y);
+                    %fitrlinear faster than fitrsvm
+                   % Mdl = fitrlinear(X(:, subsInd), Y);
+                    Mdl = fitrlinear(X(:, subsInd), Y, 'Learner','svm', 'Regularization', 'lasso', 'Solver', 'sparsa');
+                    %Mdl = fitrgp(X(:, subsInd), Y);
+                    %Mdl = fitrsvm(X(:, subsInd), Y, 'KernelFunction', 'gaussian')
+
+                    %eliminate worst feature
+                    ind = find(subsInd);
+                    [~, ex] = min(abs(Mdl.Beta));
+                    subsInd(ind(ex)) = false;
+                    nSelected = nSelected - 1;
+
                     rank(ind(ex)) = nSelected;
                 end
-            end
+                [~, rank] = sort(-rank, 'descend');
+                rank = rank';
+                this.rank = rank;
             
-            while nSelected > numToSel
-                %train linear SVM
-                %t = templateSVM('BoxConstraint',10^5, 'KernelFunction', 'linear', 'CacheSize', 'maximal','IterationLimit',100);
-                t = templateSVM('KernelFunction', 'linear','IterationLimit',20);
-                %t = templateLinear('Learner', 'svm', 'Regularization', 'lasso'); %'PassLimit',5);
-                mdl = fitcecoc(X(:,subsInd), Y, 'Coding', 'onevsone', 'Learners', t, 'Options', statset('UseParallel', true));
-                %mdl = fitcecoc(X(:,subsInd), Y, 'Coding', 'onevsall', 'Learners', t, 'Options', statset('UseParallel', true));
-                %get weight vector
-                weights = zeros(length(mdl.BinaryLearners{1}.Beta), 1);
-                for i = 1:length(mdl.BinaryLearners)
-                    weights = weights + abs(mdl.BinaryLearners{i}.Beta);
+            else
+            
+                %this.data = X;
+                nOriginal = size(X,2);
+                %this.target = Y;
+
+                c = corr(X,Y);
+                c = abs(c);
+                [~, this.secondaryRank] = sort(c,'descend');
+                ind = false(1, size(X,2));
+                ind(this.secondaryRank(1:min([size(X, 2), 500]))) = true;
+                %X = X(:, this.secondaryRank(1:min([size(X, 2), 500])));
+                X = X(:, ind);
+
+                X = zscore(X);
+                subsInd = true(1, size(X,2));
+                nSelected = size(X,2);
+
+                numToSel = 1;
+                rank = zeros(1,size(X,2));
+
+                %delete features that have nan values
+                while any(any(isnan(X(:,subsInd)))) && (nSelected > numToSel)
+                    ind = find(subsInd);
+                    ex = find(any(isnan(X(:,subsInd)), 1));
+                    ex = ex(1);
+                    subsInd(ind(ex)) = false;
+                    nSelected = nSelected - 1;
+                    if nargout == 2
+                        rank(ind(ex)) = nSelected;
+                    end
                 end
-                %eliminate worst feature
-                ind = find(subsInd);
-                [~, ex] = min(weights);
-                subsInd(ind(ex)) = false;
-                nSelected = nSelected - 1;
-                if nargout >= 2
-                    rank(ind(ex)) = nSelected;
+
+                while nSelected > numToSel
+                    %train linear SVM
+                    %t = templateSVM('BoxConstraint',10^5, 'KernelFunction', 'linear', 'CacheSize', 'maximal','IterationLimit',100);
+                    t = templateSVM('KernelFunction', 'linear','IterationLimit',20);
+                    %t = templateLinear('Learner', 'svm', 'Regularization', 'lasso'); %'PassLimit',5);
+                    mdl = fitcecoc(X(:,subsInd), Y, 'Coding', 'onevsone', 'Learners', t, 'Options', statset('UseParallel', true));
+                    %mdl = fitcecoc(X(:,subsInd), Y, 'Coding', 'onevsall', 'Learners', t, 'Options', statset('UseParallel', true));
+                    %get weight vector
+                    weights = zeros(length(mdl.BinaryLearners{1}.Beta), 1);
+                    for i = 1:length(mdl.BinaryLearners)
+                        weights = weights + abs(mdl.BinaryLearners{i}.Beta);
+                    end
+                    %eliminate worst feature
+                    ind = find(subsInd);
+                    [~, ex] = min(weights);
+                    subsInd(ind(ex)) = false;
+                    nSelected = nSelected - 1;
+                    if nargout >= 2
+                        rank(ind(ex)) = nSelected;
+                    end
                 end
+                [~, rank] = sort(-rank, 'descend');
+
+                rankT =  this.secondaryRank;
+                rankT(1:min([nOriginal, 500])) = rank;
+                rank = rankT;
+
+                this.rank = rank;
             end
-            [~, rank] = sort(-rank, 'descend');
-            
-            rankT =  this.secondaryRank;
-            rankT(1:min([nOriginal, 500])) = rank;
-            rank = rankT;
-            
-            this.rank = rank;
             
             if nargout > 2 || nargin <= 4
 %                 err = ones(1, min([size(X,2), 500]));
