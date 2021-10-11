@@ -38,12 +38,12 @@ end
 % offer error text review for debugging
 [stat,cmdout] = gitHelper(config.GitPath,'status');
 if stat
-    msg = ['A problem occured when accessing git.',...
-        'Make sure git is installed and the specified path is correct.'];
+    msg = {'A problem occured when accessing git.',...
+        'Make sure git is installed and the specified path is correct.'};
     title = 'Git error';
     options = {'Select a new path','Disable git update','Skip to DAVE','View Error Output'};
     selection = uiconfirm(fig,msg,title,...
-        'Icon','Warning','Options',options);
+        'Icon','Error','Options',options);
     switch selection
         case options{1} %update the git path, save it and continue the update
             [file,path] = uigetfile('*.exe',...
@@ -53,10 +53,11 @@ if stat
         case options{2} %set the opt out flag, save then skip ahead to DAVE
             config.Optout = true;
             writeConfig(config);
-            msg = 'You disabled updates via git. You might enable them by editing "DAVEgit.cfg".';
+            msg = {'You disabled updates via git.',...
+                'You might re-enable them by editing the "OptOut" value in "DAVEgit.cfg".'};
             title = 'Updates via git disabled';
             s = uiconfirm(fig,msg,title,'Icon','Warning',...
-                'Options',{'Ok'});
+                'Options',{'Continue to DAVE'});
             close(fig)
             return
         case options{3} %do nothing
@@ -80,16 +81,43 @@ end
 statusOut = strsplit(cmdout);
 branch = statusOut{3};
 
-[stat,cmdout] = gitHelper(config.GitPath,'fetch');
+[stat,cmdout] = gitHelper(config.GitPath,'fetch','--verbose');
 if isempty(cmdout)
-    msg = 'Everything is up to date.';
-    title = 'Update result';
+    msg = 'Everything is up to date with the remote repository.';
+    title = 'No Update required';
     s = uiconfirm(fig,msg,title,'Icon','Success',...
         'Options',{'Ok'});
     close(fig)
     return
 else
+    % split the output of the fetch command
     fetchOut = strsplit(cmdout);
+    % find the local and remote branch pairs by locating the arrows first
+    hasArrow = cellfun(@(x) strcmp(x,'->'),fetchOut);
+%     hasArrow = horzcat(hasArrow{:});
+    % select neighbours of arrow locations to get branch pairs
+    i = 3;
+    while i < size(hasArrow,2)
+        if hasArrow(i) %arrow location found
+            % set direct neighbours
+            hasArrow(i-1) = 1;
+            hasArrow(i+1) = 1;
+            i = i+1; %skip direct neighbour
+        end
+        i = i+1; %advance to the next index
+    end
+    branchPairs = fetchOut(hasArrow);
+    branchPairs = reshape(branchPairs,3,[])';
+    msg = {'Updates for the following branches were found on the remote repository:',...
+        branchPairs{:,1}};
+    title = 'Updates found';
+    if any(cellfun(@(x) strcmp(x,branch),branchPairs(:,1)))
+        options = {['Update current only: ',branch],'Update all','Do not update'};
+    else
+        options = {'Update all','Do not update'};
+    end
+    s = uiconfirm(fig,msg,title,'Icon','Info',...
+        'Options',options);
 end
 
 % ask for confirmation to update code if available
