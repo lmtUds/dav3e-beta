@@ -22,7 +22,7 @@
 % This Script will check whether there exists a newer version of the source
 % code for the DAV^3E program and if so offer to update.
 % A setup process needs to be completed on the first use.
-
+clear
 % initialize a figure for future outputs
 fig = uifigure('Name','DAVE Update via git');
 % load the existing configuration from "DAVEgit.cfg"
@@ -109,10 +109,10 @@ else
     branchPairs = fetchOut(hasArrow);
     branchPairs = reshape(branchPairs,3,[])';
     msg = {'Updates for the following branches were found on the remote repository:',...
-        branchPairs{:,1},'How would you like to proceed?'};
+        strjoin(branchPairs(:,1),', '),'','How would you like to proceed?'};
     title = 'Updates found';
     if any(cellfun(@(x) strcmp(x,branch),branchPairs(:,1)))
-        options = {['Update current only: ',branch],'Update all','Do not update'};
+        options = {'Update all',['Update current only: ',branch],'Do not update'};
     else
         options = {'Update all','Do not update'};
     end
@@ -120,7 +120,7 @@ else
         'Options',options);
     switch s
         case options{1} %mark all found branches for an update
-            updateSel = ones(size(branchPairs,1),1);    
+            updateSel = true(size(branchPairs,1),1);    
         case branch %mark only the current branch for an update
             updateSel = cellfun(@(x) strcmp(x,branch),branchPairs(:,1));
         case options{end} %close the figure and continue to DAVE
@@ -134,9 +134,9 @@ end
 if config.AskAgain
     title = 'Confirm git updates';
     msg = {'Please confirm that you are willing to update the following branches form the remote repository:',...
-        branchPairs{updateSel,1},...
-        'This might DAMAGE your local code base and WILL OVERWRITE any UNSAVED CHANGES.',...
-        'Proceed only IF YOU ACCEPT THAT POSSIBILITY!'};
+        strjoin(branchPairs(updateSel,1),', '),'',...
+        'This might damage your local code base and will overwrite any unsaved changes.',...
+        'Proceed only if you accept that possibility!'};
     options = {'Yes, update.','Yes, update. Never ask again.','No, abort.'};
     s = uiconfirm(fig,msg,title,'Icon','Warning','Options',options,...
         'DefaultOption',3);
@@ -152,7 +152,7 @@ if config.AskAgain
                 case finalOpt{1} %now really do the update
                     try %updating all selected branches
                         performGitUpdates(branchPairs(updateSel,:));
-                        msg = {'Everything is now up to date with the remote repository.',...
+                        msg = {'Everything is now up to date with the remote repository.','',...
                             'Confirmations are still enabled.',...
                             'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
                         title = 'Update completed';
@@ -162,7 +162,7 @@ if config.AskAgain
                         return
                     catch ME %handle errors
                         msg = {'An error occured while updating!',...
-                            'You should inspect your code base, to confirm its integrity!',...
+                            'You should inspect your code base, to confirm its integrity!','',...
                             'Confirmations are still enabled.',...
                             'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
                         title = 'Update error';
@@ -203,7 +203,7 @@ if config.AskAgain
                 case finalOpt{1} %now really do the update and set the flag
                     try %updating all selected branches
                         performGitUpdates(branchPairs(updateSel,:));
-                        msg = {'Everything is now up to date with the remote repository.',...
+                        msg = {'Everything is now up to date with the remote repository.','',...
                             'Confirmations will be disabled now.',...
                             'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
                         title = 'Update completed';
@@ -215,7 +215,7 @@ if config.AskAgain
                         return
                     catch ME %handle errors
                         msg = {'An error occured while updating!',...
-                            'You should inspect your code base, to confirm its integrity!',...
+                            'You should inspect your code base, to confirm its integrity!','',...
                             'Confirmations are still enabled.',...
                             'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
                         title = 'Update error';
@@ -236,9 +236,9 @@ if config.AskAgain
                         end
                     end
                 case finalOpt{2} %display a message and continue to DAVE
-                    msg = {'No updates where applied.',...
+                    msg = {'No updates where applied.','',...
                         'You will be asked to update again on next start.',...
-                        'The confirmation will also be required in the future.'};
+                        'The confirmations will also be required in the future.'};
                     title = 'No Update applied';
                     cont = uiconfirm(fig,msg,title,'Icon','Success',...
                         'Options',{'Continue to DAVE'});
@@ -246,7 +246,7 @@ if config.AskAgain
                     return
             end
         case options{3} %display a message and continue to DAVE
-            msg = {'No updates where applied.',...
+            msg = {'No updates where applied.','',...
                 'You will be asked to update again on next start.'};
             title = 'No Update applied';
             s = uiconfirm(fig,msg,title,'Icon','Success',...
@@ -268,8 +268,8 @@ function config = readConfig(fig)
     % if there was no config file, ask how to proceed
     if fileID == -1
 %         fig = uifigure;
-        msg = ['Git update integration is not configured.' ...
-            'How would you like to proceed?'];
+        msg = {'Git update integration is not configured.','',...
+            'How would you like to proceed?'};
         title = 'Missing config';
         options = {'Create default config','Select git path','Disable git update','Skip to DAVE'};
         selection = uiconfirm(fig,msg,title,...
@@ -282,31 +282,32 @@ function config = readConfig(fig)
                 config.GitPath = 'C:\Program Files\Git\bin\git.exe';
                 config.OptOut = false;
                 writeConfig(config);
-                msg = 'A new default config was created. You might need to adjust your git path in "DAVEgit.cfg".';
+                msg = {'A new default config was created.','',...
+                    'You might need to adjust your git path in "DAVEgit.cfg".'};
                 title = 'Default config created';
                 s = uiconfirm(fig,msg,title,'Icon','Warning',...
                     'Options',{'Ok'});
-                return
             case options{2} %select git path
+                config = struct();
+                config.AskAgain = true;
+                config.OptOut = false;
                 [file,path] = uigetfile('*.exe',...
                     'Select your git executable','git.exe');
                 config.GitPath = [path,file];
                 writeConfig(config);
-%                 close(fig)
             case options{3} %opt out of git
                 config = struct();
                 config.AskAgain = true;
                 config.GitPath = 'C:\Program Files\Git\bin\git.exe';
                 config.OptOut = true;
                 writeConfig(config);
-                msg = 'You disabled updates via git. You might enable them by editing "DAVEgit.cfg".';
+                msg = {'You disabled updates via git.','',...
+                    'You might enable them by editing "DAVEgit.cfg".'};
                 title = 'Updates via git disabled';
                 s = uiconfirm(fig,msg,title,'Icon','Warning',...
                     'Options',{'Ok'});
-                return
             case options{4} %return empty to skip straight to DAVE
                 config = [];
-                return
         end
     else %if we had a config file
         % scan the config file, drop all "=" and close the file
