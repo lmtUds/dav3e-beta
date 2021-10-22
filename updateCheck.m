@@ -24,7 +24,7 @@
 % A setup process needs to be completed on the first use.
 
 % initialize a figure for future outputs
-fig = uifigure;
+fig = uifigure('Name','DAVE Update via git');
 % load the existing configuration from "DAVEgit.cfg"
 config = readConfig(fig);
 % skip updating if there was no config or the user opted out
@@ -60,7 +60,7 @@ if stat
                 'Options',{'Continue to DAVE'});
             close(fig)
             return
-        case options{3} %do nothing
+        case options{3} %clsoe teh figure and continue to DAVE
             close(fig)
             return
         case options{4} %print the error output
@@ -118,11 +118,27 @@ else
     end
     s = uiconfirm(fig,msg,title,'Icon','Info',...
         'Options',options);
+    switch s
+        case options{1} %mark all found branches for an update
+            updateSel = ones(size(branchPairs,1),1);    
+        case branch %mark only the current branch for an update
+            updateSel = cellfun(@(x) strcmp(x,branch),branchPairs(:,1));
+        case options{end} %close the figure and continue to DAVE
+            close(fig)
+            return
+    end
 end
 
 % ask for confirmation to update code if available
-% allow indefinite suspesion of updates 
 % "do not ask again"-Flag stored in "DAVEgit.cfg" 
+if config.AskAgain
+    title = 'Confirm git updates';
+    msg = {'Please confirm that you are willing to update the following branches form the remote repository:',...
+        branchPairs{updateSel,1},...
+        'This might DAMAGE your local code base and WILL OVERWRITE any UNSAVED CHANGES.',...
+        'Proceed only IF YOU ACCEPT THAT POSSIBILITY!'};
+    s = uiconfirm(fig,msg,title,'Icon','Warning','Options',options);
+end
 %TODO
 
 % Define read/write functionality for the config file
