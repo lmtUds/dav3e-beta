@@ -56,7 +56,7 @@ if stat
             msg = {'You disabled updates via git.',...
                 'You might re-enable them by editing the "OptOut" value in "DAVEgit.cfg".'};
             title = 'Updates via git disabled';
-            s = uiconfirm(fig,msg,title,'Icon','Warning',...
+            s = uiconfirm(fig,msg,title,'Icon','Info',...
                 'Options',{'Continue to DAVE'});
             close(fig)
             return
@@ -66,7 +66,7 @@ if stat
         case options{4} %print the error output
             msg = cmdout;
             title = 'Git error message';
-            s = uiconfirm(fig,msg,title,'Icon','Warning',...
+            s = uiconfirm(fig,msg,title,'Icon','Error',...
                 'Options',{'Continue to DAVE'});
             close(fig)
             return
@@ -83,10 +83,10 @@ branch = statusOut{3};
 
 [stat,cmdout] = gitHelper(config.GitPath,'fetch','--verbose');
 if isempty(cmdout)
-    msg = 'Everything is up to date with the remote repository.';
+    msg = 'Everything is already up to date with the remote repository.';
     title = 'No Update required';
     s = uiconfirm(fig,msg,title,'Icon','Success',...
-        'Options',{'Ok'});
+        'Options',{'Continue to DAVE'});
     close(fig)
     return
 else
@@ -109,14 +109,14 @@ else
     branchPairs = fetchOut(hasArrow);
     branchPairs = reshape(branchPairs,3,[])';
     msg = {'Updates for the following branches were found on the remote repository:',...
-        branchPairs{:,1}};
+        branchPairs{:,1},'How would you like to proceed?'};
     title = 'Updates found';
     if any(cellfun(@(x) strcmp(x,branch),branchPairs(:,1)))
         options = {['Update current only: ',branch],'Update all','Do not update'};
     else
         options = {'Update all','Do not update'};
     end
-    s = uiconfirm(fig,msg,title,'Icon','Info',...
+    s = uiconfirm(fig,msg,title,'Icon','Question',...
         'Options',options);
     switch s
         case options{1} %mark all found branches for an update
@@ -137,10 +137,130 @@ if config.AskAgain
         branchPairs{updateSel,1},...
         'This might DAMAGE your local code base and WILL OVERWRITE any UNSAVED CHANGES.',...
         'Proceed only IF YOU ACCEPT THAT POSSIBILITY!'};
-    s = uiconfirm(fig,msg,title,'Icon','Warning','Options',options);
+    options = {'Yes, update.','Yes, update. Never ask again.','No, abort.'};
+    s = uiconfirm(fig,msg,title,'Icon','Warning','Options',options,...
+        'DefaultOption',3);
+    switch s
+        case options{1} %ask for final confirmation, update
+            title = 'Final confirmation';
+            msg = {'Are you really sure you want to update now?',...
+                'There is no turning back!'};
+            finalOpt = {'Yes, I am sure.','No, I changed my mind.'};
+            conf = uiconfirm(fig,msg,title,'Icon','Warning','Options',finalOpt,...
+                    'DefaultOption',2);
+            switch conf
+                case finalOpt{1} %now really do the update
+                    try %updating all selected branches
+                        performGitUpdates(branchPairs(updateSel,:));
+                        msg = {'Everything is now up to date with the remote repository.',...
+                            'Confirmations are still enabled.',...
+                            'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+                        title = 'Update completed';
+                        s = uiconfirm(fig,msg,title,'Icon','Success',...
+                            'Options',{'Continue to DAVE'});
+                        close(fig)
+                        return
+                    catch ME %handle errors
+                        msg = {'An error occured while updating!',...
+                            'You should inspect your code base, to confirm its integrity!',...
+                            'Confirmations are still enabled.',...
+                            'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+                        title = 'Update error';
+                        errorOpt = {'Ok, continue to DAVE','View Error Output'};
+                        cont = uiconfirm(fig,msg,title,'Icon','Error',...
+                            'Options',errorOpt);
+                        switch cont
+                            case errorOpt{1} %continue to DAVE
+                                close(fig)
+                                return
+                            case errorOpt{2} %print the error output
+                                msg = ME;
+                                title = 'Git error message';
+                                errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
+                                    'Options',{'Continue to DAVE'});
+                                close(fig)
+                                return
+                        end
+                    end
+                case finalOpt{2} %display a message and continue to DAVE
+                    msg = {'No updates where applied.',...
+                        'You will be asked to update again on next start.'};
+                    title = 'No Update applied';
+                    cont = uiconfirm(fig,msg,title,'Icon','Success',...
+                        'Options',{'Continue to DAVE'});
+                    close(fig)
+                    return
+            end
+        case options{2} %ask for final confirmation, update, set the flag
+            title = 'Final confirmation';
+            msg = {'Are you really sure you want to update now?',...
+                'There will also be no further confirmations in the future.',...
+                'There is no turning back!'};
+            finalOpt = {'Yes, I am sure.','No, I changed my mind.'};
+            conf = uiconfirm(fig,msg,title,'Icon','Warning','Options',finalOpt,...
+                    'DefaultOption',2);
+            switch conf
+                case finalOpt{1} %now really do the update and set the flag
+                    try %updating all selected branches
+                        performGitUpdates(branchPairs(updateSel,:));
+                        msg = {'Everything is now up to date with the remote repository.',...
+                            'Confirmations will be disabled now.',...
+                            'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+                        title = 'Update completed';
+                        s = uiconfirm(fig,msg,title,'Icon','Success',...
+                            'Options',{'Continue to DAVE'});
+                        config.AskAgain = false;
+                        writeConfig(config);
+                        close(fig)
+                        return
+                    catch ME %handle errors
+                        msg = {'An error occured while updating!',...
+                            'You should inspect your code base, to confirm its integrity!',...
+                            'Confirmations are still enabled.',...
+                            'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+                        title = 'Update error';
+                        errorOpt = {'Ok, continue to DAVE','View Error Output'};
+                        cont = uiconfirm(fig,msg,title,'Icon','Error',...
+                            'Options',errorOpt);
+                        switch cont
+                            case errorOpt{1} %continue to DAVE
+                                close(fig)
+                                return
+                            case errorOpt{2} %print the error output
+                                msg = ME;
+                                title = 'Git error message';
+                                errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
+                                    'Options',{'Continue to DAVE'});
+                                close(fig)
+                                return
+                        end
+                    end
+                case finalOpt{2} %display a message and continue to DAVE
+                    msg = {'No updates where applied.',...
+                        'You will be asked to update again on next start.',...
+                        'The confirmation will also be required in the future.'};
+                    title = 'No Update applied';
+                    cont = uiconfirm(fig,msg,title,'Icon','Success',...
+                        'Options',{'Continue to DAVE'});
+                    close(fig)
+                    return
+            end
+        case options{3} %display a message and continue to DAVE
+            msg = {'No updates where applied.',...
+                'You will be asked to update again on next start.'};
+            title = 'No Update applied';
+            s = uiconfirm(fig,msg,title,'Icon','Success',...
+                'Options',{'Continue to DAVE'});
+            close(fig)
+            return
+    end
+else    
 end
-%TODO
 
+% Define the update process via git
+function performGitUpdates(branchPairs)
+    %TODO
+end
 % Define read/write functionality for the config file
 function config = readConfig(fig)
     % read the standard config "DAVEgit.cfg"
