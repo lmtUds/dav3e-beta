@@ -254,7 +254,39 @@ if config.AskAgain
             close(fig)
             return
     end
-else    
+else %just update without confirmation
+    try %updating all selected branches
+        performGitUpdates(branchPairs(updateSel,:));
+        msg = {'Everything is now up to date with the remote repository.','',...
+            'Confirmations are disabled.',...
+            'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+        title = 'Update completed';
+        s = uiconfirm(fig,msg,title,'Icon','Success',...
+            'Options',{'Continue to DAVE'});
+        close(fig)
+        return
+    catch ME %handle errors
+        msg = {'An error occured while updating!',...
+            'You should inspect your code base, to confirm its integrity!','',...
+            'Confirmations are disabled.',...
+            'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
+        title = 'Update error';
+        errorOpt = {'Ok, continue to DAVE','View Error Output'};
+        cont = uiconfirm(fig,msg,title,'Icon','Error',...
+            'Options',errorOpt);
+        switch cont
+            case errorOpt{1} %continue to DAVE
+                close(fig)
+                return
+            case errorOpt{2} %print the error output
+                msg = ME;
+                title = 'Git error message';
+                errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
+                    'Options',{'Continue to DAVE'});
+                close(fig)
+                return
+        end
+    end
 end
 
 % Define the update process via git
