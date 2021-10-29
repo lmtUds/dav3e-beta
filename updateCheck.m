@@ -151,7 +151,10 @@ if config.AskAgain
             switch conf
                 case finalOpt{1} %now really do the update
                     try %updating all selected branches
-                        performGitUpdates(branchPairs(updateSel,:));
+                        log = performGitUpdates(branchPairs(updateSel,:),branch);
+                        fileID = fopen('DAVEgit.log','w');
+                        fprintf(fileID,'%s',log);
+                        fclose(fileID);
                         msg = {'Everything is now up to date with the remote repository.','',...
                             'Confirmations are still enabled.',...
                             'You might disable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
@@ -202,7 +205,10 @@ if config.AskAgain
             switch conf
                 case finalOpt{1} %now really do the update and set the flag
                     try %updating all selected branches
-                        performGitUpdates(branchPairs(updateSel,:));
+                        log = performGitUpdates(branchPairs(updateSel,:),branch);
+                        fileID = fopen('DAVEgit.log','w');
+                        fprintf(fileID,'%s',log);
+                        fclose(fileID);
                         msg = {'Everything is now up to date with the remote repository.','',...
                             'Confirmations will be disabled now.',...
                             'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
@@ -256,7 +262,10 @@ if config.AskAgain
     end
 else %just update without confirmation
     try %updating all selected branches
-        performGitUpdates(branchPairs(updateSel,:));
+        log = performGitUpdates(branchPairs(updateSel,:),branch);
+        fileID = fopen('DAVEgit.log','w');
+        fprintf(fileID,'%s',log);
+        fclose(fileID);
         msg = {'Everything is now up to date with the remote repository.','',...
             'Confirmations are disabled.',...
             'You might re-enable them by editing the "AskAgain" value in "DAVEgit.cfg".'};
@@ -290,8 +299,23 @@ else %just update without confirmation
 end
 
 % Define the update process via git
-function performGitUpdates(branchPairs)
+function log = performGitUpdates(branchPairs,ogBranch)
     %TODO
+    log = '';
+    for b = 1:size(branchPairs,1)
+       branch = branchPairs{b,1};
+       destination = branchPairs{b,3};
+       destination = strsplit(destination,'/');
+       remoteName = destination{1};
+       remoteBranch = destination{2};
+       
+       [stat,cmdout] = gitHelper(config.GitPath,'checkout',branch,'--force');
+       log = [log,cmdout];
+       [stat,cmdout] = gitHelper(config.GitPath,'pull',remoteName,remoteBranch,'--force','--commit');
+       log = [log,cmdout];
+    end
+    [stat,cmdout] = gitHelper(config.GitPath,'checkout',ogBranch,'--force');
+    log = [log,cmdout];
 end
 % Define read/write functionality for the config file
 function config = readConfig(fig)
