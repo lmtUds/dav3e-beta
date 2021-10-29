@@ -151,7 +151,7 @@ if config.AskAgain
             switch conf
                 case finalOpt{1} %now really do the update
                     try %updating all selected branches
-                        log = performGitUpdates(branchPairs(updateSel,:),branch);
+                        log = performGitUpdates(branchPairs(updateSel,:),branch,config.GitPath);
                         fileID = fopen('DAVEgit.log','w');
                         fprintf(fileID,'%s',log);
                         fclose(fileID);
@@ -177,7 +177,7 @@ if config.AskAgain
                                 close(fig)
                                 return
                             case errorOpt{2} %print the error output
-                                msg = ME;
+                                msg = ME.message;
                                 title = 'Git error message';
                                 errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
                                     'Options',{'Continue to DAVE'});
@@ -205,7 +205,7 @@ if config.AskAgain
             switch conf
                 case finalOpt{1} %now really do the update and set the flag
                     try %updating all selected branches
-                        log = performGitUpdates(branchPairs(updateSel,:),branch);
+                        log = performGitUpdates(branchPairs(updateSel,:),branch,config.GitPath);
                         fileID = fopen('DAVEgit.log','w');
                         fprintf(fileID,'%s',log);
                         fclose(fileID);
@@ -233,7 +233,7 @@ if config.AskAgain
                                 close(fig)
                                 return
                             case errorOpt{2} %print the error output
-                                msg = ME;
+                                msg = ME.message;
                                 title = 'Git error message';
                                 errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
                                     'Options',{'Continue to DAVE'});
@@ -262,7 +262,7 @@ if config.AskAgain
     end
 else %just update without confirmation
     try %updating all selected branches
-        log = performGitUpdates(branchPairs(updateSel,:),branch);
+        log = performGitUpdates(branchPairs(updateSel,:),branch,config.GitPath);
         fileID = fopen('DAVEgit.log','w');
         fprintf(fileID,'%s',log);
         fclose(fileID);
@@ -288,7 +288,7 @@ else %just update without confirmation
                 close(fig)
                 return
             case errorOpt{2} %print the error output
-                msg = ME;
+                msg = ME.message;
                 title = 'Git error message';
                 errWindow = uiconfirm(fig,msg,title,'Icon','Error',...
                     'Options',{'Continue to DAVE'});
@@ -299,7 +299,8 @@ else %just update without confirmation
 end
 
 % Define the update process via git
-function log = performGitUpdates(branchPairs,ogBranch)
+
+function log = performGitUpdates(branchPairs,ogBranch,GitPath)
     %TODO
     log = '';
     for b = 1:size(branchPairs,1)
@@ -308,13 +309,13 @@ function log = performGitUpdates(branchPairs,ogBranch)
        destination = strsplit(destination,'/');
        remoteName = destination{1};
        remoteBranch = destination{2};
-       
-       [stat,cmdout] = gitHelper(config.GitPath,'checkout',branch,'--force');
+
+       [stat,cmdout] = gitHelper(GitPath,'checkout',branch,'--force');
        log = [log,cmdout];
-       [stat,cmdout] = gitHelper(config.GitPath,'pull',remoteName,remoteBranch,'--force','--commit');
+       [stat,cmdout] = gitHelper(GitPath,'pull',remoteName,remoteBranch,'--force','--commit');
        log = [log,cmdout];
     end
-    [stat,cmdout] = gitHelper(config.GitPath,'checkout',ogBranch,'--force');
+    [stat,cmdout] = gitHelper(GitPath,'checkout',ogBranch,'--force');
     log = [log,cmdout];
 end
 % Define read/write functionality for the config file
@@ -413,4 +414,44 @@ function writeConfig(config)
     fileID = fopen('DAVEgit.cfg','w');
     fprintf(fileID,'%s = "%s"\n',configCell{:});
     fclose(fileID);
+end
+function varargout = gitHelper(GitPath,varargin)
+% THIS FUNCTION WAS ADAPTED FROM
+% https://stackoverflow.com/a/42272702
+%
+% GIT Execute a git command.
+%
+% GITHELPER <ARGS>, when executed in command style, executes the git command and
+% displays the git outputs at the MATLAB console.
+% ARG1 needs to be the path to a git executable.
+%
+% STATUS = GITHELPER(ARG1, ARG2,...), when executed in functional style, executes
+% the git command and returns the output status STATUS.
+% ARG1 needs to be the path to a git executable.
+%
+% [STATUS, CMDOUT] = GITHELPER(ARG1, ARG2,...), when executed in functional
+% style, executes the git command and returns the output status STATUS and
+% the git output CMDOUT.
+% ARG1 needs to be the path to a git executable.
+
+% Check output arguments.
+nargoutchk(0,2)
+
+% Construct the git command. Surround the provided path with double
+% quotation marks to comply with Windows policy.
+winExePath = ['"',GitPath,'"'];
+cmdstr = strjoin([winExePath, varargin]);
+
+% Execute the git command.
+[status, cmdout] = system(cmdstr);
+
+switch nargout
+    case 0
+        disp(cmdout)
+    case 1
+        varargout{1} = status;
+    case 2
+        varargout{1} = status;
+        varargout{2} = cmdout;
+end
 end
