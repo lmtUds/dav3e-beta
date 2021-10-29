@@ -133,7 +133,7 @@ end
 % "do not ask again"-Flag stored in "DAVEgit.cfg" 
 if config.AskAgain
     title = 'Confirm git updates';
-    msg = {'Please confirm that you are willing to update the following branches form the remote repository:',...
+    msg = {'Please confirm that you are willing to update the following branches from the remote repository:',...
         strjoin(branchPairs(updateSel,1),', '),'',...
         'This might damage your local code base and will overwrite any unsaved changes.',...
         'Proceed only if you accept that possibility!'};
@@ -299,9 +299,7 @@ else %just update without confirmation
 end
 
 % Define the update process via git
-
 function log = performGitUpdates(branchPairs,ogBranch,GitPath)
-    %TODO
     log = '';
     for b = 1:size(branchPairs,1)
        branch = branchPairs{b,1};
