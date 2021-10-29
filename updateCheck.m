@@ -81,7 +81,7 @@ end
 statusOut = strsplit(cmdout);
 branch = statusOut{3};
 
-[stat,cmdout] = gitHelper(config.GitPath,'fetch','--verbose');
+[stat,cmdout] = gitHelper(config.GitPath,'fetch');
 if isempty(cmdout)
     msg = 'Everything is already up to date with the remote repository.';
     title = 'No Update required';
