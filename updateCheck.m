@@ -76,7 +76,7 @@ end
 % check if updates are present on the remote repository
 % highlight if updates happened to tracked branch
 % allow selective pulling
-%TODO
+%TODO git branch list to only update local branches
 % extract relevant branch from the status output
 statusOut = strsplit(cmdout);
 branch = statusOut{3};
@@ -301,18 +301,32 @@ end
 % Define the update process via git
 function log = performGitUpdates(branchPairs,ogBranch,GitPath)
     log = '';
+    %get a list of all branches and extract local branches
+    [stat,cmdout] = gitHelper(GitPath,'branch','--list','-a');
+    listSplit = strsplit(cmdout);
+    hasStar = cellfun(@(x) strcmp(x,'*'),listSplit);
+    [~, ind] = max(hasStar);
+    locals = listSplit([2:ind-1 ind+1]);
+    log = [log,cmdout];
+    
+    %loop through all branch pairs
     for b = 1:size(branchPairs,1)
-       branch = branchPairs{b,1};
-       destination = branchPairs{b,3};
-       destination = strsplit(destination,'/');
-       remoteName = destination{1};
-       remoteBranch = destination{2};
-
-       [stat,cmdout] = gitHelper(GitPath,'checkout',branch,'--force');
-       log = [log,cmdout];
-       [stat,cmdout] = gitHelper(GitPath,'pull',remoteName,remoteBranch,'--force','--commit');
-       log = [log,cmdout];
+        branch = branchPairs{b,1};
+        destination = branchPairs{b,3};
+        destination = strsplit(destination,'/');
+        remoteName = destination{1};
+        remoteBranch = destination{2};
+        if any(strcmp(branch,locals)) %branch was present locally
+            [stat,cmdout] = gitHelper(GitPath,'checkout',branch,'--force');
+        else %make a new branch from remote
+            [stat,cmdout] = gitHelper(GitPath,'checkout','-b',branch,[remoteName,'/',remoteBranch],'--force');
+        end
+        log = [log,cmdout];
+        %do the actual pull, force merging and committing
+        [stat,cmdout] = gitHelper(GitPath,'pull',remoteName,remoteBranch,'--force','--commit');
+        log = [log,cmdout];
     end
+    %go back to the starting branch
     [stat,cmdout] = gitHelper(GitPath,'checkout',ogBranch,'--force');
     log = [log,cmdout];
 end
