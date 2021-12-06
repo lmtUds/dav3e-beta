@@ -25,6 +25,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
 %         currentFeatureDefinitionSet = FeatureDefinitionSet.empty;
         currentFeatureDefinition
         ranges = GraphicsRange.empty;
+        selectedRanges
         
         cycleLines
         previewLines
@@ -298,7 +299,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             rangeLabel.Layout.Row = 1;
             rangeLabel.Layout.Column = [1 2];
             
-            rangeTable = uitable(rangeGrid);
+            rangeTable = uitable(rangeGrid,...
+                'CellSelectionCallback',@(src,event) obj.rangeTableSelectionCallback(src,event));
             rangeTable.Layout.Row = [2 3];
             rangeTable.Layout.Column = [1 2];
             
@@ -312,7 +314,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             rangeDel = uibutton(rangeGrid,...
                 'Text','Delete',...
-                'ButtonPushedFcn',@(h,e)obj.removeRange);
+                'ButtonPushedFcn',@(src,event) obj.removeRange(src,event));
             rangeDel.Layout.Row = 4;
             rangeDel.Layout.Column = 2;
             
@@ -606,18 +608,19 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.updateFeaturePreview();
         end
         
-        function removeRange(obj)
-            selectedRangeIDs = obj.rangeTable.jTable.getSelectedRows() + 1;
-            gObjects = {};
-            for i=1:numel(selectedRangeIDs)
-                selectedRangeID = selectedRangeIDs(i);
-                if selectedRangeID == 0
-                    return
-                end
-                gObjects{i} = obj.rangeTable.getRowObjectsAt(selectedRangeID);
-            end
-            for i=1:numel(gObjects)
-                deleteRangeCallback(obj,gObjects{i})
+        function removeRange(obj,src,event)
+%             selectedRangeIDs = obj.rangeTable.jTable.getSelectedRows() + 1;
+%             gObjects = {};
+            rangeObjects = obj.rangeTable.UserData(obj.selectedRanges);
+%             for i=1:numel(selectedRangeIDs)
+%                 selectedRangeID = selectedRangeIDs(i);
+%                 if selectedRangeID == 0
+%                     return
+%                 end
+%                 gObjects{i} = obj.rangeTable.getRowObjectsAt(selectedRangeID);
+%             end
+            for i=1:numel(rangeObjects)
+                obj.deleteRangeCallback(rangeObjects(i))
             end
         end
 
@@ -664,6 +667,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             [ranges.onDragStopCallback] = deal(@obj.cycleRangeDragStopCallback);
             [ranges.onDeleteRequestCallback] = deal(@obj.deleteRangeCallback);
             obj.ranges = [obj.ranges, ranges];
+            if isempty(obj.ranges)
+                obj.selectedRanges = [];
+            else
+                obj.selectedRanges = 1;
+            end
         end
         
         function deleteRangeDrawings(obj)
@@ -939,7 +947,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
             obj.rangeTable.setCallbacksActive(true);
         end
-        
+        function rangeTableSelectionCallback(obj,src,event)
+            obj.selectedRanges = unique(event.Indices(:,1));
+        end
         function rangeTableDataChangeCallback(obj,rc,v)
             %%
             % write changes from the table to the point object
