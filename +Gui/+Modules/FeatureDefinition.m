@@ -262,13 +262,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             defsElementAdd = uibutton(defsGrid,...
                 'Text','Add',...
-                'ButtonPushedFcn',@(h,e)obj.addFeatureDefinition);
+                'ButtonPushedFcn',@(src,event) obj.addFeatureDefinition);
             defsElementAdd.Layout.Row = 4;
             defsElementAdd.Layout.Column = [1 2];
             
             defsElementDel = uibutton(defsGrid,...
                 'Text','Delete',...
-                'ButtonPushedFcn',@(h,e)obj.removeFeatureDefinition);
+                'ButtonPushedFcn',@(src,event) obj.removeFeatureDefinition);
             defsElementDel.Layout.Row = 4;
             defsElementDel.Layout.Column = [3 4];
             
@@ -844,8 +844,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function populateRangeTable(obj,gRanges)
             %%
             % write data to the table, style and configure it, activate callbacks
+            t = obj.rangeTable;
             if isempty(gRanges)
-                data = {};
+                t.Data = {};
                 return
             else
                 captions = cellstr(gRanges.getRange().getCaption()');
@@ -856,8 +857,6 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 data = [captions, positions, divs, forms];  %colors];
             end
 
-            t = obj.rangeTable;
-            
             t.Data = data;
             t.UserData= gRanges;
             
