@@ -881,8 +881,12 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function updateFeaturePreview(obj)
             fd = obj.currentFeatureDefinition;
             if isempty(fd)
-                delete(obj.previewLines);
-                obj.previewLines = [];
+                %instead of deleting the lines, just make them invisible
+                for line = 1:numel(obj.previewLines)
+                    obj.previewLines(line).Visible = 0;
+                end
+%                 delete(obj.previewLines);
+%                 obj.previewLines = [];
 %                 cla(obj.hAxPreview);
                 return
             end
@@ -909,9 +913,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 y(:,i) = y(:,i) - nanmean(y(:,i));%zscore(y(:,i));
             end
             
+            %set preview line data and make it visible
             for i = 1:numel(obj.previewLines)
                 obj.previewLines(i).XData = x;
                 obj.previewLines(i).YData = y(i,:);
+                obj.previewLines(i).Visible = 1;
             end
         end
         
@@ -955,6 +961,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
 %             obj.rangeTable.setCallbacksActive(true);
             tableColSort(obj.rangeTable,2,'a');
             obj.rangeTable.Enable = 'on';
+            obj.updateFeaturePreview();
         end
         function rangeTableSelectionCallback(obj,src,event)
             obj.selectedRanges = unique(event.Indices(:,1));
