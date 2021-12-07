@@ -922,10 +922,15 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function rangeDraggedCallback(obj,gRange)
             %%
             % update the position in the table when the point is dragged
-            row = obj.rangeTable.getRowObjectRow(gRange);
+%             row = obj.rangeTable.getRowObjectRow(gRange);
+            row = ismember(obj.rangeTable.UserData,gRange);
             pos = gRange.getPosition();
-            obj.rangeTable.setValue(pos(1),row,2);
-            obj.rangeTable.setValue(pos(2),row,3);
+            obj.rangeTable.Data{row,2} = pos(1);
+            obj.rangeTable.Data{row,3} = pos(2);
+            tableColSort(obj.rangeTable,2,'a');
+%             pos = gRange.getPosition();
+%             obj.rangeTable.setValue(pos(1),row,2);
+%             obj.rangeTable.setValue(pos(2),row,3);
         end
         
         function cycleRangeDragStartCallback(obj,gObj)
@@ -933,9 +938,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
-            obj.rangeTable.setCallbacksActive(false);
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+            obj.rangeTable.Enable = 'off';
+%             obj.rangeTable.setCallbacksActive(false);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
         end
         
         function cycleRangeDragStopCallback(obj,gObj)
@@ -944,9 +950,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % messed up, probably due to dynamic sorting in the table?),
             % set cycle line width back to normal
             pause(0.01); % to make sure all callbacks have been processed
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-            obj.rangeTable.setCallbacksActive(true);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.rangeTable.setCallbacksActive(true);
+            tableColSort(obj.rangeTable,2,'a');
+            obj.rangeTable.Enable = 'on';
         end
         function rangeTableSelectionCallback(obj,src,event)
             obj.selectedRanges = unique(event.Indices(:,1));
