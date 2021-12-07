@@ -300,7 +300,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             rangeLabel.Layout.Column = [1 2];
             
             rangeTable = uitable(rangeGrid,...
-                'CellSelectionCallback',@(src,event) obj.rangeTableSelectionCallback(src,event));
+                'CellSelectionCallback',@(src,event) obj.rangeTableSelectionCallback(src,event),...
+                'CellEditCallback',@(src,event) obj.rangeTableDataChangeCallback(src,event));
             rangeTable.Layout.Row = [2 3];
             rangeTable.Layout.Column = [1 2];
             
@@ -950,32 +951,66 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function rangeTableSelectionCallback(obj,src,event)
             obj.selectedRanges = unique(event.Indices(:,1));
         end
-        function rangeTableDataChangeCallback(obj,rc,v)
+        function rangeTableDataChangeCallback(obj,src,event)
             %%
             % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.rangeTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition([v{i} nan]);
-                    case 3
-                        o.setPosition([nan v{i}]);
-                    case 4
-                        o.getObject().setSubRangeNum(v{i});
-                        o.updateSubRanges();
-                        obj.updateFeaturePreview();
-                    case 5
-                        o.getObject().setSubRangeForm(v{i});
-                        o.updateSubRanges();
-                        obj.updateFeaturePreview();
-                end
-                pos = o.getPosition();
-                obj.rangeTable.setValue(pos(1),rc(i,1),2);
-                obj.rangeTable.setValue(pos(2),rc(i,1),3);
-                obj.rangeTable.jTable.sortColumn(2);
+            row = event.Indices(1);
+            col = event.Indices(2);
+            fRange = src.UserData(row);
+            switch col
+                case 1
+                    fRange.getObject().setCaption(event.EditData);
+                case 2
+                    fRange.setPosition([event.NewData nan]);
+                case 3
+                    fRange.setPosition([nan event.NewData]);
+                case 4
+                    fRange.getObject().setSubRangeNum(event.NewData);
+                    fRange.updateSubRanges();
+                    obj.updateFeaturePreview();
+                case 5
+                    fRange.getObject().setSubRangeForm(event.NewData);
+                    fRange.updateSubRanges();
+                    obj.updateFeaturePreview();
+%                 case 6
+%                     try %to convert the edited string to a color triplet
+%                         rgbClr = str2clr(event.EditData);
+%                     catch ME %revert back to the previous string and colour
+%                         disp(ME)
+%                         rgbClr = str2clr(event.PreviousData);
+%                         src.Data{row,col} = event.PreviousData;
+%                     end
+%                     fRange.setColor(rgbClr);
+%                     idx = ismember(obj.cyclePoints,fRange);
+%                     obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+%                     obj.hLines.current.pp.cycle(idx).Color = rgbClr;
             end
+            ind = tableColSort(obj.rangeTable,2,'a');
+            obj.ranges = obj.ranges(ind);
+            
+%             for i = 1:size(src,1)
+%                 o = obj.rangeTable.getRowObjectsAt(src(i,1));
+%                 switch src(i,2)
+%                     case 1
+%                         o.getObject().setCaption(event{i});
+%                     case 2
+%                         o.setPosition([event{i} nan]);
+%                     case 3
+%                         o.setPosition([nan event{i}]);
+%                     case 4
+%                         o.getObject().setSubRangeNum(event{i});
+%                         o.updateSubRanges();
+%                         obj.updateFeaturePreview();
+%                     case 5
+%                         o.getObject().setSubRangeForm(event{i});
+%                         o.updateSubRanges();
+%                         obj.updateFeaturePreview();
+%                 end
+%                 pos = o.getPosition();
+%                 obj.rangeTable.setValue(pos(1),src(i,1),2);
+%                 obj.rangeTable.setValue(pos(2),src(i,1),3);
+%                 obj.rangeTable.jTable.sortColumn(2);
+%             end
         end
                 
         function rangeTableMouseClickedCallback(obj,visRC,actRC)
