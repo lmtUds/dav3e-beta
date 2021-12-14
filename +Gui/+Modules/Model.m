@@ -596,8 +596,14 @@ classdef Model < Gui.Modules.GuiModule
         
         function onOpen(obj)
             obj.updatePropGrid();
-            obj.setDropdown.setItems(cellstr(obj.getProject().models.getCaption()));
-            obj.setDropdown.setSelectedItem(char(obj.currentModel.getCaption()));
+            
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().models.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentModel.getCaption();
+            
+%             obj.setDropdown.setItems(cellstr(obj.getProject().models.getCaption()));
+%             obj.setDropdown.setSelectedItem(char(obj.currentModel.getCaption()));
         end
         
         function onClose(obj)
