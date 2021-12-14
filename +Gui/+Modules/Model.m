@@ -372,7 +372,7 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function dropdownModelChange(obj,h,newItem,newIndex)
-            statusbar(obj.main.hFigure,'Changing model...'); 
+%             statusbar(obj.main.hFigure,'Changing model...'); 
             
             obj.currentModel = ...
                 obj.getProject().models(newIndex);
@@ -382,8 +382,8 @@ classdef Model < Gui.Modules.GuiModule
             [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
             obj.makeParameterDropdowns(caps,inds);
             
-            sb = statusbar(obj.main.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
+%             sb = statusbar(obj.main.hFigure,'Ready.');
+%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
         end        
         
         function updateTabs(obj)
@@ -392,8 +392,8 @@ classdef Model < Gui.Modules.GuiModule
         
         function success = computeFeatures(obj)
             success = true;
-            sb = statusbar(obj.main.hFigure, 'Computing features...');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
+%             sb = statusbar(obj.main.hFigure, 'Computing features...');
+%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
             try
                 features = obj.getProject().computeFeatures();
             catch ME
@@ -407,15 +407,15 @@ classdef Model < Gui.Modules.GuiModule
                 success = false;
             end
 %             features.featureCaptions'
-            sb = statusbar(obj.main.hFigure, 'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+%             sb = statusbar(obj.main.hFigure, 'Ready.');
+%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
         end
         
         function trainModel(obj)
             %obj.getProject().mergedFeatureData.groupingCaptions = obj.getProject().groupings.getCaption();
 
-            sb = statusbar(obj.main.hFigure,'Building model...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);            
+%             sb = statusbar(obj.main.hFigure,'Building model...');
+%             set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);            
             
             % preparation, training, validation, testing
             data = obj.getProject().mergedFeatureData;
@@ -438,8 +438,8 @@ classdef Model < Gui.Modules.GuiModule
             
             obj.updatePropGrid();
             
-            sb = statusbar(obj.main.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);  
+%             sb = statusbar(obj.main.hFigure,'Ready.');
+%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);  
         end
         
         function makeParameterDropdowns(obj,caps,inds)
