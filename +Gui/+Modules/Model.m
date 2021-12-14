@@ -159,9 +159,15 @@ classdef Model < Gui.Modules.GuiModule
             defsRem.Layout.Row = 2;
             defsRem.Layout.Column = 4;
             
-            propGridPanel = uipanel(defsGrid);
-            propGridPanel.Layout.Row = 3;
-            propGridPanel.Layout.Column = [1 4];
+%             propGridPanel = uipanel(defsGrid);
+%             propGridPanel.Layout.Row = 3;
+%             propGridPanel.Layout.Column = [1 4];
+
+            obj.propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid);%,...
+%                 'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+%                 'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
+            obj.propGrid.Layout.Row = 3;
+            obj.propGrid.Layout.Column = [1 4];
                         
             % model dropdown
             obj.setDropdown = defsDropdown;           
