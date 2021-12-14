@@ -322,8 +322,9 @@ classdef Model < Gui.Modules.GuiModule
         function updatePropGrid(obj)
             obj.propGrid.clear();
             obj.getModel().processingChain.updateChainParameters(obj.getProject());
-            pgf = obj.getModel().makePropGridFields();
-            obj.propGrid.addProperty(pgf);       
+            obj.propGrid.addBlocks(obj.getModel().processingChain.blocks);
+%             pgf = obj.getModel().makePropGridFields();
+%             obj.propGrid.addProperty(pgf);       
         end
         
         function dropdownNewModel(obj,h)
