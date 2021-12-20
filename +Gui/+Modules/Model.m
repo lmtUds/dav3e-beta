@@ -217,12 +217,13 @@ classdef Model < Gui.Modules.GuiModule
             % not reproduce the issue
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
             
-            tabGroup = uipanel(moduleLayout,...
-                'BorderType','none');
-            tabGroup.Layout.Row = 1;
-            tabGroup.Layout.Column = 2;
+%             tabGroup = uipanel(moduleLayout,...
+%                 'BorderType','none');
+%             tabGroup.Layout.Row = 1;
+%             tabGroup.Layout.Column = 2;
             
-            obj.tabLayout = tabGroup;
+%             obj.tabLayout = tabGroup;
+            obj.tabLayout = moduleLayout;
             
             parameterPanel = uipanel(moduleLayout,...
                 'BorderType','none',...
@@ -511,7 +512,10 @@ classdef Model < Gui.Modules.GuiModule
         function makeModelTabs(obj)
             % delete old tabs
             if isempty(obj.tabGroup)
-                obj.tabGroup = uitabgroup(obj.tabLayout,'SelectionChangedFcn',@obj.updateChildrenTab);
+                obj.tabGroup = uitabgroup('Parent',obj.tabLayout,...
+                    'SelectionChangedFcn',@obj.updateChildrenTab);
+                obj.tabGroup.Layout.Row = 1;
+                obj.tabGroup.Layout.Column = 2;
             else
                 tabs = obj.tabGroup.Children;
                 obj.tabLayout.Visible = 'off';
