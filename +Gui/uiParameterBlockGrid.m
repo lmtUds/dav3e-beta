@@ -251,6 +251,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         %create the edit field for the parameter value for
                         %non collapsed blocks
                         if ~b.collapsed && ~obj.collapsedCategories(k)
+                            try 
                             if isnumeric(p.value)
                                 edit = uieditfield(grid,...
                                     'numeric',...
@@ -267,7 +268,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                             end
                             edit.Layout.Row = rowCount;
                             edit.Layout.Column = 2;
-
+                            catch
+                               foo = 5; 
+                            end
                             rowCount = rowCount + 1;   %advance to the next row
                         end
                     end
