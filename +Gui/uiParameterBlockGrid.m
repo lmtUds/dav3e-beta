@@ -22,8 +22,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     %PARAMETERGRID A grid style ui container for uiParameterBlock instances
     
     properties
-    end
-    properties (Access = private)
+%     end
+%     properties (Access = private)
         blocks
         categories
         collapsedCategories
@@ -252,7 +252,22 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         %non collapsed blocks
                         if ~b.collapsed && ~obj.collapsedCategories(k)
                             try 
-                                if isnumeric(p.value)
+                                if ~isempty(p.enum) %single or multi choice from a selection
+                                    switch p.selectionType
+                                        case 'single'
+                                            if iscell(p.value)
+                                                value = p.value{1};
+                                            else
+                                                value = p.value;
+                                            end
+                                            edit = uidropdown(grid,...
+                                                'Value',value,...
+                                                'Items',p.enum);
+%                                         case 'multiple'
+%                                             edit = uilabel(grid,...
+%                                                 'Text',strjoin(p.value,';'));
+                                    end
+                                elseif isnumeric(p.value) %numeric value
                                     if ~p.editable
                                         edit = uilabel(grid,...
                                             'Text',num2str(p.value),...
@@ -265,7 +280,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                             'Value',p.value,...
                                             'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                                     end
-                                else
+                                else %text value
                                     if ~p.editable
                                         edit = uilabel(grid,...
                                             'Text',p.value,...
@@ -280,8 +295,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                 end
                                 edit.Layout.Row = rowCount;
                                 edit.Layout.Column = 2;
-                            catch
-                               foo = 5; 
+                            catch ME
+                               disp(ME) 
+                               p.value
+                               p.enum
                             end
                             rowCount = rowCount + 1;   %advance to the next row
                         end
