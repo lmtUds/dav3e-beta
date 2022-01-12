@@ -155,7 +155,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                % append the current block to its appropriate category group
                if isempty(groupedBlocks)
                   groupedBlocks{cmp} = obj.blocks(i);
-               elseif isempty(groupedBlocks{cmp})
+               elseif size(groupedBlocks,2) < size(cmp,2)%isempty(groupedBlocks{cmp})
                   groupedBlocks{cmp} = obj.blocks(i); 
                else
                   groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
@@ -263,7 +263,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                             edit = uidropdown(grid,...
                                                 'Value',value,...
                                                 'Items',p.enum);
-%                                         case 'multiple'
+                                        case 'multiple'
+                                            edit = uilabel(grid,...
+                                                'Text','TBD');
 %                                             edit = uilabel(grid,...
 %                                                 'Text',strjoin(p.value,';'));
                                     end
