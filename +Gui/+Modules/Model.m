@@ -323,7 +323,7 @@ classdef Model < Gui.Modules.GuiModule
         function updatePropGrid(obj)
             obj.propGrid.clear();
             obj.getModel().processingChain.updateChainParameters(obj.getProject());
-            obj.propGrid.addBlocks(obj.getModel().processingChain.blocks);
+            obj.propGrid.addBlocks(obj.getModel().processingChain.getAllBlocksInChain());
 %             pgf = obj.getModel().makePropGridFields();
 %             obj.propGrid.addProperty(pgf);       
         end
