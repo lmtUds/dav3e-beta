@@ -222,8 +222,7 @@ classdef Model < Gui.Modules.GuiModule
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
             
             %Create the tabbed container to house the main module display
-            tabGroup = uitabgroup(moduleLayout,...
-                'BorderType','none');
+            tabGroup = uitabgroup(moduleLayout);
             tabGroup.Layout.Row = 1;
             tabGroup.Layout.Column = 2;
             
@@ -467,6 +466,7 @@ classdef Model < Gui.Modules.GuiModule
         
         function makeParameterDropdowns(obj,caps,inds)
             delete(obj.parametersDropdownGrid.Children);
+            obj.parametersDropdownPanel.Children.delete();
             obj.parameterPopups = [];
 
             [cap,~,val] = obj.getModel().getVariedHyperParameters();
@@ -531,6 +531,7 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function makeModelTabs(obj)
+            %%
             % delete old tabs
             if isempty(obj.tabGroup)
                 obj.tabGroup = uitabgroup('Parent',obj.tabLayout,...
@@ -541,8 +542,9 @@ classdef Model < Gui.Modules.GuiModule
                 tabs = obj.tabGroup.Children;
                 obj.tabLayout.Visible = 'off';
                 delete(tabs);
-                delete(obj.parametersDropdownGrid.Children);
                 obj.parameterPopups = [];
+%                 delete(obj.parametersDropdownGrid.Children);
+                obj.parametersDropdownPanel.Children.delete();
                 obj.parametersDropdownPanel.Visible = 'off';
             end
             
