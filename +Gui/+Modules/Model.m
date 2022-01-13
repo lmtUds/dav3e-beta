@@ -118,6 +118,7 @@ classdef Model < Gui.Modules.GuiModule
         
         function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
             %%
+            %Define the main three column module layout
             moduleLayout = uigridlayout(uiParent,[1 3],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
@@ -125,8 +126,11 @@ classdef Model < Gui.Modules.GuiModule
                 'RowHeight',{'1x'},...
                 'RowSpacing',7);
             
+            %Add the menubar item for this module
             moduleMenu = uimenu(mainFigure,'Label','Model');
-                      
+            
+            %Create the grid to house the model definition section in the
+            %leftmost column
             defsGrid = uigridlayout(moduleLayout, [5 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
                 'RowHeight',{'1x','1x','12x','1x','2x'},...
@@ -143,7 +147,7 @@ classdef Model < Gui.Modules.GuiModule
             
             defsDropdown = uidropdown(defsGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@obj.dropdownModelCallback);
+                'ValueChangedFcn',@(src,event) obj.dropdownModelCallback(src,event));
             defsDropdown.Layout.Row = 2;
             defsDropdown.Layout.Column = [1 2];
             
@@ -217,14 +221,17 @@ classdef Model < Gui.Modules.GuiModule
             % not reproduce the issue
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
             
-%             tabGroup = uipanel(moduleLayout,...
-%                 'BorderType','none');
-%             tabGroup.Layout.Row = 1;
-%             tabGroup.Layout.Column = 2;
+            %Create the tabbed container to house the main module display
+            tabGroup = uitabgroup(moduleLayout,...
+                'BorderType','none');
+            tabGroup.Layout.Row = 1;
+            tabGroup.Layout.Column = 2;
             
-%             obj.tabLayout = tabGroup;
+            obj.tabGroup = tabGroup;
             obj.tabLayout = moduleLayout;
             
+            %Create the panel for the parameter adjusting section after
+            %training
             parameterPanel = uipanel(moduleLayout,...
                 'BorderType','none',...
                 'Visible','off');
