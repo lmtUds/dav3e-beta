@@ -359,12 +359,26 @@ classdef Model < Gui.Modules.GuiModule
             h.setSelectedItem(obj.currentModel.getCaption());
         end
         
-        function dropdownModelCallback(obj,event)
-           if event.Edited
-               dropdownModelRename(obj,h,newName,index)
-           else
-               dropdownModelChange(obj,h,newItem,newIndex)
-           end
+        function dropdownModelCallback(obj,src,event)
+            if event.Edited                
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().models.getCaption()));
+                obj.getProject().models(index).setCaption(newName);
+                src.Items{index} = newName;
+            else
+%               statusbar(obj.main.hFigure,'Changing model...'); 
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentModel = ...
+                    obj.getProject().models(index);
+                obj.updatePropGrid;
+                obj.updateTabs();
+
+                [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
+                obj.makeParameterDropdowns(caps,inds);
+%               sb = statusbar(obj.main.hFigure,'Ready.');
+%               set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
+            end
         end
         
         function dropdownModelRename(obj,h,newName,index)
