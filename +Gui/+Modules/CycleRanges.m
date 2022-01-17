@@ -136,7 +136,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
             samplingPeriod=sensor.getCluster().samplingPeriod;
             
             data = sensor.data;
-            
+            data = data';
+            data = data(:);
 %             if numel(unique(data))>2
 %                 warning('This function is limited to a sensor that only has the values 0 and 1.')
 %                 return;
