@@ -172,6 +172,7 @@ classdef Model < Gui.Modules.GuiModule
 %                 'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
             obj.propGrid.Layout.Row = 3;
             obj.propGrid.Layout.Column = [1 4];
+            obj.propGrid.columnRatio = {'4x','2x'};
                         
             % model dropdown
             obj.setDropdown = defsDropdown;           
