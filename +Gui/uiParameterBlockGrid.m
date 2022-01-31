@@ -129,11 +129,17 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         end
         
         function multiSelParamCallback(obj, btn, event, parameter)
+            %setup indexing of the enumerator and find already selected
+            %values 
             prevSelectionInd = 1:max(size(parameter.enum));
             contained = strcmp(parameter.value,parameter.enum);
+            %prompt the user to select from the whole enumerator space with
+            %multiple selection allowed
             [selection,exitStatus] = listdlg('ListString',parameter.enum,...
-                'InitialValue',prevSelectionInd(contained));
-            if exitStatus
+                'InitialValue',prevSelectionInd(contained),...
+                'Name','Multiple Selection',...
+                'PromptString',['Select multiple ''', char(parameter.shortCaption),'''']);
+            if exitStatus %a selection happened so we update
                 parameter.value = parameter.enum(selection);
                 obj.update();
             end
