@@ -140,7 +140,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 'Name','Multiple Selection',...
                 'PromptString',['Select multiple ''', char(parameter.shortCaption),'''']);
             if exitStatus %a selection happened so we update
-                parameter.value = parameter.enum(selection);
+                fakeEvent = struct();
+                fakeEvent.Value = parameter.enum(selection);
+                obj.valueEditCallback(btn,fakeEvent,parameter);
                 obj.update();
             end
         end
@@ -280,7 +282,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                             end
                                             paramEntry = uidropdown(grid,...
                                                 'Value',value,...
-                                                'Items',p.enum);
+                                                'Items',p.enum,...
+                                                'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                                         case 'multiple'
                                             %gather how many of the
                                             %multiples were selected
