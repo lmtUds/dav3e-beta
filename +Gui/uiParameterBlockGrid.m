@@ -28,6 +28,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         categories
         collapsedCategories
         columnRatio = {'3x','1x'};
+        lineHeight = 22;
         panel
         selectedBlock
         skippedBlocks
@@ -195,7 +196,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % properly into the grid
             rowCount = 0;
             heights = {};
-            charHeight = {22};
+            charHeight = {obj.lineHeight};
             for k = 1:numel(obj.categories)
                 rowCount = rowCount + 1; %row per category header
                 heights = [heights charHeight];
@@ -299,6 +300,21 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
 %                                                 'Text','TBD');
 %                                             edit = uilabel(grid,...
 %                                                 'Text',strjoin(p.value,';'));
+                                    end
+                                elseif islogical(p.value) %checkbox flag 
+                                    if ~p.editable
+                                        if p.value
+                                            labelText = 'true';
+                                        else
+                                            labelText = 'false';
+                                        end
+                                        paramEntry = uilabel(grid,...
+                                            'Text',labelText,...
+                                            'HorizontalAlignment','center');
+                                    else
+                                        paramEntry = uicheckbox(grid,...
+                                            'Text','','Value',p.value,...
+                                            'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                                     end
                                 elseif isnumeric(p.value) %numeric value
                                     if ~p.editable
