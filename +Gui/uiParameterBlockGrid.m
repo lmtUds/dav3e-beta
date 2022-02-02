@@ -141,8 +141,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 'Name','Multiple Selection',...
                 'PromptString',['Select multiple ''', char(parameter.shortCaption),'''']);
             if exitStatus %a selection happened so we update
+                %setup a fake event to pass to the valueEditCallback
                 fakeEvent = struct();
                 fakeEvent.Value = parameter.enum(selection);
+                %process the value edit and update the ui element
                 obj.valueEditCallback(btn,fakeEvent,parameter);
                 obj.update();
             end
@@ -286,7 +288,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                                 'Items',p.enum,...
                                                 'ValueChangedFcn',@(src,event) obj.valueEditCallback(src,event,p));
                                         case 'multiple'
-                                            %gather how many of the
+                                            %gather how many of the allowed
                                             %multiples were selected
                                             selectRatioText = ...
                                                 ['Sel. ',num2str(max(size(p.value))),...
@@ -301,7 +303,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
 %                                             edit = uilabel(grid,...
 %                                                 'Text',strjoin(p.value,';'));
                                     end
-                                elseif islogical(p.value) %checkbox flag 
+                                elseif islogical(p.value) %binary flag
                                     if ~p.editable
                                         if p.value
                                             labelText = 'true';
