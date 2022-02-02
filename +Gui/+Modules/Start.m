@@ -143,9 +143,16 @@ classdef Start < Gui.Modules.GuiModule
                 % statusbar (Working)
 %                 sb = statusbar(obj.main.hFigure,'Loading files...');
 %                 set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
-
+                
+                %perform the actual data import
                 obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
                 obj.getProject().clusters.getCaption();
+                %check for track clashes and put all sensors on separate tracks
+                %clashes they are likely as all data is
+                %put on the same "default" track on import
+                obj.resolveTracks();
+                
+                %fill the sensor data table
                 obj.main.populateSensorSetTable();
 
                 % statusbar (Ready)
@@ -160,6 +167,31 @@ classdef Start < Gui.Modules.GuiModule
             else
                 error('Unexpected return value for choosedialog()');
             end
+        end
+        
+        function resolveTracks(obj)
+            %rename duplicate tracks by enumerating all duplicates with the
+            %same base track name
+            
+            %extract track names
+            tracks = arrayfun(@(x) x.track, obj.getProject().clusters);
+            %as long as duplicates remain we need to alter names
+            while length(unique(tracks)) ~= length(tracks)
+                %loop through unique track names to find duplicate groups
+                uTracks = unique(tracks);
+                for i = 1:length(uTracks)
+                   occ = contains(tracks,uTracks(i));
+                   if sum(occ) > 1 %for if really a duplicate
+                       %enumerate all duplicates in the group by appending an
+                       %increasing number
+                       tracks(occ) = strcat(tracks(occ),string(1:sum(occ))');
+                   end
+                end
+            end
+            %set the new track names in the data structure
+            for i = 1:length(tracks)
+               obj.getProject().clusters(i).track = tracks(i); 
+            end            
         end
     end
 end
