@@ -180,7 +180,8 @@ classdef Start < Gui.Modules.GuiModule
                 %loop through unique track names to find duplicate groups
                 uTracks = unique(tracks);
                 for i = 1:length(uTracks)
-                   occ = contains(tracks,uTracks(i));
+%                    occ = contains(tracks,uTracks(i));
+                   occ = matches(tracks,uTracks(i));
                    if sum(occ) > 1 %for if really a duplicate
                        %enumerate all duplicates in the group by appending an
                        %increasing number
