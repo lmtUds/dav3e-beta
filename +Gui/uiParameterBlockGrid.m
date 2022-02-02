@@ -133,7 +133,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             %setup indexing of the enumerator and find already selected
             %values 
             prevSelectionInd = 1:max(size(parameter.enum));
-            contained = strcmp(parameter.value,parameter.enum);
+            contained = contains(parameter.enum,parameter.value);
             %prompt the user to select from the whole enumerator space with
             %multiple selection allowed
             [selection,exitStatus] = listdlg('ListString',parameter.enum,...
