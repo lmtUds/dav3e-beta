@@ -34,7 +34,6 @@ classdef Model < Gui.Modules.GuiModule
         detailsLayout
         tabLayout
         parametersDropdownPanel
-        parametersDropdownGrid
         parameterPopups
         
         featurePreviewX
@@ -109,7 +108,7 @@ classdef Model < Gui.Modules.GuiModule
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
             obj.tabLayout = uiextras.VBox('Parent',obj.detailsLayout);
             obj.parametersDropdownPanel = Gui.Modules.Panel('Parent',obj.detailsLayout, 'Title','parameters', 'Padding',2);
-            obj.parametersDropdownGrid = uiextras.Grid('Parent',obj.parametersDropdownPanel, 'Spacing',2, 'Padding',0);
+%             obj.parametersDropdownGrid = uiextras.Grid('Parent',obj.parametersDropdownPanel, 'Spacing',2, 'Padding',0);
             obj.parametersDropdownPanel.Visible = 'off';
 
             layout.Sizes = [-1,-3];
@@ -233,6 +232,7 @@ classdef Model < Gui.Modules.GuiModule
             %Create the panel for the parameter adjusting section after
             %training
             parameterPanel = uipanel(moduleLayout,...
+                'Title','Hyper parameter adjustment',...
                 'BorderType','none',...
                 'Visible','off');
             parameterPanel.Layout.Row = 1;
@@ -469,17 +469,28 @@ classdef Model < Gui.Modules.GuiModule
 %             delete(obj.parametersDropdownGrid.Children);
             obj.parametersDropdownPanel.Children.delete();
             obj.parameterPopups = [];
-
+            
+            %get the hyper parameters that are varied with caption and
+            %values available for variation
             [cap,~,val] = obj.getModel().getVariedHyperParameters();
             
+            %setup the grid to arrange the parameter variation dropdowns
+            parametersDropdownGrid = uigridlayout(obj.parametersDropdownPanel,...
+                2*numel(cap),1);
+            
+            %loop through the changed hyper parameters
             for i = 1:numel(cap)
-                uicontrol(obj.parametersDropdownGrid,'Style','text', 'String',cap{i});
+                %add a label for each varied parameter
+                uilabel(parametersDropdownGrid,'Text',cap{i});
+                %select the last variation value by default
                 ind = inds(ismember(caps,cap{i}));
-                popup = uicontrol(obj.parametersDropdownGrid,...
-                    'Style','popupmenu', 'String',val{i},...
+                %add a dropdown to select the variable value
+                popup = uidropdown(parametersDropdownGrid,...
+                    'Items',val{i},...
                     'UserData',cap{i},...
-                    'Value',ind,...
-                    'Callback',@obj.parameterDropdownChanged);
+                    'Value',val{i}{ind},...
+                    'ValueChangedFcn',@(src,event) obj.parameterDropdownChanged());
+                %append to all parameterDropdowns
                 if isempty(obj.parameterPopups)
                     obj.parameterPopups = popup;
                 else
@@ -487,11 +498,10 @@ classdef Model < Gui.Modules.GuiModule
                 end
             end
             if numel(cap) > 0
-                set(obj.parametersDropdownGrid, 'ColumnSizes', [100], 'RowSizes', repmat([30 30],1,numel(cap)));
-                obj.detailsLayout.Sizes = [-1,110];
+                parametersDropdownGrid.ColumnWidth = {100};
                 obj.parametersDropdownPanel.Visible = 'on';
             else
-                obj.detailsLayout.Sizes = [-1,0];
+                parametersDropdownGrid.ColumnWidth = {0};
                 obj.parametersDropdownPanel.Visible = 'off';
             end
         end
@@ -500,7 +510,7 @@ classdef Model < Gui.Modules.GuiModule
             caps = {}; inds = [];
             for i = 1:numel(obj.parameterPopups)
                 caps{i} = obj.parameterPopups(i).UserData;
-                inds(i) = obj.parameterPopups(i).Value;
+                inds(i) = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
             end
             
             data = obj.getProject().mergedFeatureData.copy();
