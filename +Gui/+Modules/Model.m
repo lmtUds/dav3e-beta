@@ -232,7 +232,7 @@ classdef Model < Gui.Modules.GuiModule
             %Create the panel for the parameter adjusting section after
             %training
             parameterPanel = uipanel(moduleLayout,...
-                'Title','Hyper parameter adjustment',...
+                'Title','Adjust Parameters',...
                 'BorderType','none',...
                 'Visible','off');
             parameterPanel.Layout.Row = 1;
@@ -454,7 +454,7 @@ classdef Model < Gui.Modules.GuiModule
             [~,caps,inds] = obj.getModel().getLowestErrorData();
             obj.getModel().trainForParameterIndexSet(data,caps,inds);
 
-            sb = statusbar(obj.main.hFigure,'Plotting...');            
+%             sb = statusbar(obj.main.hFigure,'Plotting...');            
             
             obj.makeModelTabs();
             obj.makeParameterDropdowns(caps,inds);
@@ -476,19 +476,20 @@ classdef Model < Gui.Modules.GuiModule
             
             %setup the grid to arrange the parameter variation dropdowns
             parametersDropdownGrid = uigridlayout(obj.parametersDropdownPanel,...
-                2*numel(cap),1);
+                [2*numel(cap) 1],'RowHeight',repmat(32,1,2*numel(cap)),...
+                'Padding',[0 0 0 0],'RowSpacing',5);
             
             %loop through the changed hyper parameters
             for i = 1:numel(cap)
                 %add a label for each varied parameter
-                uilabel(parametersDropdownGrid,'Text',cap{i});
+                uilabel(parametersDropdownGrid,'Text',cap{i},'WordWrap','on');
                 %select the last variation value by default
                 ind = inds(ismember(caps,cap{i}));
                 %add a dropdown to select the variable value
                 popup = uidropdown(parametersDropdownGrid,...
-                    'Items',val{i},...
+                    'Items',string(val{i}),...
                     'UserData',cap{i},...
-                    'Value',val{i}{ind},...
+                    'Value',string(val{i}{ind}),...
                     'ValueChangedFcn',@(src,event) obj.parameterDropdownChanged());
                 %append to all parameterDropdowns
                 if isempty(obj.parameterPopups)
@@ -498,7 +499,7 @@ classdef Model < Gui.Modules.GuiModule
                 end
             end
             if numel(cap) > 0
-                parametersDropdownGrid.ColumnWidth = {100};
+                parametersDropdownGrid.ColumnWidth = {'1x'};
                 obj.parametersDropdownPanel.Visible = 'on';
             else
                 parametersDropdownGrid.ColumnWidth = {0};
