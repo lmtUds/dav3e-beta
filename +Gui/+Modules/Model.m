@@ -121,7 +121,7 @@ classdef Model < Gui.Modules.GuiModule
             moduleLayout = uigridlayout(uiParent,[1 3],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
-                'ColumnWidth',{'2x','5x','1x'},...
+                'ColumnWidth',{'2x','5x',0},...
                 'RowHeight',{'1x'},...
                 'RowSpacing',7);
             
@@ -474,35 +474,36 @@ classdef Model < Gui.Modules.GuiModule
             %values available for variation
             [cap,~,val] = obj.getModel().getVariedHyperParameters();
             
-            %setup the grid to arrange the parameter variation dropdowns
-            parametersDropdownGrid = uigridlayout(obj.parametersDropdownPanel,...
-                [2*numel(cap) 1],'RowHeight',repmat(32,1,2*numel(cap)),...
-                'Padding',[0 0 0 0],'RowSpacing',5);
-            
-            %loop through the changed hyper parameters
-            for i = 1:numel(cap)
-                %add a label for each varied parameter
-                uilabel(parametersDropdownGrid,'Text',cap{i},'WordWrap','on');
-                %select the last variation value by default
-                ind = inds(ismember(caps,cap{i}));
-                %add a dropdown to select the variable value
-                popup = uidropdown(parametersDropdownGrid,...
-                    'Items',string(val{i}),...
-                    'UserData',cap{i},...
-                    'Value',string(val{i}{ind}),...
-                    'ValueChangedFcn',@(src,event) obj.parameterDropdownChanged());
-                %append to all parameterDropdowns
-                if isempty(obj.parameterPopups)
-                    obj.parameterPopups = popup;
-                else
-                    obj.parameterPopups(i) = popup;
-                end
-            end
+            %check if any parameters have varied selection
             if numel(cap) > 0
-                parametersDropdownGrid.ColumnWidth = {'1x'};
+                %setup the grid to arrange the parameter variation dropdowns
+                parametersDropdownGrid = uigridlayout(obj.parametersDropdownPanel,...
+                    [2*numel(cap) 1],'RowHeight',repmat(32,1,2*numel(cap)),...
+                    'Padding',[0 0 0 0],'RowSpacing',5,'ColumnWidth',{'1x'});
+
+                %loop through the changed hyper parameters
+                for i = 1:numel(cap)
+                    %add a label for each varied parameter
+                    uilabel(parametersDropdownGrid,'Text',cap{i},'WordWrap','on');
+                    %select the last variation value by default
+                    ind = inds(ismember(caps,cap{i}));
+                    %add a dropdown to select the variable value
+                    popup = uidropdown(parametersDropdownGrid,...
+                        'Items',string(val{i}),...
+                        'UserData',cap{i},...
+                        'Value',string(val{i}{ind}),...
+                        'ValueChangedFcn',@(src,event) obj.parameterDropdownChanged());
+                    %append to all parameterDropdowns
+                    if isempty(obj.parameterPopups)
+                        obj.parameterPopups = popup;
+                    else
+                        obj.parameterPopups(i) = popup;
+                    end
+                end
+                obj.parametersDropdownPanel.Parent.ColumnWidth{3} = '1x';
                 obj.parametersDropdownPanel.Visible = 'on';
             else
-                parametersDropdownGrid.ColumnWidth = {0};
+                obj.parametersDropdownPanel.Parent.ColumnWidth{3} = 0;
                 obj.parametersDropdownPanel.Visible = 'off';
             end
         end
