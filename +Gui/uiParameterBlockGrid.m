@@ -131,12 +131,24 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         
         function multiSelParamCallback(obj, btn, event, parameter)
             %setup indexing of the enumerator and find already selected
-            %values 
+            %values, differentiate numeric and string enumerators
             prevSelectionInd = 1:max(size(parameter.enum));
-            contained = contains(parameter.enum,parameter.value);
+            if isnumeric(parameter.enum)
+                if iscell(parameter.value) %param was multi select
+                    contained = ismember(parameter.enum,...
+                        cell2mat(parameter.value));
+                else %param still one number
+                    contained = ismember(parameter.enum,parameter.value);
+                end
+                enumList = arrayfun(@(x) num2str(x),parameter.enum,...
+                    'UniformOutput',false);
+            else
+                enumList = parameter.enum;
+                contained = contains(parameter.enum,parameter.value);
+            end
             %prompt the user to select from the whole enumerator space with
             %multiple selection allowed
-            [selection,exitStatus] = listdlg('ListString',parameter.enum,...
+            [selection,exitStatus] = listdlg('ListString',enumList,...
                 'InitialValue',prevSelectionInd(contained),...
                 'Name','Multiple Selection',...
                 'PromptString',['Select multiple ''', char(parameter.shortCaption),'''']);
@@ -144,6 +156,10 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 %setup a fake event to pass to the valueEditCallback
                 fakeEvent = struct();
                 fakeEvent.Value = parameter.enum(selection);
+                %put multiselected numeric values in cells
+                if ~iscell(fakeEvent.Value)
+                    fakeEvent.Value = num2cell(fakeEvent.Value);
+                end
                 %process the value edit and update the ui element
                 obj.valueEditCallback(btn,fakeEvent,parameter);
                 obj.update();
@@ -176,11 +192,11 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                    cmp = [cmp 1];
                end
                % append the current block to its appropriate category group
-               if isempty(groupedBlocks)
+               if isempty(groupedBlocks) %nothing grouped yet
                   groupedBlocks{cmp} = obj.blocks(i);
-               elseif size(groupedBlocks,2) < size(cmp,2)%isempty(groupedBlocks{cmp})
-                  groupedBlocks{cmp} = obj.blocks(i); 
-               else
+               elseif size(groupedBlocks,2) < size(cmp,2)%category not grouped yet
+                  groupedBlocks = [groupedBlocks {obj.blocks(i)}]; 
+               else %category already grouped
                   groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
                end
             end
