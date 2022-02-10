@@ -466,7 +466,7 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function makeParameterDropdowns(obj,caps,inds)
-            delete(obj.parametersDropdownGrid.Children);
+%             delete(obj.parametersDropdownGrid.Children);
             obj.parametersDropdownPanel.Children.delete();
             obj.parameterPopups = [];
 
