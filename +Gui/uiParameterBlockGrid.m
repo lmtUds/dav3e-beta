@@ -134,12 +134,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             %values, differentiate numeric and string enumerators
             prevSelectionInd = 1:max(size(parameter.enum));
             if isnumeric(parameter.enum)
-                if iscell(parameter.value) %param was multi select
-                    contained = ismember(parameter.enum,...
-                        cell2mat(parameter.value));
-                else %param still one number
-                    contained = ismember(parameter.enum,parameter.value);
-                end
+                contained = ismember(parameter.enum,parameter.value);
                 enumList = arrayfun(@(x) num2str(x),parameter.enum,...
                     'UniformOutput',false);
             else
@@ -156,10 +151,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 %setup a fake event to pass to the valueEditCallback
                 fakeEvent = struct();
                 fakeEvent.Value = parameter.enum(selection);
-                %put multiselected numeric values in cells
-                if ~iscell(fakeEvent.Value)
-                    fakeEvent.Value = num2cell(fakeEvent.Value);
-                end
                 %process the value edit and update the ui element
                 obj.valueEditCallback(btn,fakeEvent,parameter);
                 obj.update();
