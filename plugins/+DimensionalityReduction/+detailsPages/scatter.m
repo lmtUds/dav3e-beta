@@ -33,8 +33,9 @@ function [panel,elements] = makeGui(parent)
     box on,
     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
     elements.hAx = hAx;
-    spinButton = uicontrol(layout, 'String','Start spin','Callback',...
-        @(src,event)spinAxes(src,event,hAx),'Interruptible',true,'BusyAction','cancel');
+    spinButton = uibutton(layout,'Text','Start spin',...
+        'ButtonPushedFcn',@(src,event)spinAxes(src,event,hAx),...
+        'Interruptible',true,'BusyAction','cancel');
     setappdata(spinButton,'spinning',0);    % current plot spinning state
     setappdata(spinButton,'degree',0);      % degrees covered by the spin
     elements.spinButton = spinButton;
