@@ -152,13 +152,13 @@ classdef Model < Gui.Modules.GuiModule
             
             defsAdd = uibutton(defsGrid,...
                 'Text','+',...
-                'ButtonPushedFcn',@obj.dropdownNewModel);
+                'ButtonPushedFcn',@(src,event) obj.dropdownNewModel(src,event,defsDropdown));
             defsAdd.Layout.Row = 2;
             defsAdd.Layout.Column = 3;
             
             defsRem = uibutton(defsGrid,...
                 'Text','-',...
-                'ButtonPushedFcn',@obj.dropdownRemoveModel);
+                'ButtonPushedFcn',@(src,event) obj.dropdownRemoveModel(src,event,defsDropdown));
             defsRem.Layout.Row = 2;
             defsRem.Layout.Column = 4;
             
@@ -335,22 +335,22 @@ classdef Model < Gui.Modules.GuiModule
 %             obj.propGrid.addProperty(pgf);       
         end
         
-        function dropdownNewModel(obj,h)
+        function dropdownNewModel(obj,src,event,dropdown)
             model = obj.getProject().addModel();
             obj.currentModel = model;
-            h.appendItem(model.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(model.getCaption());
+            dropdown.Value = char(model.getCaption());
         end
         
-        function dropdownRemoveModel(obj,h)
-            idx = h.getSelectedIndex();
+        function dropdownRemoveModel(obj,src,event,dropdown)
+            idx = dropdown.getSelectedIndex();
 %             models = obj.getProject().removeModelAt(idx);
             
             % if there is only one model, it will now be deleted
             % so we have to add a new one
             if numel(obj.getProject().models) == 1
                 newModel = obj.getProject().addModel();
-                h.appendItem(newModel.getCaption());
+                dropdown.appendItem(newModel.getCaption());
             else
                 if idx == 1
                     newModel = obj.getProject().models(2);
@@ -362,8 +362,8 @@ classdef Model < Gui.Modules.GuiModule
             obj.currentModel = newModel;
             obj.getProject().removeModelAt(idx);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentModel.getCaption());
+            dropdown.removeItemAt(idx);
+            dropdown.setSelectedItem(obj.currentModel.getCaption());
         end
         
         function dropdownModelCallback(obj,src,event)
