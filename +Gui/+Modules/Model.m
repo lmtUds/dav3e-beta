@@ -567,9 +567,6 @@ classdef Model < Gui.Modules.GuiModule
             if ~obj.getModel().trained
                return 
             end
-           
-            % activate tab layout to create tabs
-            obj.tabGroup.Visible = 'on';
             
             % create tabs for each processing block type
             blocks = obj.getModel().processingChain.getBlocksInOrder();
@@ -589,18 +586,22 @@ classdef Model < Gui.Modules.GuiModule
                 %check block type and create a new tab under type's tab
                 type = char(blocks(i).type);
                 typeTab = obj.tabGroup.Children(ismember({obj.tabGroup.Children.Title},type));
-                if isempty(typeTab.Children)
-                    typeGroup = uitabgroup(typeTab,'SelectionChangedFcn',@obj.updateChildrenTab);
+                typeGrid = uigridlayout(typeTab,[1 1],'Padding',[0 0 0 0]);
+                if isempty(typeGrid.Children)
+                    typeGroup = uitabgroup(typeGrid,'SelectionChangedFcn',@obj.updateChildrenTab);
+%                     typeGroup.Position(3:4) = [1 1];
                 else
                     typeGroup = typeTab.Children;
                 end
                 blockTab = uitab(typeGroup,'title',char(blocks(i).getCaption()));
+                blockGrid = uigridlayout(blockTab,[1 1],'Padding',[0 0 0 0]);
                 %create a new group and fill it with blocks output tabs
-                tg = uitabgroup(blockTab,'SelectionChangedFcn',@obj.onTabChanged);
+                blockGroup = uitabgroup(blockGrid,'SelectionChangedFcn',@obj.onTabChanged);
                 for j = 1:numel(blocks(i).detailsPages)
-                    t = uitab(tg,'title',blocks(i).detailsPages{j});
-                    [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},t,obj.getProject());
-                    t.UserData = updateFun;
+                    detailTab = uitab(blockGroup,'title',blocks(i).detailsPages{j});
+                    detailGrid = uigridlayout(detailTab,[1 1],'Padding',[0 0 0 0]);
+                    [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
+                    detailTab.UserData = updateFun;
                 end
             end
             %set the final created tab as selected
@@ -614,6 +615,9 @@ classdef Model < Gui.Modules.GuiModule
             if ~isempty(obj.tabGroup.Children)
                 obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
             end
+            
+            % set all created tabs visible
+            obj.tabGroup.Visible = 'on';
         end
         
         function allowed = canOpen(obj)
