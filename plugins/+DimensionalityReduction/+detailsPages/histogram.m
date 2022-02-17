@@ -67,21 +67,22 @@ function populateGui(elements,project,dataprocessingblock)
     [h1,c1] = histPlot(elements.axesPanel,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
     [h2,c2] = histPlot(elements.axesPanel,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
     c2 = c2 + string(' (testing)');
-    legend([h1,h2],[c1,c2]);
+%     legend([h1,h2],[c1,c2]);
 end
 
 function [handles,captions] = histPlot(panel,data,grouping,dims,groupingColors,limits,cumEnergy)
     handles = [];
     captions = string.empty;
+    tl = tiledlayout(panel,numel(dims),1);
     for i = 1:numel(dims)
-        hsAx = subplot(numel(dims),1,i,'Parent',panel);
+        hsAx = nexttile(tl);
 %         legend(hsAx,'off');
 %         cla(hsAx);
         hold(hsAx,'on');
         cats = categories(deStar(grouping));
         for j = 1:numel(cats)
             idx = grouping == cats{j};
-            p = histogram(data(idx,i),linspace(limits(1,i),limits(2,i),50));
+            p = histogram(hsAx,data(idx,i),linspace(limits(1,i),limits(2,i),50));
             
             if i == 1
                 if isempty(handles)
@@ -95,8 +96,9 @@ function [handles,captions] = histPlot(panel,data,grouping,dims,groupingColors,l
             set(p,'FaceColor',groupingColors(cats{j}));
         end
 %         set(handles,'MarkerEdgeColor',[1,1,1],'MarkerEdgeAlpha',0.7,'MarkerFaceAlpha',0.7);
-        xlabel(sprintf('DF%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
-        ylabel('counts');
+        legend(hsAx,captions)
+        xlabel(hsAx,sprintf('DF%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
+        ylabel(hsAx,'counts');
         hold(hsAx,'off');
     end
 end
