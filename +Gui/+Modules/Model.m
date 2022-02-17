@@ -343,15 +343,17 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function dropdownRemoveModel(obj,src,event,dropdown)
-            idx = dropdown.getSelectedIndex();
-%             models = obj.getProject().removeModelAt(idx);
+            %get selected item and index it via number
+            selItem = ismember(dropdown.Items,dropdown.Value);
+            idx = 1:size(dropdown.Items,2);
+            idx = idx(selItem);
             
             % if there is only one model, it will now be deleted
             % so we have to add a new one
             if numel(obj.getProject().models) == 1
                 newModel = obj.getProject().addModel();
-                dropdown.appendItem(newModel.getCaption());
-            else
+                dropdown.Items{end+1} = char(newModel.getCaption());
+            else %if we had more models remove accordingly
                 if idx == 1
                     newModel = obj.getProject().models(2);
                 else
@@ -361,9 +363,9 @@ classdef Model < Gui.Modules.GuiModule
 
             obj.currentModel = newModel;
             obj.getProject().removeModelAt(idx);
-                
-            dropdown.removeItemAt(idx);
-            dropdown.setSelectedItem(obj.currentModel.getCaption());
+            
+            dropdown.Items(idx) = [];
+            dropdown.Value = char(obj.currentModel.getCaption());
         end
         
         function dropdownModelCallback(obj,src,event)
