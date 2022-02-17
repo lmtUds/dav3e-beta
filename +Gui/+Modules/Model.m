@@ -555,7 +555,7 @@ classdef Model < Gui.Modules.GuiModule
                 obj.tabGroup.Layout.Column = 2;
             else
                 tabs = obj.tabGroup.Children;
-                obj.tabLayout.Visible = 'off';
+                obj.tabGroup.Visible = 'off';
                 delete(tabs);
                 obj.parameterPopups = [];
 %                 delete(obj.parametersDropdownGrid.Children);
@@ -563,17 +563,17 @@ classdef Model < Gui.Modules.GuiModule
                 obj.parametersDropdownPanel.Visible = 'off';
             end
             
-            % if model not trained -> return
+            % if model not trained, no ouput tabs -> return
             if ~obj.getModel().trained
                return 
             end
            
             % activate tab layout to create tabs
-            obj.tabLayout.Visible = 'on';
+            obj.tabGroup.Visible = 'on';
             
-            % create tabs
+            % create tabs for each processing block type
             blocks = obj.getModel().processingChain.getBlocksInOrder();
-            if isempty(blocks)
+            if isempty(blocks) %no blocks, no tabs
                 return
             end
             types = cellfun(@char,{blocks.type},'uni',false);
@@ -581,35 +581,37 @@ classdef Model < Gui.Modules.GuiModule
             for i = 1:numel(uniqueTypes)
                 uitab(obj.tabGroup,'title',uniqueTypes{i});
             end
-
+            % loop through individual blocks to fill their specific tabs
             for i = numel(blocks):-1:1
-                if isempty(blocks(i).detailsPages)
+                if isempty(blocks(i).detailsPages) %skip block with no output
                     continue;
                 end
+                %check block type and create a new tab under type's tab
                 type = char(blocks(i).type);
                 typeTab = obj.tabGroup.Children(ismember({obj.tabGroup.Children.Title},type));
                 if isempty(typeTab.Children)
-                    t = uitabgroup(typeTab,'SelectionChangedFcn',@obj.updateChildrenTab);
+                    typeGroup = uitabgroup(typeTab,'SelectionChangedFcn',@obj.updateChildrenTab);
                 else
-                    t = typeTab.Children;
+                    typeGroup = typeTab.Children;
                 end
-                t = uitab(t,'title',char(blocks(i).getCaption()));
-                tg = uitabgroup(t,'SelectionChangedFcn',@obj.onTabChanged);
+                blockTab = uitab(typeGroup,'title',char(blocks(i).getCaption()));
+                %create a new group and fill it with blocks output tabs
+                tg = uitabgroup(blockTab,'SelectionChangedFcn',@obj.onTabChanged);
                 for j = 1:numel(blocks(i).detailsPages)
                     t = uitab(tg,'title',blocks(i).detailsPages{j});
                     [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},t,obj.getProject());
                     t.UserData = updateFun;
                 end
             end
-            
+            %set the final created tab as selected
             tg.SelectedTab = t;
+            %delete empty tab groups
             for i = numel(obj.tabGroup.Children):-1:1
                 if isempty(obj.tabGroup.Children(i).Children)
                     delete(obj.tabGroup.Children(i));
                 end
             end
             obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
-            
         end
         
         function allowed = canOpen(obj)
