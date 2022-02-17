@@ -604,14 +604,16 @@ classdef Model < Gui.Modules.GuiModule
                 end
             end
             %set the final created tab as selected
-            tg.SelectedTab = t;
+%             tg.SelectedTab = t;
             %delete empty tab groups
             for i = numel(obj.tabGroup.Children):-1:1
                 if isempty(obj.tabGroup.Children(i).Children)
                     delete(obj.tabGroup.Children(i));
                 end
             end
-            obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
+            if ~isempty(obj.tabGroup.Children)
+                obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
+            end
         end
         
         function allowed = canOpen(obj)
