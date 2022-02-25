@@ -621,7 +621,7 @@ classdef Model < Gui.Modules.GuiModule
             obj.tabGroup.Visible = 'on';
             % set the last tab in each group as active
             % selection appears to be bugged as of now
-            %https://de.mathworks.com/matlabcentral/answers/545120-bug-in-tabgroup-appearance-in-appdesigner-r2019b
+            %https://mathworks.com/matlabcentral/answers/545120-bug-in-tabgroup-appearance-in-appdesigner-r2019b
             if ~isempty(obj.tabGroup.Children)
                 %Set the last type tab as active
                 obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
