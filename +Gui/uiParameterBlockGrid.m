@@ -28,7 +28,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         categories
         collapsedCategories
         columnRatio = {'3x','1x'};
-        lineHeight = 22;
+        lineHeight = 22.1;
         panel
         selectedBlock
         skippedBlocks
@@ -160,7 +160,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     methods (Access = protected)
         function setup(obj)
             % TODO
-            obj.panel = uipanel(obj,'BorderType','none','BackgroundColor','white');
+            obj.panel = uipanel(obj,'BorderType','none',...
+                'Scrollable','off',...
+                'BackgroundColor','white');
             obj.blocks = [];
         end
         
@@ -182,11 +184,20 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                    obj.collapsedCategories = [obj.collapsedCategories 0];
                    cmp = [cmp 1];
                end
+               %Sort categories to correctly display chain order
+               [obj.categories,catInd] = sort(obj.categories);
+               obj.collapsedCategories = obj.collapsedCategories(catInd);
+               cmp = cmp(catInd);
                % append the current block to its appropriate category group
                if isempty(groupedBlocks) %nothing grouped yet
                   groupedBlocks{cmp} = obj.blocks(i);
                elseif size(groupedBlocks,2) < size(cmp,2)%category not grouped yet
-                  groupedBlocks = [groupedBlocks {obj.blocks(i)}]; 
+                  %append a new group of empty blocks for each category 
+                  for j = 1:size(cmp,2)-size(groupedBlocks,2)
+                    groupedBlocks = [groupedBlocks {[]}]; 
+                  end
+                  %append the current block to its category
+                  groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
                else %category already grouped
                   groupedBlocks{cmp} = [groupedBlocks{cmp} obj.blocks(i)];
                end
