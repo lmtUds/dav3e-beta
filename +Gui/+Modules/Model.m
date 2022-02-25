@@ -586,38 +586,53 @@ classdef Model < Gui.Modules.GuiModule
                 %check block type and create a new tab under type's tab
                 type = char(blocks(i).type);
                 typeTab = obj.tabGroup.Children(ismember({obj.tabGroup.Children.Title},type));
-                typeGrid = uigridlayout(typeTab,[1 1],'Padding',[0 0 0 0]);
-                if isempty(typeGrid.Children)
+                if isempty(typeTab.Children)
+                    typeGrid = uigridlayout(typeTab,[1 1],'Padding',[0 0 0 0]);
                     typeGroup = uitabgroup(typeGrid,'SelectionChangedFcn',@obj.updateChildrenTab);
-%                     typeGroup.Position(3:4) = [1 1];
                 else
-                    typeGroup = typeTab.Children;
+                    typeGrid = typeTab.Children;
+                    typeGroup = typeGrid.Children;
                 end
                 blockTab = uitab(typeGroup,'title',char(blocks(i).getCaption()));
                 blockGrid = uigridlayout(blockTab,[1 1],'Padding',[0 0 0 0]);
                 %create a new group and fill it with blocks output tabs
-                blockGroup = uitabgroup(blockGrid,'SelectionChangedFcn',@obj.onTabChanged);
+                blockGroup = uitabgroup(blockGrid,...
+                    'SelectionChangedFcn',@obj.onTabChanged);
                 for j = 1:numel(blocks(i).detailsPages)
                     detailTab = uitab(blockGroup,'title',blocks(i).detailsPages{j});
                     detailGrid = uigridlayout(detailTab,[1 1],'Padding',[0 0 0 0]);
                     [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
                     detailTab.UserData = updateFun;
+                    %Select the tab  created once
+                    blockGroup.SelectedTab = detailTab;
                 end
+                %Select the tab  created once
+                typeGroup.SelectedTab = blockTab;
             end
-            %set the final created tab as selected
-%             tg.SelectedTab = t;
+            
             %delete empty tab groups
             for i = numel(obj.tabGroup.Children):-1:1
                 if isempty(obj.tabGroup.Children(i).Children)
                     delete(obj.tabGroup.Children(i));
                 end
             end
-            if ~isempty(obj.tabGroup.Children)
-                obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
-            end
-            
+                        
             % set all created tabs visible
             obj.tabGroup.Visible = 'on';
+            % set the last tab in each group as active
+            if ~isempty(obj.tabGroup.Children)
+                %Set the last type tab as active
+                obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
+                %Set the last block in that type as active
+                typeTab = obj.tabGroup.Children(end);
+                blockGroup = typeTab.Children.Children;
+                blockGroup.SelectedTab = blockGroup.Children(end);
+                %Set the last details page for the active bloack as active
+                blockTab = blockGroup.Children(end);
+                detailsGroup = blockTab.Children.Children;
+                detailsGroup.SelectedTab = detailsGroup.Children(end);
+            end
+            
         end
         
         function allowed = canOpen(obj)
