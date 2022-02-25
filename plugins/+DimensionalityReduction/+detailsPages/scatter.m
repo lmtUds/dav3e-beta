@@ -81,9 +81,10 @@ function populateGui(elements,project,dataprocessingblock)
         set(elements.hAx,'View',[37.5,30]);
     end
     xlabel(elements.hAx,sprintf('DF1 (%0.1f %%)',100*cumEnergy(1)));
-    ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
-    legend(elements.hAx,[h1,h2],[c1,c2]);
-
+    if numel(dims) >= 2
+        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
+        legend(elements.hAx,[h1,h2],[c1,c2]);
+    end
 %     p1 = trainData(1:end-1,:);
 %     p2 = trainData(2:end,:);
 %     x = [trainData(1:end-1,1),trainData(2:end,1)];
