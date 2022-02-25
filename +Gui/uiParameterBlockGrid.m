@@ -25,7 +25,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
 %     end
 %     properties (Access = private)
         blocks
-        categories
+        categories = [];
         collapsedCategories
         columnRatio = {'3x','1x'};
         lineHeight = 22.1;
@@ -51,6 +51,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         function clear(obj)
             obj.panel.Children.delete();
             obj.blocks = [];
+            obj.categories = [];
+            
+            obj.update();
         end
         
         function deleteBlock(obj, block)
@@ -177,12 +180,12 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             % group all blocks into their respective categories
             groupedBlocks = {};
             for i = 1:numel(obj.blocks) %loop through all blocks
-               c = obj.blocks(i).type; 
+               c = obj.blocks(i).type;
                cmp = c == obj.categories;   %check if category is known
                if sum(cmp) == 0 % append if not
                    obj.categories = [obj.categories c];
                    obj.collapsedCategories = [obj.collapsedCategories 0];
-                   cmp = [cmp 1];
+                   cmp = [cmp true];
                end
                %Sort categories to correctly display chain order
                [obj.categories,catInd] = sort(obj.categories);
