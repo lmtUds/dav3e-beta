@@ -284,18 +284,12 @@ classdef Model < Gui.Modules.GuiModule
         end
 
         function removeModelChainBlock(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
+            block = obj.propGrid.getSelectedBlock();
+            if isempty(block)
                 return
             end
-            idx = obj.propGrid.jPropList.indexOf(prop.jProperty);
-            block = prop.getMatlabObj();
             obj.getModel().removeFromChain(block);
-            obj.propGrid.removeProperty(prop);
-            if obj.propGrid.jPropList.size() > 0
-                nextSelProp = obj.propGrid.jPropList.get(max([0, idx-1]));
-                obj.propGrid.grid.setSelectedProperty(nextSelProp);
-            end
+            obj.updatePropGrid();
         end
         
         function moveModelChainBlockUp(obj)
