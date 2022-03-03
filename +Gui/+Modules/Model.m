@@ -506,7 +506,9 @@ classdef Model < Gui.Modules.GuiModule
             caps = {}; inds = [];
             for i = 1:numel(obj.parameterPopups)
                 caps{i} = obj.parameterPopups(i).UserData;
-                inds(i) = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+                logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+                proxArray = 1:size(obj.parameterPopups(i).Items,2);
+                inds(i) = proxArray(logInd);
             end
             
             data = obj.getProject().mergedFeatureData.copy();
@@ -519,7 +521,7 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function tab = getCurrentDetailsPageTab(obj)
-            tab = obj.tabGroup.SelectedTab.Children.SelectedTab.Children.SelectedTab;
+            tab = obj.tabGroup.SelectedTab.Children.Children.SelectedTab.Children.Children.SelectedTab;
         end
         
         function updateChildrenTab(obj,h,varargin)
