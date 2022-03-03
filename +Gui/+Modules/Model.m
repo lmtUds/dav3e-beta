@@ -293,26 +293,24 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function moveModelChainBlockUp(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
+            block = obj.propGrid.getSelectedBlock();
+            if isempty(block)
                 return
             end
-            block = prop.getMatlabObj();
             if block.canMoveUp()
                 block.moveUp();
-                obj.propGrid.movePropertyUp(prop);
+                obj.updatePropGrid();
             end
         end
         
         function moveModelChainBlockDown(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
+            block = obj.propGrid.getSelectedBlock();
+            if isempty(block)
                 return
             end
-            block = prop.getMatlabObj();
             if block.canMoveDown()
                 block.moveDown();
-                obj.propGrid.movePropertyDown(prop);
+                obj.updatePropGrid();
             end
         end
         
