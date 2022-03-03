@@ -523,11 +523,11 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function updateChildrenTab(obj,h,varargin)
-            selTab = h.SelectedTab.Children.SelectedTab;
+            selTab = h.SelectedTab.Children.Children.SelectedTab;
             if isa(selTab.UserData,'function_handle')
                 selTab.UserData();
             else
-                selTab = selTab.Children.SelectedTab;
+                selTab = selTab.Children.Children.SelectedTab;
                 selTab.UserData();
             end
         end
