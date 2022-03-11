@@ -387,6 +387,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 s = keys(fe);
                 [sel,ok] = listdlg('ListString',s);
                 if ~ok
+                    fds = FeatureDefinition.empty;
                     return
                 end
             else
@@ -592,6 +593,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             iPos = [pos pos+floor(cc.nCyclePoints/10)];
             if isempty(fd)
                 fd = obj.addFeatureDefinition();
+                if isempty(fd) %feature def. method dialog was canceled
+                    return
+                end
                 for i = 1:numel(fd)
                     r = cc.makeIndexRange(iPos);
                     fd(i).addRange(r);
