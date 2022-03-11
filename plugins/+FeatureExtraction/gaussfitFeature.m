@@ -38,7 +38,7 @@ function f = computeFeature(y,x,prm)
     for i = 1:size(y,1)
         try
             ft = fit(x',y(i,:)','gauss1',...
-                'lower',[0,x(1),0], 'upper',[inf,x(2),inf])
+                'lower',[0,x(1),0], 'upper',[inf,x(2),inf]);
             f(i,:) = [ft.a1,ft.b1,ft.c1];
         catch
             warning('Could not fit.')
