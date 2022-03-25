@@ -521,10 +521,12 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function tab = getCurrentDetailsPageTab(obj)
+            %double children bc. a grid is inbetween
             tab = obj.tabGroup.SelectedTab.Children.Children.SelectedTab.Children.Children.SelectedTab;
         end
         
         function updateChildrenTab(obj,h,varargin)
+            %double children bc. a grid is inbetween
             selTab = h.SelectedTab.Children.Children.SelectedTab;
             if isa(selTab.UserData,'function_handle')
                 selTab.UserData();
@@ -573,7 +575,8 @@ classdef Model < Gui.Modules.GuiModule
                 uitab(obj.tabGroup,'title',uniqueTypes{i});
             end
             % loop through individual blocks to fill their specific tabs
-            for i = numel(blocks):-1:1
+%             for i = numel(blocks):-1:1
+            for i = 1:numel(blocks)
                 if isempty(blocks(i).detailsPages) %skip block with no output
                     continue;
                 end
