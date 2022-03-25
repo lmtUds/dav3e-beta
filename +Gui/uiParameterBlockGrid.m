@@ -29,6 +29,7 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
         collapsedCategories
         columnRatio = {'3x','1x'};
         lineHeight = 22.1;
+        mainFigure
         panel
         selectedBlock
         skippedBlocks
@@ -56,45 +57,12 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
             obj.update();
         end
         
-        function deleteBlock(obj, block)
-            ind = obj.getBlockIndex(block);
-            obj.blocks = ...
-                [obj.blocks(1:ind-1),obj.blocks(ind+1:end)];
-            obj.update();
-            
-            % TODO handle selected block deletion
-        end
-        
         function blocks = getAllBlocks(obj)
             blocks = obj.blocks;
         end
         
-        function block = getBlock(obj, identifier)
-            if isnumeric(identifier)
-               block = obj.blocks(identifier);
-            else
-               % TODO
-               block = 'foo'; 
-            end
-        end
-        
         function selectedblock = getSelectedBlock(obj)
             selectedblock = obj.selectedBlock;
-        end
-        
-        function index = getBlockIndex(obj, block)
-            index = [];
-            for i = 1:numel(obj.blocks)
-                % TODO how to compare parameters properly
-                if block == obj.blocks(i)
-                    index = i;
-                    return
-                end
-            end
-            if isempty(index)
-                warning('parameter block could not be found');
-                index = 1;
-            end
         end
                 
         function valueEditCallback(obj, src, event, param)
@@ -162,7 +130,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
     end
     methods (Access = protected)
         function setup(obj)
-            % TODO
             obj.panel = uipanel(obj,'BorderType','none',...
                 'Scrollable','off',...
                 'BackgroundColor','white');
