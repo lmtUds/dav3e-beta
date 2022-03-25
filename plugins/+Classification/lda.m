@@ -64,6 +64,9 @@ function updateParameters(params,project)
     for i = 1:numel(params)
         if params(i).shortCaption == string('trainError')
             val = project.currentModel.trainingErrors;
+            tris = project.currentModel.trainedIndexSet;
+            hpi = project.currentModel.hyperParameterIndices;
+            val = val(sum(tris~=hpi,1) == 0);
             if ~isnan(val)
                 params(i).value = val;
             else
@@ -71,6 +74,9 @@ function updateParameters(params,project)
             end
         elseif params(i).shortCaption == string('validationError')
             val = project.currentModel.validationErrors;
+            tris = project.currentModel.trainedIndexSet;
+            hpi = project.currentModel.hyperParameterIndices;
+            val = val(sum(tris~=hpi,1) == 0);
             if ~isnan(val)
                 params(i).value = val;
             else
@@ -78,6 +84,9 @@ function updateParameters(params,project)
             end
         elseif params(i).shortCaption == string('testError')
             val = project.currentModel.testingErrors;
+            tris = project.currentModel.trainedIndexSet;
+            hpi = project.currentModel.hyperParameterIndices;
+            val = val(sum(tris~=hpi,1) == 0);
             if ~isnan(val)
                 params(i).value = val;
             else
