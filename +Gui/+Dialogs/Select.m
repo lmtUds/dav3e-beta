@@ -64,7 +64,8 @@ for i = 1:2:length(varargin)
     end
 end
 %build the ui figure
-fig = uifigure('Name',name,'WindowStyle','modal','Visible','off');
+fig = uifigure('Name',name,'WindowStyle','modal','Visible','off',...
+    'DeleteFcn',@cancelFcn);
 fig.Position(3) = 200;
 n = 0;
 rowHeights = {};
@@ -127,13 +128,13 @@ uiwait(fig);
     end
     function selectAll(src,event)
         listBox.Value = listBox.Items;
-        Selection = listBox.Items;
     end
     function okFcn(src,event)
         Selection = listBox.Value;
-        cancelFcn([],[]);
+        delete(fig)
     end
     function cancelFcn(src,event)
+        Selection = ListItems(initialSelect);
         delete(fig)
     end
 end
