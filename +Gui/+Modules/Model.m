@@ -245,17 +245,17 @@ classdef Model < Gui.Modules.GuiModule
                 methods = Model.getAvailableMethods(true);
 %                 s = keys(fe);
                 s = {};
+                c = {};
                 fields = fieldnames(methods);
                 for i = 1:numel(fields)
                     if numel(keys(methods.(fields{i}))) == 0
                         continue
                     end
-                    s{end+1} = sprintf('<html><b>%s</b></html>',fields{i});
                     s = horzcat(s,keys(methods.(fields{i})));
-                    s{end+1} = '';
+                    c = horzcat(c,repmat(fields(i),1,size(keys(methods.(fields{i})),2)));
                 end
-                [sel,ok] = listdlg('ListString',s);
-                if ~ok
+                [sel,ext,cats] = Gui.Dialogs.SelectCategory('ListItems',s,'Categories',c);
+                if ~ext
                     return
                 end
             else
@@ -263,19 +263,9 @@ classdef Model < Gui.Modules.GuiModule
             end
 
             for i = 1:numel(sel)
-                str = s{sel(i)};
-                if isempty(str) || str(1) == '<'
-                    continue
-                end
-                
-                for j = sel(i):-1:1
-                    field = s{j};
-                    if ~isempty(field) && field(1) == '<'
-                        map = methods.(field(10:end-11));
-                        fcn = map(str);
-                        break
-                    end
-                end
+                str = sel{i};
+                map = methods.(cats{i});
+                fcn = map(str);
                 
                 obj.getModel().addToChain(DataProcessingBlock(fcn));
             end
