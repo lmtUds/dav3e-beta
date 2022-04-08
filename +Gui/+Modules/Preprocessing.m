@@ -366,7 +366,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % cycle point set dropdown and buttons
             qsPointsDropdown = uidropdown(qsPointsGrid,...
                 'Editable','on',...
-                'ValueChangedFcn',@(src,event)obj.dropdowIndexPointSetCallback(src,event));
+                'ValueChangedFcn',@(src,event)obj.dropdownIndexPointSetCallback(src,event));
             qsPointsDropdown.Layout.Row = 1;
             qsPointsDropdown.Layout.Column = [1 2];
             
@@ -754,14 +754,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 switch answer
                     case 'Choose a replacement'
                         prepChains(idx) = [];
-                        [sel,ok] = listdlg('PromptString','Please select a replacement preprocessing chain',...
-                            'ListString',prepChains.getCaption(),...
-                            'SelectionMode','single');
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',prepChains.getCaption(),...
+                            'Message','Please select a replacement preprocessing chain.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replacePreprocessingChainInSensors(ppc,prepChains(sel));
-                        newPPC = prepChains(sel);
+                        selInd = ismember(prepChains.getCaption(),sel);
+                        obj.getProject().replacePreprocessingChainInSensors(ppc,prepChains(selInd));
+                        newPPC = prepChains(selInd);
                     case 'Replace with new'
                         newPPC = obj.getProject().addPreprocessingChain();
                         dropdown.Items = [dropdown.Items char(newPPC.getCaption())];
@@ -847,14 +848,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 switch answer
                     case 'Choose a replacement'
                         cPointSets(idx) = [];
-                        [sel,ok] = listdlg('PromptString','Please select a replacement cycle point set',...
-                            'ListString',cPointSets.getCaption(),...
-                            'SelectionMode','single');
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',cPointSets.getCaption(),...
+                            'Message','Please select a replacement cycle point set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceCyclePointSetInSensors(cps,cPointSets(sel));
-                        newCps = cPointSets(sel);
+                        selInd = ismember(cPointSets.getCaption(),sel);
+                        obj.getProject().replaceCyclePointSetInSensors(cps,cPointSets(selInd));
+                        newCps = cPointSets(selInd);
                     case 'Replace with new'
                         newCps = obj.getProject().addCyclePointSet();
                         dropdown.Items = [dropdown.Items char(newCps.getCaption())];
@@ -936,14 +938,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 switch answer
                     case 'Choose a replacement'
                         iPointSets(idx) = [];
-                        [sel,ok] = listdlg('PromptString','Please select a replacement index point set',...
-                            'ListString',iPointSets.getCaption(),...
-                            'SelectionMode','single');
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',iPointSets.getCaption(),...
+                            'Message','Please select a replacement index point set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceIndexPointSetInSensors(ips,iPointSets(sel));
-                        newIps = iPointSets(sel);
+                        selInd = ismember(iPointSets.getCaption(),sel);
+                        obj.getProject().replaceIndexPointSetInSensors(ips,iPointSets(selInd));
+                        newIps = iPointSets(selInd);
                     case 'Replace with new'
                         newIps = obj.getProject().addIndexPointSet();
                         dropdown.Items = [dropdown.Items char(newIps.getCaption())];
@@ -1572,11 +1575,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function addPreprocessing(obj, src, event)
             pp = PreprocessingChain.getAvailableMethods(true);
             s = keys(pp);
-            [sel,ok] = listdlg('ListString',s);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',s);
             if ~ok
                 return
             end
-            obj.currentPreprocessingChain.appendPreprocessing(s(sel));
+            obj.currentPreprocessingChain.appendPreprocessing(sel);
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
@@ -1587,11 +1590,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
             pp = obj.currentPreprocessingChain.preprocessings;
             captions = pp.getCaption();
             %uniqueTags = unique(captions);
-            [sel,ok] = listdlg('ListString',captions);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',captions);
             if ~ok
                 return
             end
-            rem = pp(sel);
+            rem = pp(ismember(captions,sel));
             obj.currentPreprocessingChain.removePreprocessing(rem);
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
