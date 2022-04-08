@@ -65,7 +65,7 @@ for i = 1:2:length(varargin)
 end
 %build the ui figure
 fig = uifigure('Name',name,'WindowStyle','modal','Visible','off',...
-    'DeleteFcn',@cancelFcn);
+    'DeleteFcn',@figDelFcn);
 fig.Position(3) = 200;
 n = 0;
 rowHeights = {};
@@ -92,7 +92,7 @@ if ~isempty(message)
     msgLbl = uilabel(grid,'Text',message);
     msgLbl.Layout.Column = [1 2];
 end
-listBox = uilistbox(grid,'Items',ListItems,'ValueChangedFcn',@listSelect);
+listBox = uilistbox(grid,'Items',ListItems);
 listBox.Multiselect = multiSelect;
 listBox.Value = listBox.Items(initialSelect);
 listBox.Layout.Column = [1 2];
@@ -123,18 +123,22 @@ uiwait(fig);
        listBox.Items(ismember(listBox.Items,listBox.Value)) = [];
        ListItems = listBox.Items;
     end
-    function listSelect(src,event)
-        ExitStatus = 1;
-    end
     function selectAll(src,event)
         listBox.Value = listBox.Items;
     end
     function okFcn(src,event)
-        Selection = listBox.Value;
+        ExitStatus = 1;
         delete(fig)
     end
     function cancelFcn(src,event)
-        Selection = ListItems(initialSelect);
+        ExitStatus = 0;
         delete(fig)
+    end
+    function figDelFcn(src,event)
+        if ~ExitStatus
+            Selection = ListItems(initialSelect);
+        else
+            Selection = listBox.Value;
+        end
     end
 end
