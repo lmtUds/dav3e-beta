@@ -143,6 +143,9 @@ classdef Start < Gui.Modules.GuiModule
                 % statusbar (Working)
 %                 sb = statusbar(obj.main.hFigure,'Loading files...');
 %                 set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+                prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Loading Files','Indeterminate','on');
+                drawnow
                 
                 %perform the actual data import
                 obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
@@ -158,6 +161,7 @@ classdef Start < Gui.Modules.GuiModule
                 % statusbar (Ready)
 %                 sb = statusbar(obj.main.hFigure,'Ready.');
 %                 set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+                close(prog)
 
             % !!BETA!!: Automated multi file import is not implemented yet
             % and therefore the selection dialog is currently also disabled.
