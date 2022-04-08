@@ -358,7 +358,10 @@ classdef Model < Gui.Modules.GuiModule
                 obj.getProject().models(index).setCaption(newName);
                 src.Items{index} = newName;
             else
-%               statusbar(obj.main.hFigure,'Changing model...'); 
+                prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+                drawnow
                 index = cellfun(@(x) strcmp(x,event.Value), src.Items);
                 obj.currentModel = ...
                     obj.getProject().models(index);
@@ -367,8 +370,7 @@ classdef Model < Gui.Modules.GuiModule
 
                 [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
                 obj.makeParameterDropdowns(caps,inds);
-%               sb = statusbar(obj.main.hFigure,'Ready.');
-%               set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
+                close(prog)
             end
         end
         
@@ -379,8 +381,9 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function dropdownModelChange(obj,h,newItem,newIndex)
-%             statusbar(obj.main.hFigure,'Changing model...'); 
-            
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Changing model',...
+                'Indeterminate','on');
+            drawnow
             obj.currentModel = ...
                 obj.getProject().models(newIndex);
             obj.updatePropGrid;
@@ -389,8 +392,7 @@ classdef Model < Gui.Modules.GuiModule
             [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
             obj.makeParameterDropdowns(caps,inds);
             
-%             sb = statusbar(obj.main.hFigure,'Ready.');
-%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
+            close(prog)
         end        
         
         function updateTabs(obj)
@@ -399,8 +401,9 @@ classdef Model < Gui.Modules.GuiModule
         
         function success = computeFeatures(obj)
             success = true;
-%             sb = statusbar(obj.main.hFigure, 'Computing features...');
-%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Computing features',...
+                'Indeterminate','on');
+            drawnow
             try
                 features = obj.getProject().computeFeatures();
             catch ME
@@ -414,16 +417,14 @@ classdef Model < Gui.Modules.GuiModule
                 success = false;
             end
 %             features.featureCaptions'
-%             sb = statusbar(obj.main.hFigure, 'Ready.');
-%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function trainModel(obj)
             %obj.getProject().mergedFeatureData.groupingCaptions = obj.getProject().groupings.getCaption();
-
-%             sb = statusbar(obj.main.hFigure,'Building model...');
-%             set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);            
-            
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Building model',...
+                'Indeterminate','on');
+            drawnow
             % preparation, training, validation, testing
             data = obj.getProject().mergedFeatureData;
             
@@ -437,16 +438,15 @@ classdef Model < Gui.Modules.GuiModule
 
             [~,caps,inds] = obj.getModel().getLowestErrorData();
             obj.getModel().trainForParameterIndexSet(data,caps,inds);
-
-%             sb = statusbar(obj.main.hFigure,'Plotting...');            
+                      
+            prog.Title = 'Plotting';
             
             obj.makeModelTabs();
             obj.makeParameterDropdowns(caps,inds);
             
             obj.updatePropGrid();
             
-%             sb = statusbar(obj.main.hFigure,'Ready.');
-%             set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);  
+            close(prog)
         end
         
         function makeParameterDropdowns(obj,caps,inds)
