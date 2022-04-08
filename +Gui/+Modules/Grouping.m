@@ -72,12 +72,12 @@ classdef Grouping < Gui.Modules.GuiModule
         
         function onClickMenuSetCurrentGrouping(obj)
             s = cellstr(obj.getProject().groupings.getCaption());
-            [sel,ok] = listdlg('ListString',s, 'SelectionMode','single');
+            [sel,ok] = Gui.Dialogs.Select('ListItems',s,'MultiSelect',false);
             if ~ok
                 return
             end
             obj.main.getActiveModule().onClose();
-            obj.getProject().currentGrouping = obj.getProject().groupings(sel);
+            obj.getProject().currentGrouping = obj.getProject().groupings(ismember(s,sel));
             obj.main.getActiveModule().onOpen();
         end
         
