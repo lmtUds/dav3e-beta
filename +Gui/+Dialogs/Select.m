@@ -71,7 +71,7 @@ n = 0;
 rowHeights = {};
 if ~isempty(message)
     n = n+1;
-    rowHeights{n} = baseCharHeight;
+    rowHeights{n} = 'fit';
 end
 n = n+1;
 rowHeights{n} = '1x';
@@ -89,7 +89,7 @@ n = n+1;
 rowHeights{n} = baseCharHeight;
 grid = uigridlayout(fig,[n,2],'RowHeight',rowHeights);
 if ~isempty(message)
-    msgLbl = uilabel(grid,'Text',message);
+    msgLbl = uilabel(grid,'Text',message,'WordWrap','on');
     msgLbl.Layout.Column = [1 2];
 end
 listBox = uilistbox(grid,'Items',ListItems);

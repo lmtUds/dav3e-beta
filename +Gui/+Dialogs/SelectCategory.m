@@ -66,7 +66,7 @@ n = 0;
 rowHeights = {};
 if ~isempty(message)
     n = n+1;
-    rowHeights{n} = baseCharHeight;
+    rowHeights{n} = 'fit';
 end
 %split the items into their categories
 %add rows for label and listbox per category
@@ -90,7 +90,7 @@ fig.Position(3) = 300;
 grid = uigridlayout(fig,[n,2],'RowHeight',rowHeights,'Scrollable','on',...
     'RowSpacing',4,'ColumnSpacing',4);
 if ~isempty(message)
-    msgLbl = uilabel(grid,'Text',message);
+    msgLbl = uilabel(grid,'Text',message,'WordWrap','on');
     msgLbl.Layout.Column = [1 2];
 end
 catBoxes = cell(1,size(uCats,2));
