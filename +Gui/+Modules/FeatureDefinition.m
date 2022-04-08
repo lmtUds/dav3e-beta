@@ -124,8 +124,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                
         function onClickMenuComputeFeatures(obj)
             success = true;
-            sb = statusbar(obj.main.hFigure, 'Computing features...');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Computing features',...
+                'Indeterminate','on');
+            drawnow
             try
                 features = obj.getProject().computeFeatures();
             catch ME
@@ -139,8 +140,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 success = false;
             end
 %             features.featureCaptions'
-            sb = statusbar(obj.main.hFigure, 'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function [panel,menu] = makeLayout(obj)
