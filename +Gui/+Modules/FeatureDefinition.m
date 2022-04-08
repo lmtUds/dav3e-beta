@@ -385,7 +385,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             if nargin < 2
                 fe = FeatureDefinitionSet.getAvailableMethods(true);
                 s = keys(fe);
-                [sel,ok] = listdlg('ListString',s);
+                [sel,ok] = Gui.Dialogs.Select('ListItems',s);
                 if ~ok
                     fds = FeatureDefinition.empty;
                     return
@@ -396,7 +396,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             fds = FeatureDefinition.empty;
             for i = 1:numel(sel)
-                fcn = fe(s{sel(i)});
+                fcn = fe(sel{i});
                 fd = FeatureDefinition(fcn);
                 obj.currentFeatureDefinitionSet.addFeatureDefinition(fd);
                 fds(end+1) = fd;
@@ -415,11 +415,12 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function removeFeatureDefinition(obj,fd)
             if nargin < 2
                 fds = obj.currentFeatureDefinitionSet.getFeatureDefinitions();
-                [sel,ok] = listdlg('ListString',fds.getCaption());
+                [sel,ok] = Gui.Dialogs.Select('ListItems',fds.getCaption(),...
+                    'MultiSelect',false);
                 if ~ok
                     return
                 end
-                fd = fds(sel);
+                fd = fds(ismember(fds.getCaption(),sel));
             end
             obj.currentFeatureDefinitionSet.removeFeatureDefinition(fd);
             obj.deleteRangeDrawings();
@@ -498,14 +499,15 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 switch answer
                     case 'Choose a replacement'
                         fdss(idx) = [];
-                        [sel,ok] = listdlg('PromptString','Please select a replacement feature definition set',...
-                            'ListString',fdss.getCaption(),...
-                            'SelectionMode','single');
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',fdss.getCaption(),...
+                            'Message','Please select a replacement feature definition set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceFeatureDefinitionSetInSensors(fds,fdss(sel));
-                        newFds = fdss(sel);
+                        selInd = ismember(fdss.getCaption,sel);
+                        obj.getProject().replaceFeatureDefinitionSetInSensors(fds,fdss(selInd));
+                        newFds = fdss(selInd);
                     case 'Replace with new'
                         newFds = obj.getProject().addFeatureDefinitionSet();
                         dropdown.Items = [dropdown.Items char(newFds.getCaption())];
