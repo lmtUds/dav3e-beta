@@ -120,7 +120,6 @@ uiwait(fig);
                 allBoxes{j}.Value = {};
             end
         end
-        ExitStatus = 1;
     end
     function okFcn(src,event,catBoxes)
         sel = {};
@@ -133,6 +132,7 @@ uiwait(fig);
             sel = [sel, v];
             selCats = [selCats, c];
         end
+        ExitStatus = 1;
         SelectionCategories = selCats;
         Selection = sel;
         delete(fig)
