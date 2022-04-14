@@ -128,9 +128,9 @@ classdef MainRework < handle
             uimenu(mh,'Label','very wide plot',callback,@obj.openVeryWidePlot);
             
             % statusbar
-%             warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-%             sb = statusbar(f,'Initialize...');
-%             set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(f,'Title','Initialize',...
+                'Indeterminate','on');
+            drawnow
             
             % layout
 %             mainLayout = uiextras.VBoxFlex('Parent',f, 'Spacing',5);
@@ -222,11 +222,14 @@ classdef MainRework < handle
             obj.modulePanel.Children(1).Visible = 1;
             obj.modules(1).onOpen();
             obj.moduleSidebar.Children(1).FontWeight = 'bold';
+            
+            close(prog)
         end
  
         function importGasmixerFile(obj,varargin)
-            sb = statusbar(obj.hFigure,'Import cycle ranges and groupings...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Import cycle ranges and groupings',...
+                'Indeterminate','on');
+            drawnow
             output = Gui.Dialogs.DataExchange();
             waitfor(Gui.Dialogs.LoadGRUPY(output));
             if isempty(output.data)
@@ -243,8 +246,7 @@ classdef MainRework < handle
             if any(contains(obj.moduleNames, 'Gui.Modules.Grouping'))
                obj.modules(contains(obj.moduleNames, 'Gui.Modules.Grouping')).onOpen()
             end
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function importCycleRangesAndGroups(obj,varargin)
@@ -422,7 +424,9 @@ classdef MainRework < handle
             if ~obj.modules(i).canOpen()
                 return
             end
-%             statusbar(obj.hFigure,'Changing module...');
+            prog = uiprogressdlg(obj.hFigure,'Title','Changing module',...
+                'Indeterminate','on');
+            drawnow
             try
 %                 ind = 1;
 %                 children = obj.modulePanel.Children;
@@ -444,7 +448,7 @@ classdef MainRework < handle
             obj.modules(i).onOpen();
             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
             obj.moduleSidebar.Children(i).FontWeight = 'bold';
-%             statusbar(obj.hFigure,'Ready.');
+            close(prog)
         end
         
         function m = getActiveModule(obj)
@@ -600,16 +604,16 @@ classdef MainRework < handle
                 oldPath = path;
             end
             
-            sb = statusbar(obj.hFigure,'Saving project...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Saving project',...
+                'Indeterminate','on');
+            drawnow
             
             project = obj.project; %#ok<NASGU,PROPLC>
             save(fullfile(path,file),'project','-v7.3');
             obj.projectPath = path;
             obj.projectFile = file;
             
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function loadProject(obj)
@@ -624,8 +628,9 @@ classdef MainRework < handle
             end
             oldPath = path;
             
-            sb = statusbar(obj.hFigure,'Loading project...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Loading project',...
+                'Indeterminate','on');
+            drawnow
             
             l = load(fullfile(path,file),'-mat');
             obj.project = l.project;
@@ -645,8 +650,7 @@ classdef MainRework < handle
             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
             obj.moduleSidebar.Children(end).FontWeight = deal('bold');
             
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function createTestData(obj)
