@@ -342,23 +342,23 @@ classdef MainRework < handle
         
         function importDataFromWorkspace(obj,varargin)
             vars = evalin('base','who');
-            [sel,ok] = listdlg('ListString',vars);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',vars);
             if ~ok
                 return
             end
             for i = 1:numel(sel)
-                data = evalin('base',vars{sel(i)});
+                data = evalin('base',sel{i});
                 if ~isnumeric(data)
-                    warning('Format of variable %s not supported.',vars{sel(i)});
+                    warning('Format of variable %s not supported.',sel{i});
                     continue
                 end
                 c = Cluster('samplingPeriod',1,...
                     'nCyclePoints',size(data,2),...
                     'nCycles',size(data,1),...
-                    'caption',vars{sel(i)});        
+                    'caption',sel{i});        
 
                 sensordata = SensorData.Memory(data);
-                sensor = Sensor(sensordata,'caption',vars{sel(i)});
+                sensor = Sensor(sensordata,'caption',sel{i});
                 c.addSensor(sensor);
 
                 obj.project.addCluster(c);
