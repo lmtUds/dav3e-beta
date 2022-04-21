@@ -112,6 +112,8 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 enumList = parameter.enum;
                 contained = contains(parameter.enum,parameter.value);
             end
+            %prompt the user to select from the whole enumerator space with
+            %multiple selection allowed
             [selection,exitStatus,enumList] = Gui.Dialogs.Select(...
                 'AllowAdd',true,...
                 'ListItems',enumList,...
@@ -125,12 +127,6 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                 parameter.enum = enumList;
             end
             selection = ismember(enumList,selection);
-            %prompt the user to select from the whole enumerator space with
-            %multiple selection allowed
-%             [selection,exitStatus] = listdlg('ListString',enumList,...
-%                 'InitialValue',prevSelectionInd(contained),...
-%                 'Name','Multiple Selection',...
-%                 'PromptString',['Select multiple ''', char(parameter.shortCaption),'''']);
             if exitStatus %a selection happened so we update
                 %setup a fake event to pass to the valueEditCallback
                 fakeEvent = struct();
