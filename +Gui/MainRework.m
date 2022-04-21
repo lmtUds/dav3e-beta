@@ -360,7 +360,10 @@ classdef MainRework < handle
                 sensordata = SensorData.Memory(data);
                 sensor = Sensor(sensordata,'caption',sel{i});
                 c.addSensor(sensor);
-
+                %when there is no project, create one
+                if isempty(obj.project)
+                    obj.project = Project();
+                end
                 obj.project.addCluster(c);
             end
             obj.populateSensorSetTable();
@@ -574,13 +577,22 @@ classdef MainRework < handle
         end
         
         function newProject(obj)
-            questdlg('All unsaved changes in the current project will be lost. Proceed?','Really?','Yes','No','No');
-            obj.project = Project();
-            
-            obj.populateSensorSetTable();
-            for i = 1:numel(obj.modules)
-                obj.modules(i).reset();
-            end            
+            selection = uiconfirm(obj.hFigure,...
+                'All unsaved changes in the current project will be lost. Proceed?',...
+                'Confirm new project','Icon','warning',...
+                'Options',{'Yes, Overwrite','No, Cancel'},...
+                'DefaultOption',2,'CancelOption',2);
+            switch selection
+                case 'No, Cancel'
+                    return
+                case 'Yes, Overwrite'
+                    obj.project = Project();
+
+                    obj.populateSensorSetTable();
+                    for i = 1:numel(obj.modules)
+                        obj.modules(i).reset();
+                    end            
+            end
         end        
         
         function saveProject(obj)
