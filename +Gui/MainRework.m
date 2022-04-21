@@ -371,13 +371,13 @@ classdef MainRework < handle
         
         function exportDataToWorkspace(obj,varargin)
             sensors = obj.project.getSensors();
-            [sel,ok] = listdlg('ListString',sensors.getCaption('cluster'));
+            [sel,ok] = Gui.Dialogs.Select('ListItems',sensors.getCaption('cluster'));
             if ~ok
                 return
             end
             for i = 1:numel(sel)
-                s = matlab.lang.makeValidName(char(sensors(sel(i)).getCaption('cluster')));
-                assignin('base',s,sensors(sel(i)).data);
+                s = matlab.lang.makeValidName(sel{i});
+                assignin('base',s,sensors(ismember(sel{i},sensors.getCaption('cluster'))).data);
             end
         end
         
