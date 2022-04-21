@@ -113,9 +113,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
             obj.oldPath = path;
             
             if ~isempty(obj.ranges)
-                re = questdlg('This will delete the current cycle ranges. Proceed?','Proceed?','Yes','No','No');
-                if ~strcmp(re,'Yes')
-                    return
+                selection = uiconfirm(obj.main.hFigure,...
+                                'This will delete the current cycle ranges. Proceed?',...
+                                'Confirm cycle range import','Icon','warning',...
+                                'Options',{'Yes, Import','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, Cancel'
+                        return
                 end
             end
             splitFile = strsplit(file,'.');
