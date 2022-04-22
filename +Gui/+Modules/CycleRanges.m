@@ -95,7 +95,11 @@ classdef CycleRanges < Gui.Modules.GuiModule
         end
         
         function onClickChangeRangeLength(obj,onlyCluster)
-            answer = inputdlg({'start','end'},'Change range size',[1 10],{'0','0'});
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',{'start','end'},...
+                'DefaultValues',{'0','0'},'Name','Change range size');
+            if ~ext
+                return
+            end
             startVal = str2double(answer{1});
             endVal = str2double(answer{2});
             r = obj.getProject().ranges;
