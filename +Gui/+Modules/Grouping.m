@@ -188,9 +188,14 @@ classdef Grouping < Gui.Modules.GuiModule
             end
             obj.oldPath = path;
             
-            re = questdlg('This will delete the current groupings. Proceed?','Proceed?','Yes','No','No');
-            if ~strcmp(re,'Yes')
-                return
+            selection = uiconfirm(obj.main.hFigure,...
+                                'This will delete the current groupings. Proceed?',...
+                                'Confirm grouping import','Icon','warning',...
+                                'Options',{'Yes, Import','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+            switch selection
+                case 'No, Cancel'
+                    return
             end
             
             splitFile = strsplit(file,'.');
@@ -241,10 +246,10 @@ classdef Grouping < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             elseif numel(p.ranges) == 0
                 allowed = false;
-                errordlg('Define at least one cycle range.');
+                uialert(obj.main.hFigure,'Define at least one cycle range.','Cycle ranges required');
             else
                 allowed = true;
             end
@@ -435,11 +440,14 @@ classdef Grouping < Gui.Modules.GuiModule
             % rename the grouping
             if strcmp(get(gcf,'SelectionType'),'open') ...
                     && size(event.Indices,1) == size(src.Data,1)
-                prompt = {'Enter a new grouping name:'};
-                dlgtitle = 'Grouping Renaming';
-                dims = [1 35];
-                definput = {g.caption};
-                answer = inputdlg(prompt,dlgtitle,dims,definput);
+                
+                [answer,ext] = Gui.Dialogs.Input('FieldNames',{g.caption},...
+                    'DefaultValues',{g.caption},...
+                    'Message','Enter new grouping names:',...
+                    'Name','Rename Grouping');
+                if ~ext
+                    return
+                end
                 g.setCaption(answer);
             end
         end
@@ -541,18 +549,19 @@ classdef Grouping < Gui.Modules.GuiModule
         
         function renameGroupings(obj,src,event)
             gps = obj.getProject().groupings;
-            caps = gps.getCaption();            
-            prompt = cellfun(@char,caps,'UniformOutput',false)';
-            dlgtitle = 'Grouping Renaming';
-            dims = [1 35];
-            definput = cellfun(@char,caps,'UniformOutput',false);
-            
-            answer = inputdlg(prompt,dlgtitle,dims,definput);
+            caps = gps.getCaption();
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',caps,...
+                    'DefaultValues',caps,...
+                    'Message','Enter new grouping names:',...
+                    'Name','Rename Grouping');
+            if ~ext
+                return
+            end
             gps.setCaption(answer);
             
             %check for renamed groupings 
             %then choose the first renamed one as active
-            idx = ~strcmp(answer,prompt);
+            idx = ~strcmp(answer,caps);
             if any(idx)
                 [~,ind] = max(idx);
                 obj.populateGroupsTable(gps(ind));
