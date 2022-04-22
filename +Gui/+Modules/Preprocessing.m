@@ -516,7 +516,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             else
                 allowed = true;
             end
