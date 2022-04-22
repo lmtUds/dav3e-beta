@@ -78,6 +78,8 @@ for i = 1:numel(FieldNames)
 end
 n = n+1;    
 rowHeights{n} = baseCharHeight;
+%adjust figure size to fit grid rowspacing 10, padding 10
+fig.Position(4) = (baseCharHeight + 10) * n + 10;
 grid = uigridlayout(fig,[n,2],'RowHeight',rowHeights);%,...
 %     'ColumnWidth',{'1x','2x'});
 if ~isempty(message)
