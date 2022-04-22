@@ -84,7 +84,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function onClickMenuPlotFeaturesOverTime(obj)
             if isempty(obj.getProject().mergedFeatureData)
-                errordlg('No features to plot.');
+                uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
             figure; axes;
@@ -100,7 +100,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function onClickMenuPlotFeaturesOverTimeStandardized(obj)
             if isempty(obj.getProject().mergedFeatureData)
-                errordlg('No features to plot.');
+                uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
             figure; axes;
@@ -130,13 +130,17 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n %s', ME.message),'WindowStyle','modal');
+                uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation failed');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n %s', ME.message),'WindowStyle','modal');
+                uialert(obj.main.hFigure,...
+                        sprintf('Could not merge features.\n %s', ME.message),...
+                        'Feature merge failed');
                 success = false;
             end
 %             features.featureCaptions'
@@ -694,10 +698,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             elseif isempty(obj.getProject().groupings)
                 allowed = false;
-                errordlg('Make at least one grouping.');
+                uialert(obj.main.hFigure,'Define at least one grouping.','Grouping required');
             else
                 allowed = true;
             end
