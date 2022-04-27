@@ -407,13 +407,17 @@ classdef Model < Gui.Modules.GuiModule
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                    sprintf('Could not compute features.\n %s', ME.message),...
+                    'Feature computation error');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                    sprintf('Could not merge features.\n %s', ME.message),...
+                    'Feature merge error');
                 success = false;
             end
 %             features.featureCaptions'
@@ -432,7 +436,9 @@ classdef Model < Gui.Modules.GuiModule
                 obj.getModel().train(data);
             catch ME
                 f = gcf;
-                errordlg(sprintf('Error during model training.\n %s', ME.message),'I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    sprintf('Error during model training.\n %s', ME.message),...
+                    'Model training error');
                 set(0, 'CurrentFigure', f)
             end
 
@@ -629,21 +635,33 @@ classdef Model < Gui.Modules.GuiModule
             allowed = true;
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.','I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    'Load at least one sensor.',...
+                    'Data required');
             elseif isempty(obj.getProject().groupings)
                 allowed = false;
-                errordlg('Make at least one grouping.','I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    'Create at least one grouping.',...
+                    'Grouping required');
             elseif isempty(obj.getProject().mergedFeatureData)
-                q = questdlg('Must compute features first. Compute features now?','','Yes','No','Yes');
-                allowed = false;
-                if strcmp(q,'Yes')
-                    try
-                        allowed = obj.computeFeatures();
-                        obj.currentModel.reset();
-                        obj.makeModelTabs()
-                    catch ME
-                        errordlg(sprintf('Error during feature computation.\n %s', ME.message),'I''m afraid I can''t do that.');
-                    end
+                selection = uiconfirm(obj.main.hFigure,...
+                                {'Features must be computed first.','Compute features now?'},...
+                                'Confirm feature computation','Icon','warning',...
+                                'Options',{'Yes, Compute now','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, Cancel'
+                        allowed = false;
+                        return
+                end
+                try
+                    allowed = obj.computeFeatures();
+                    obj.currentModel.reset();
+                    obj.makeModelTabs()
+                catch ME
+                    uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation error');
                 end
             end
         end
