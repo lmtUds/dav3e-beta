@@ -11,7 +11,7 @@ classdef DataExchange < handle
         end
         
         function obj = setData(obj, data)
-            obj.data = data
+            obj.data = data;
         end
     end
 end
