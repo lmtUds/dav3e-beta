@@ -64,10 +64,10 @@ end
 %define variables to keep track of needed grid measurements
 n = 0;
 rowHeights = {};
-if ~isempty(message)
-    n = n+1;
-    rowHeights{n} = 'fit';
-end
+% if ~isempty(message)
+%     n = n+1;
+%     rowHeights{n} = 'fit';
+% end
 %split the items into their categories
 %add rows for label and listbox per category
 uCats = unique(categories,'stable');
@@ -80,19 +80,26 @@ for i = 1:size(uCats,2)
     n = n+1;
     rowHeights{n} = sum(catInd)*baseCharHeight+1;
 end
-%we need a final row for 'ok' and 'cancel'
-n = n+1;    
-rowHeights{n} = baseCharHeight;
+% %we need a final row for 'ok' and 'cancel'
+% n = n+1;    
+% rowHeights{n} = baseCharHeight;
 %build the ui figure
 fig = uifigure('Name',name,'WindowStyle','modal','Visible','off',...
     'DeleteFcn',@cancelFcn);
 fig.Position(3) = 300;
-grid = uigridlayout(fig,[n,2],'RowHeight',rowHeights,'Scrollable','on',...
-    'RowSpacing',4,'ColumnSpacing',4);
+
 if ~isempty(message)
-    msgLbl = uilabel(grid,'Text',message,'WordWrap','on');
+    outerGrid = uigridlayout(fig,[3,2],'RowHeight',{'fit','1x',baseCharHeight});
+    msgLbl = uilabel(outerGrid,'Text',message,'WordWrap','on');
     msgLbl.Layout.Column = [1 2];
+else
+    outerGrid = uigridlayout(fig,[2,2],'RowHeight',{'1x',baseCharHeight});
 end
+% panel = uipanel(outerGrid,'BorderType','none','Scrollable','on');
+% panel.Layout.Column = [1 2];
+grid = uigridlayout(outerGrid,[n,2],'RowHeight',rowHeights,'Scrollable','on',...
+    'RowSpacing',4,'ColumnSpacing',4,'Padding',[0 0 0 0]);
+grid.Layout.Column = [1 2];
 catBoxes = cell(1,size(uCats,2));
 for i = 1:size(uCats,2)
     catLabel = uilabel(grid,'Text',uCats{i},'FontWeight','bold');
@@ -103,10 +110,10 @@ for i = 1:size(uCats,2)
     catBox.Layout.Column = [1 2];
     catBoxes{i} = catBox;
 end
-okButton = uibutton(grid,'Text',okStr,...
+okButton = uibutton(outerGrid,'Text',okStr,...
     'ButtonPushedFcn',@(src,event) okFcn(src,event,catBoxes));
 okButton.Layout.Column = 1;
-cancelButton = uibutton(grid,'Text',cancelStr,'ButtonPushedFcn',@cancelFcn);
+cancelButton = uibutton(outerGrid,'Text',cancelStr,'ButtonPushedFcn',@cancelFcn);
 cancelButton.Layout.Column = 2;
 fig.Visible = 'on';
 uiwait(fig);
