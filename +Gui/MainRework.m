@@ -657,10 +657,14 @@ classdef MainRework < handle
             % set first module active
             % this is not done with the setModule method in order to avoid
             % calling onClose on the last module here
-            obj.modulePanel.SelectedChild = 1;
+            obj.modulePanel.Children(1).Visible = 1;
             obj.modules(1).onOpen();
-            [obj.moduleSidebar.Children.FontWeight] = deal('normal');
-            obj.moduleSidebar.Children(end).FontWeight = deal('bold');
+            obj.moduleSidebar.Children(1).FontWeight = 'bold';
+            
+%             obj.modulePanel.SelectedChild = 1;
+%             obj.modules(1).onOpen();
+%             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
+%             obj.moduleSidebar.Children(end).FontWeight = deal('bold');
             
             close(prog)
         end

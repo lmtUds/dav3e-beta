@@ -59,7 +59,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function reset(obj)
             reset@Gui.Modules.GuiModule(obj);
-            obj.rangeTable.clear();
+%             obj.rangeTable.clear();
+            obj.rangeTable.Data = {};
+            obj.rangeTable.UserData = {};
             obj.propGrid.clear();
             delete(obj.ranges);
             obj.ranges = GraphicsRange.empty;

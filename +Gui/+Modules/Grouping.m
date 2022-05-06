@@ -56,8 +56,12 @@ classdef Grouping < Gui.Modules.GuiModule
         
         function reset(obj)
             reset@Gui.Modules.GuiModule(obj);
-            obj.groupingTable.clear();
-            obj.groupsTable.clear();
+%             obj.groupingTable.clear();
+            obj.groupingTable.Data = {};
+            obj.groupingTable.UserData = {};
+%             obj.groupsTable.clear();
+            obj.groupsTable.Data = {};
+            obj.groupsTable.UserData = {};
             delete(obj.ranges);
             obj.ranges = GraphicsRange.empty;
         end
