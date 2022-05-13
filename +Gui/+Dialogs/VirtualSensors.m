@@ -66,7 +66,7 @@ function VirtualSensors(main)
         sensors = main.project.getSensors();
         sensors(~[sensors.virtual]) = [];
         if ~isempty(sensors)
-            blocks = sensors.dataProcessingBlock;
+            blocks = [sensors.dataProcessingBlock];
             propG.addBlocks(blocks);
         end
         Update(propG,[],main);
