@@ -39,12 +39,14 @@ function [data,prms] = apply(files,prms)
         [~,filename,~] = fileparts(file);
         
         datasets = getAllH5Datasets(file);
-        dialog = Gui.Dialogs.ImportGenericH5(gcf,datasets);
-        uiwait(dialog.f);
+        [map,exit] = Gui.Dialogs.ImportGenericH5(datasets);
+        if ~exit %dialog closed without selection
+            continue
+        end
         
-        clusterNames = keys(dialog.groupMap);
+        clusterNames = keys(map);
         for i = 1:numel(clusterNames)
-            clusterDatasets = dialog.groupMap(clusterNames{i});
+            clusterDatasets = map(clusterNames{i});
             
             d = h5read(file,clusterDatasets{1});
             fields = fieldnames(d);
