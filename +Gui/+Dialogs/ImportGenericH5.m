@@ -32,7 +32,7 @@ classdef ImportGenericH5 < handle
     
     methods
         function obj = ImportGenericH5(main,datasetNames)
-            obj.ImportGenericH5New(datasetNames);
+            [map, exit] = obj.ImportGenericH5New(datasetNames);
             obj.main = main;
             obj.f = figure('Name','H5 Clusters','WindowStyle','modal');
             layout = uiextras.VBox('Parent',obj.f);
@@ -63,24 +63,28 @@ classdef ImportGenericH5 < handle
             Exit = 0;
             fig = uifigure('Name','H5 Clusters','WindowStyle','modal',...
                 'Visible','off');
-            grid = uigridlayout(fig,[3 1],'RowHeight',{'1x','4x',22});
+            grid = uigridlayout(fig,[4 1],'RowHeight',{22,'1x','4x',22});
+            
+            infoLabel = uilabel(grid,'Text','Select extraction depth',...
+                'HorizontalAlignment','center');
+            infoLabel.Layout.Row = 1;
                         
             obj.datasetNames = datasetNames;
             [atoms,nMin,nMax] = PathAtoms(datasetNames);
             
             slider = uislider(grid,'Limits',[nMin nMax],'Value',nMax,...
-                'MajorTickLabels',{});
-            slider.Layout.Row = 1;
+                'MajorTicks',nMin:1:nMax,'MinorTicks',[]);
+            slider.Layout.Row = 2;
             
-            listBox = uilistbox(grid);
-            listBox.Layout.Row = 2;
+            listBox = uilistbox(grid,'Multiselect','on');
+            listBox.Layout.Row = 3;
             slider.ValueChangedFcn = @(src,event)...
                 Dragged(src,event,listBox,atoms);
             
             okButton = uibutton(grid,'Text','Ok',...
                 'ButtonPushedFcn',@(src,event)...
                     Ok(src,event,slider,listBox,datasetNames,atoms));
-            okButton.Layout.Row = 3;
+            okButton.Layout.Row = 4;
             
             Dragged(slider,[],listBox,atoms);
             
@@ -99,7 +103,7 @@ classdef ImportGenericH5 < handle
                     roots{i} = strjoin(a(1:n),'/');
                 end
                 [roots,~,idx] = unique(string(roots));
-                n = histcounts(idx, 1:numel(roots));
+                n = histcounts(idx,'BinMethod','integers');
             end
             function Dragged(src,event,list,atoms)
                 [roots,n] = Roots(atoms,src.Value);
