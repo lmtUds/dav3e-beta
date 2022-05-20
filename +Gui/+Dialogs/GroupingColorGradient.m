@@ -32,6 +32,7 @@ classdef GroupingColorGradient < handle
     
     methods
         function obj = GroupingColorGradient(main,module)
+%             obj.GroupingColorGradientNew(main,module);
             obj.main = main;
             obj.module = module;
             obj.f = figure('Name','Grouping color gradient',...
@@ -55,6 +56,39 @@ classdef GroupingColorGradient < handle
                 'Callback',@(h,e)obj.applyButtonClicked);
             
             layout.Sizes = [-3,-1,30,30];
+        end
+        function GroupingColorGradientNew(obj,main,module)
+            if isempty(module.currentGrouping)
+                uialert(main.hFigure,...
+                    'Setting a grouping color requires a grouping to be created first.',...
+                    'No grouping found')
+                return
+            end
+            fig = uifigure('Name','Grouping color gradient',...
+                'Visible','off');
+            grid = uigridlayout(fig,[4 1],'RowHeight',{'2x','1x',22,22});
+            
+            clrPicker = uipanel(grid);
+%             cc = javax.swing.JColorChooser(); %com.mathworks.mlwidgets.graphics.ColorPicker(0,0,'');
+%             [obj.jColorChooser,obj.hColorChooser] = javacomponent(cc,[0,0,1,1],layout);
+            
+            infoLabel = uilabel(grid,...
+                'Text','The selected groups will be ignored for color gradient');
+            grouping = module.currentGrouping;
+            groupList = uilistbox(grid,...
+                'Items',deStar(grouping.getDestarredCategories()));
+            applyButton = uibutton(grid,'Text','Apply',...
+                'ButtonPushedFcn',@(src,event) ApplyClr(src,event,groupList,module,clrPicker));
+                        
+            fig.Visible = 'on';
+            function ApplyClr(src,event,groupList,module,clrPicker)
+%                 clr = clrPicker.getColor();
+                clr = [1 1 0];
+                ignoreGroups = groupList.Value;
+                module.currentGrouping.makeColorGradientHSV(clr,ignoreGroups);
+                module.populateGroupsTable();
+                module.updateRangeColors();
+            end
         end
         
         function show(obj)
