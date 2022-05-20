@@ -32,6 +32,7 @@ classdef GroupingCreation < handle
     
     methods
         function obj = GroupingCreation(main,module)
+%             obj.GroupingCreationNew(main,module);
             obj.main = main;
             obj.module = module;
             obj.f = figure('Name','Grouping color gradient',...
@@ -63,6 +64,77 @@ classdef GroupingCreation < handle
                 'Callback',@(h,e)obj.applyButtonClicked);
             
             layout.Sizes = [20,30,20,30,20,-1,20,30,30];
+        end
+        function GroupingCreationNew(obj,main,module)            
+            fig = uifigure('Name','Grouping creation',...
+                'Visible','off','WindowStyle','modal');
+            grid = uigridlayout(fig,[5 4],'RowHeight',{'fit',22,'1x', 22, 22});
+            
+            msgLabel = uilabel(grid,'Wordwrap','on',...
+                'Text','A new grouping will be created by masking the base grouping with selected groups by appending the selected Token.');
+            msgLabel.Layout.Column = [1 4];
+            msgLabel.Layout.Row = 1;
+            
+            baseLabel = uilabel(grid,'Text','Base Grouping');
+            baseLabel.Layout.Column = 1;
+            baseLabel.Layout.Row = [2 3];            
+            
+            baseDropdown = uidropdown(grid,...
+                'Items',main.project.groupings.getCaption);
+            baseDropdown.Layout.Column = 1;
+            baseDropdown.Layout.Row = 4;
+            
+            maskLabel = uilabel(grid,'Text','Mask Grouping');
+            maskLabel.Layout.Column = 2;
+            maskLabel.Layout.Row = [2 3];
+            
+            maskDropdown = uidropdown(grid,...
+                'Items',main.project.groupings.getCaption);
+            maskDropdown.Layout.Column = 2;
+            maskDropdown.Layout.Row = 4;
+            
+            selectLabel = uilabel(grid,'Text','Select Groups');
+            selectLabel.Layout.Column = 3;
+            selectLabel.Layout.Row = 2;
+            
+            groupings = main.project.groupings;
+            currentMaskGrouping = ...
+                groupings(ismember(maskDropdown.Value,groupings));
+            selectList = uilistbox(grid,'Items',categories(currentMaskGrouping.vals)); 
+            
+            maskDropdown.ValueChangedFcn =...
+                @(src,event) UpdateList(src,event,selectList,main);
+            
+            tokenLabel = uilabel(grid,'Text','Token');
+            tokenLabel.Layout.Column = 4;
+            tokenLabel.Layout.Row = [2 3];
+            
+            tokenDropdown = uidropdown(grid,'Items',{'<ignore>','*'});
+            tokenDropdown.Layout.Column = 4;
+            tokenDropdown.Layout.Row = 4;
+            
+            applyButton = uibutton(grid,'Text','Create new Grouping',...
+                'ButtonPushedFcn',@(src,event)...
+                    CreateGrouping(src,event,main,module,...
+                    baseDropdown,maskDropdown,selectList,tokenDropdown));
+                
+            fig.Visible = 'on';
+            
+            function CreateGrouping(src,event,main,module,base,mask,list,token)
+                p = main.project;
+                baseGrouping = p.getGroupingByCaption(base.Value);
+                maskGrouping = p.getGroupingByCaption(mask.Value);
+                maskCats = list.Value;
+                action = token.Value;
+                p.createGroupingFrom(baseGrouping,maskGrouping,maskCats,action);
+                module.populateGroupingTable();
+                module.populateGroupsTable();
+            end
+            function UpdateList(src,event,list,main)
+                gps = main.project.groupings;
+                cmg = gps(ismember(src.Value,gps));
+                list.Items = categories(cmg.vals);
+            end
         end
         
         function show(obj)
