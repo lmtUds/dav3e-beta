@@ -38,7 +38,7 @@ function GroupingColorGradient(main,module)
     grid = uigridlayout(fig,[4 1],'RowHeight',{'1x',22,'1x',22});
 
     clrPicker = uibutton(grid,'BackgroundColor',[0 0 1],...
-        'ButtonPushedFcn',@(src,event) PickColor(src, event),...
+        'ButtonPushedFcn',@(src,event) PickColor(src, event,main,fig),...
         'Text','Click to set base color',...
         'FontWeight','bold','FontSize',24);
 
@@ -60,8 +60,13 @@ function GroupingColorGradient(main,module)
         module.populateGroupsTable();
         module.updateRangeColors();
     end
-    function PickColor(src,event)
-        c = uisetcolor(src.BackgroundColor);
+    function PickColor(src,event,main,fig)
+        fig.Visible = 'off';
+        c = uisetcolor(src.BackgroundColor,'Set gradient base color');
         src.BackgroundColor = c;
+        %avoid focus loss
+        main.hFigure.Visible = 'off';
+        main.hFigure.Visible = 'on';
+        fig.Visible = 'on';
     end
 end
