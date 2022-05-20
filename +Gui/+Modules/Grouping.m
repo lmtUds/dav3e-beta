@@ -43,14 +43,14 @@ classdef Grouping < Gui.Modules.GuiModule
     methods
         function obj = Grouping(main)
             obj@Gui.Modules.GuiModule(main);
-            obj.colorGradientDialog = Gui.Dialogs.GroupingColorGradient(main,obj);
+%             obj.colorGradientDialog = Gui.Dialogs.GroupingColorGradient(main,obj);
             obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
         end
         
         function delete(obj)
             delete(obj.groupingTable);
             delete(obj.groupsTable);
-            delete(obj.colorGradientDialog.f);
+%             delete(obj.colorGradientDialog.f);
             delete(obj.createGroupingDialog.f);
         end
         
@@ -127,10 +127,14 @@ classdef Grouping < Gui.Modules.GuiModule
                 'RowSpacing',7);
             
             moduleMenu = uimenu(mainFigure,'Label','Grouping');
-            uimenu(moduleMenu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
-            uimenu(moduleMenu,'Label','make color gradient', getMenuCallbackName(),@(varargin)obj.colorGradientDialog.show());
-            uimenu(moduleMenu,'Label','import groupings', getMenuCallbackName(),@(varargin)obj.onClickImport);
-            uimenu(moduleMenu,'Label','export groupings', getMenuCallbackName(),@(varargin)obj.onClickExport);
+            uimenu(moduleMenu,'Label', 'set current grouping',...
+                getMenuCallbackName(), @(varargin)obj.onClickMenuSetCurrentGrouping);
+            uimenu(moduleMenu,'Label', 'make color gradient',...
+                getMenuCallbackName(), @()Gui.Dialogs.GroupingColorGradient(obj.main,obj));
+            uimenu(moduleMenu,'Label', 'import groupings',...
+                getMenuCallbackName(), @(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label', 'export groupings',...
+                getMenuCallbackName(), @(varargin)obj.onClickExport);
                         
             groupAx = uiaxes(moduleLayout);
             groupAx.XLabel.String = 'Cycle number';
@@ -438,7 +442,7 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
-            obj.colorGradientDialog.update(deStar(g.getDestarredCategories()));
+%             obj.colorGradientDialog.update(deStar(g.getDestarredCategories()));
             
             % if a double click on the whole column happended
             % rename the grouping
