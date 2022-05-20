@@ -29,9 +29,7 @@ classdef Grouping < Gui.Modules.GuiModule
 
         ranges
         quasistaticLines
-        
-        createGroupingDialog
-        
+                
         oldPath
     end
     
@@ -42,13 +40,11 @@ classdef Grouping < Gui.Modules.GuiModule
     methods
         function obj = Grouping(main)
             obj@Gui.Modules.GuiModule(main);
-%             obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
         end
         
         function delete(obj)
             delete(obj.groupingTable);
             delete(obj.groupsTable);
-%             delete(obj.createGroupingDialog.f);
         end
         
         function reset(obj)
