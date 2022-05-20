@@ -30,7 +30,6 @@ classdef Grouping < Gui.Modules.GuiModule
         ranges
         quasistaticLines
         
-        colorGradientDialog
         createGroupingDialog
         
         oldPath
@@ -43,14 +42,12 @@ classdef Grouping < Gui.Modules.GuiModule
     methods
         function obj = Grouping(main)
             obj@Gui.Modules.GuiModule(main);
-%             obj.colorGradientDialog = Gui.Dialogs.GroupingColorGradient(main,obj);
             obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
         end
         
         function delete(obj)
             delete(obj.groupingTable);
             delete(obj.groupsTable);
-%             delete(obj.colorGradientDialog.f);
             delete(obj.createGroupingDialog.f);
         end
         
@@ -130,7 +127,7 @@ classdef Grouping < Gui.Modules.GuiModule
             uimenu(moduleMenu,'Label', 'set current grouping',...
                 getMenuCallbackName(), @(varargin)obj.onClickMenuSetCurrentGrouping);
             uimenu(moduleMenu,'Label', 'make color gradient',...
-                getMenuCallbackName(), @()Gui.Dialogs.GroupingColorGradient(obj.main,obj));
+                getMenuCallbackName(), @(varargin)Gui.Dialogs.GroupingColorGradient(obj.main, obj));
             uimenu(moduleMenu,'Label', 'import groupings',...
                 getMenuCallbackName(), @(varargin)obj.onClickImport);
             uimenu(moduleMenu,'Label', 'export groupings',...
@@ -442,7 +439,6 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
-%             obj.colorGradientDialog.update(deStar(g.getDestarredCategories()));
             
             % if a double click on the whole column happended
             % rename the grouping
