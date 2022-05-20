@@ -42,13 +42,13 @@ classdef Grouping < Gui.Modules.GuiModule
     methods
         function obj = Grouping(main)
             obj@Gui.Modules.GuiModule(main);
-            obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
+%             obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
         end
         
         function delete(obj)
             delete(obj.groupingTable);
             delete(obj.groupsTable);
-            delete(obj.createGroupingDialog.f);
+%             delete(obj.createGroupingDialog.f);
         end
         
         function reset(obj)
@@ -168,7 +168,8 @@ classdef Grouping < Gui.Modules.GuiModule
             
             createButton = uibutton(buttonGrid,...
                 'Text','Create new grouping',...
-                'ButtonPushedFcn',@(varargin)obj.createGroupingDialog.show());
+                'ButtonPushedFcn',@(varargin)...
+                            Gui.Dialogs.GroupingCreation(obj.main,obj));
             createButton.Layout.Row = 2;
             
             deleteButton = uibutton(buttonGrid,...
