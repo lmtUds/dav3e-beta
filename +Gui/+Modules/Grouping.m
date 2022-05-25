@@ -77,41 +77,8 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.getProject().currentGrouping = obj.getProject().groupings(ismember(s,sel));
             obj.main.getActiveModule().onOpen();
         end
-        
-        function [panel,menu] = makeLayout(obj)
-            panel = Gui.Modules.Panel();
-            
-            menu = uimenu('Label','Grouping');
-            uimenu(menu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
-            uimenu(menu,'Label','make color gradient', getMenuCallbackName(),@(varargin)obj.colorGradientDialog.show());
-            uimenu(menu,'Label','import groupings', getMenuCallbackName(),@(varargin)obj.onClickImport);
-            uimenu(menu,'Label','export groupings', getMenuCallbackName(),@(varargin)obj.onClickExport);
-            
-            layout = uiextras.VBox('Parent',panel);
-            obj.hAx = axes(layout);
-            xlabel('cycle number'); ylabel('prepro. data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
-            
-            tablePropLayout = uiextras.HBox('Parent',layout);
-
-            obj.groupingTable = JavaTable(tablePropLayout,'editable');
-            
-            configLayout = uiextras.VBox('Parent',tablePropLayout);
-            uicontrol('Parent',configLayout, 'String','add new grouping',...
-                'Callback',@obj.addGroupingButtonCallback);
-            uicontrol('Parent',configLayout, 'String','create new grouping',...
-                'Callback',@(varargin)obj.createGroupingDialog.show());
-            obj.deleteButton = uicontrol('Parent',configLayout, 'String','delete grouping',...
-                'Callback',@obj.deleteGroupingButtonCallback);
-            obj.groupsTable = JavaTable(configLayout);
-
-            layout.Sizes = [-1,-3];
-            tablePropLayout.Sizes = [-4,-1];
-            configLayout.Sizes = [25,25,25,-1];
-        end
-        
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+                
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             moduleLayout = uigridlayout(uiParent,[3 2],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...

@@ -56,33 +56,18 @@ classdef Main < handle
         end
         
         function makeLayout(obj)
-            f = figure( ...
+            f = uifigure( ...
                 'Name', 'DAV³E © Laboratory for Measurement Technology', ...
                 'Tag', ['DAV³E Version ',num2str(obj.version)],...
                 'NumberTitle', 'off', ...
                 'MenuBar', 'none', ...
-                'Toolbar', 'figure', ...
                 'HandleVisibility', 'on', ...
                 'Units', 'normalized', ...
                 'Position', [.2 .2 .7 .7],...
                 'Color','w',...
                 'CloseReq',@(h,e)obj.delete);
+            f.Units = 'pixels';
             obj.hFigure = f;
-        
-            % remove some buttons that are not needed
-            a = findall(gcf);
-            b = findall(a,'ToolTipString','Save Figure');
-            b = [b, findall(a,'ToolTipString','Open File')];
-            b = [b, findall(a,'ToolTipString','New Figure')];
-            b = [b, findall(a,'ToolTipString','Print Figure')];
-            b = [b, findall(a,'ToolTipString','Show Plot Tools')];
-            b = [b, findall(a,'ToolTipString','Hide Plot Tools')];
-            b = [b, findall(a,'ToolTipString','Link Plot')];
-            b = [b, findall(a,'ToolTipString','Insert Colorbar')];
-            b = [b, findall(a,'ToolTipString','Open File')];
-            b = [b, findall(a,'ToolTipString','Insert Legend')];
-            b = [b, findall(a,'ToolTipString','Show Plot Tools and Dock Figure')];
-            set(b,'Visible','Off');
             
             % menubar
             callback = getMenuCallbackName();
@@ -120,49 +105,37 @@ classdef Main < handle
             uimenu(mh,'Label','Virtual sensors',...
                 callback,@obj.showVirtualSensors);
             
-            mh = uimenu(f,'Label','Plots');
-            uimenu(mh,'Label','default plot',callback,@obj.openDefaultPlot);
-            uimenu(mh,'Label','square plot',callback,@obj.openSquarePlot);
-            uimenu(mh,'Label','div. plot vertical',callback,@obj.openDivPlotVertical);
-            uimenu(mh,'Label','scatter/histogram plot',callback,@obj.openScatterHistPlot);
-            uimenu(mh,'Label','very wide plot',callback,@obj.openVeryWidePlot);
+            mh = uimenu(f,'Label','Extract Plots');
+            uimenu(mh,'Label','Default Plot',callback,@obj.openDefaultPlot);
+            uimenu(mh,'Label','Square Plot',callback,@obj.openSquarePlot);
+            uimenu(mh,'Label','Two Plots vertical Stack',callback,@obj.openDivPlotVertical);
+            uimenu(mh,'Label','Scatter+Histogram Plot',callback,@obj.openScatterHistPlot);
+            uimenu(mh,'Label','Very wide Plot',callback,@obj.openVeryWidePlot);
             
             % statusbar
-            warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-            sb = statusbar(f,'Initialize...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(f,'Title','Initialize',...
+                'Indeterminate','on');
+            drawnow
             
-            % layout
-            mainLayout = uiextras.VBoxFlex('Parent',f, 'Spacing',5);
-            content = uiextras.HBox('Parent',mainLayout);
-            bottomTable = uiextras.HBox('Parent',mainLayout);
-            modulesSidebar = uiextras.VButtonBox('Parent',content);
-            module = uiextras.CardPanel('Parent',content);
-            %uicontrol('Parent',modulesSidebar, 'Background','y')
-            %uicontrol('Parent',module, 'Background','r')
-            %uicontrol('Parent',bottomTable, 'Background','b')
+            mainLayout = uigridlayout(f,[2 2]);
+            mainLayout.RowHeight = {'3x','1x'};
+            mainLayout.ColumnWidth = {'1x','7x'};
             
-            t = JavaTable(bottomTable,'sortable');
-            t.setSortingEnabled(true)
-            t.setFilteringEnabled(true);
-            t.setColumnReorderingAllowed(false);
+            bottomTable = uitable(mainLayout);
+            bottomTable.Layout.Row = 2;
+            bottomTable.Layout.Column = [1 2];
             
-            % context menu
-            popupMenu = javax.swing.JPopupMenu();
-            selectItem = javax.swing.JMenuItem('select all');
-            deselectItem = javax.swing.JMenuItem('deselect all');
-            popupMenu.add(selectItem);
-            popupMenu.add(deselectItem);
-            t.jTable.setComponentPopupMenu(popupMenu);
-            set(handle(selectItem,'CallbackProperties'),'MousePressedCallback',@obj.selectVisibleSensors)
-            set(handle(deselectItem,'CallbackProperties'),'MousePressedCallback',@obj.deselectVisibleSensors)
+            modulesSidebar = uigridlayout(mainLayout,...
+                [numel(obj.moduleNames) 1],...
+                'Padding',[0 0 0 0]);
+            modulesSidebar.Layout.Row = 1;
+            modulesSidebar.Layout.Column = 1;
             
-            obj.sensorSetTable = t;
-            
-            mainLayout.Sizes = [-1,200];
-            content.Sizes = [200,-5];
-            modulesSidebar.ButtonSize = [190,35];
-            modulesSidebar.VerticalAlignment = 'top';
+            module = uipanel(mainLayout,'BorderType','none');
+            module.Layout.Row = 1;
+            module.Layout.Column = 2;
+%             
+            obj.sensorSetTable = bottomTable;
             
             obj.modulePanel = module;
             obj.moduleSidebar = modulesSidebar;
@@ -170,13 +143,17 @@ classdef Main < handle
             % load modules
             for i = 1:numel(obj.moduleNames)
                 m = feval(obj.moduleNames{i},obj);
-                [panel,menu] = m.makeLayout();
-                panel.Parent = module;
-                menu.Parent = f;
-                uicontrol('Parent',modulesSidebar, 'String',m.caption, ...
-                    'Callback', @(varargin)obj.setModule(i));
+                [moduleLayout,moduleMenu] = m.makeLayout(module,f);
+                moduleButton = uibutton(modulesSidebar,...
+                    'Text',m.caption,...
+                    'ButtonPushedFcn',@(varargin)obj.setModule(i));
+                moduleButton.Layout.Row = i;
                 obj.modules(i) = m;
             end
+            
+            % reverse child order as they are pushed to the front in the
+            % panel children array, but to the back of obj.modules
+            obj.modulePanel.Children = obj.modulePanel.Children(end:-1:1);
             
             mh = uimenu(f,'Label','DevTools');
             uimenu(mh,'Label','create example data','Callback',@(varargin)obj.createTestData);
@@ -189,18 +166,17 @@ classdef Main < handle
             % set first module active
             % this is not done with the setModule method in order to avoid
             % calling onClose on the last module here
-            obj.modulePanel.SelectedChild = 1;
+            obj.modulePanel.Children(1).Visible = 1;
             obj.modules(1).onOpen();
-            obj.moduleSidebar.Children(end).FontWeight = deal('bold');
+            obj.moduleSidebar.Children(1).FontWeight = 'bold';
             
-            % statusbar (Ready)
-            sb = statusbar(f,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
  
         function importGasmixerFile(obj,varargin)
-            sb = statusbar(obj.hFigure,'Import cycle ranges and groupings...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Import cycle ranges and groupings',...
+                'Indeterminate','on');
+            drawnow
             output = Gui.Dialogs.DataExchange();
             waitfor(Gui.Dialogs.LoadGRUPY(output));
             if isempty(output.data)
@@ -217,8 +193,7 @@ classdef Main < handle
             if any(contains(obj.moduleNames, 'Gui.Modules.Grouping'))
                obj.modules(contains(obj.moduleNames, 'Gui.Modules.Grouping')).onOpen()
             end
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function importCycleRangesAndGroups(obj,varargin)
@@ -269,23 +244,33 @@ classdef Main < handle
         end
         
         function openDefaultPlot(obj,varargin)
-            defaultPlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Default','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxDefault(Fig))
         end
         
         function openSquarePlot(obj,varargin)
-            squarePlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Square','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxSquare(Fig))
         end
         
         function openDivPlotVertical(obj,varargin)
-            twoPlotsVertical
+            msg = 'Click first plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: vert. Stack','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxStacked(Fig))
         end
         
         function openScatterHistPlot(obj,varargin)
-            centerHistSubplot
+            msg = 'Click center plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Scatter+Hist','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxScatterHist(Fig))
         end
         
         function openVeryWidePlot(obj,varargin)
-            veryWidePlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Very wide','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxVeryWide(Fig))
         end
         
         function howto(obj,varargin)
@@ -314,25 +299,28 @@ classdef Main < handle
         
         function importDataFromWorkspace(obj,varargin)
             vars = evalin('base','who');
-            [sel,ok] = listdlg('ListString',vars);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',vars);
             if ~ok
                 return
             end
             for i = 1:numel(sel)
-                data = evalin('base',vars{sel(i)});
+                data = evalin('base',sel{i});
                 if ~isnumeric(data)
-                    warning('Format of variable %s not supported.',vars{sel(i)});
+                    warning('Format of variable %s not supported.',sel{i});
                     continue
                 end
                 c = Cluster('samplingPeriod',1,...
                     'nCyclePoints',size(data,2),...
                     'nCycles',size(data,1),...
-                    'caption',vars{sel(i)});        
+                    'caption',sel{i});        
 
                 sensordata = SensorData.Memory(data);
-                sensor = Sensor(sensordata,'caption',vars{sel(i)});
+                sensor = Sensor(sensordata,'caption',sel{i});
                 c.addSensor(sensor);
-
+                %when there is no project, create one
+                if isempty(obj.project)
+                    obj.project = Project();
+                end
                 obj.project.addCluster(c);
             end
             obj.populateSensorSetTable();
@@ -340,13 +328,13 @@ classdef Main < handle
         
         function exportDataToWorkspace(obj,varargin)
             sensors = obj.project.getSensors();
-            [sel,ok] = listdlg('ListString',sensors.getCaption('cluster'));
+            [sel,ok] = Gui.Dialogs.Select('ListItems',sensors.getCaption('cluster'));
             if ~ok
                 return
             end
             for i = 1:numel(sel)
-                s = matlab.lang.makeValidName(char(sensors(sel(i)).getCaption('cluster')));
-                assignin('base',s,sensors(sel(i)).data);
+                s = matlab.lang.makeValidName(sel{i});
+                assignin('base',s,sensors(ismember(sel{i},sensors.getCaption('cluster'))).data);
             end
         end
         
@@ -396,189 +384,172 @@ classdef Main < handle
             if ~obj.modules(i).canOpen()
                 return
             end
-            statusbar(obj.hFigure,'Changing module...');
+            prog = uiprogressdlg(obj.hFigure,'Title','Changing module',...
+                'Indeterminate','on');
+            drawnow
             try
-                obj.modules(obj.modulePanel.SelectedChild).onClose()
+%                 ind = 1;
+%                 children = obj.modulePanel.Children;
+%                 % select the first visible child
+%                 for j = 1:size(children,1)
+%                     if children(j).Visible == 1
+%                         ind = j;
+%                         break
+%                     end
+%                 end
+                obj.modules(panelChildFind(obj.modulePanel)).onClose()
             catch ME
                 disp(ME);
                 error(['An error occured. This one is usually resolved '...
                        'by executing "clear classes" or restarting MATLAB.']);
             end
-            obj.modulePanel.SelectedChild = i;
+%             obj.modulePanel.SelectedChild = i;
+            panelChildSelect(obj.modulePanel,i);
             obj.modules(i).onOpen();
             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
-            c = obj.moduleSidebar.Children(end:-1:1);
-            c(i).FontWeight = 'bold';
-            statusbar(obj.hFigure,'Ready.');
+            obj.moduleSidebar.Children(i).FontWeight = 'bold';
+            close(prog)
         end
         
         function m = getActiveModule(obj)
-            m = obj.modules(obj.modulePanel.SelectedChild);
+%             ind = 1;
+%             children = obj.modulePanel.Children;
+%             % select the first visible child
+%             for i = 1:size(children,1)
+%                 if children(i).Visible == 1
+%                     ind = i;
+%                     break
+%                 end
+%             end
+            m = obj.modules(panelChildFind(obj.modulePanel));
         end
         
         function populateSensorSetTable(obj)
+            % retrieve sensor information
             s = obj.project.getSensors();
-            data = cell(numel(s),6);
+            data = cell(numel(s),5);
             for i = 1:numel(s)
                 data{i,1} = s(i).isActive();
-                data{i,2} = s(i).getCluster().getCaption();
-                data{i,3} = s(i).getCaption();
-                data{i,4} = s(i).cyclePointSet.getCaption();
-                data{i,5} = s(i).indexPointSet.getCaption();
-                data{i,6} = s(i).preprocessingChain.getCaption();
-                data{i,7} = s(i).featureDefinitionSet.getCaption();
-            end
-            obj.sensorSetTable.clear();
-            obj.sensorSetTable.setData(data,{'use','cluster','sensor','cycle points','index points','preprocessing','feature set'});
-            obj.sensorSetTable.setColumnsEditable([true true true true true true true]);
-            obj.sensorSetTable.setColumnClasses({'bool','str','str',...
-                cellstr(obj.project.poolCyclePointSets.getCaption()),...
-                cellstr(obj.project.poolIndexPointSets.getCaption()),...
-                cellstr(obj.project.poolPreprocessingChains.getCaption()),...
-                cellstr(obj.project.poolFeatureDefinitionSets.getCaption())});
-            obj.sensorSetTable.setRowObjects(s);
-            
-            obj.sensorSetTable.jTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-            obj.sensorSetTable.jTable.setColumnSelectionAllowed(false);
-            pos = find(ismember(s,obj.project.getCurrentSensor())) - 1;
-            if ~isempty(pos) && pos > 0
-                try
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                catch, end
+                data{i,2} = char(s(i).getCluster().getCaption());
+                data{i,3} = char(s(i).getCaption());
+                data{i,4} = char(s(i).preprocessingChain.getCaption());
+                data{i,5} = char(s(i).featureDefinitionSet.getCaption());
             end
             
-            obj.sensorSetTable.onDataChangedCallback = @dataCallback;
-            obj.sensorSetTable.onMouseClickedCallback = @mouseCallback;
-            obj.sensorSetTable.onRowSelectionChangedCallback = @rowSelectionCallback;
-            obj.sensorSetTable.onIndexChangedCallback = @indexChangedCallback;
+            % prepare the table for display
+            vars = {'Use','Cluster','Sensor','Preprocessing','Feature set'};
+            widths = {'1x','4x','4x','4x','4x'};
             
-%             com.jidesoft.grid.TableUtils.autoResizeAllColumns(obj.sensorSetTable.jTable,true);
-%             width = obj.sensorSetTable.jTable.getColumn('use').getWidth();
+            obj.sensorSetTable.Data = data;
+            obj.sensorSetTable.RowName = 'numbered';
+            obj.sensorSetTable.ColumnName = vars;
+            obj.sensorSetTable.ColumnWidth = widths;
+            obj.sensorSetTable.ColumnEditable = ...
+                [true true true true true];
+            obj.sensorSetTable.ColumnSortable = ...
+                [false true true false false];
             
-            obj.sensorSetTable.jTable.setAutoResizeMode(obj.sensorSetTable.jTable.AUTO_RESIZE_ALL_COLUMNS);
-            c = obj.sensorSetTable.jTable.getColumn('use'); c.setMinWidth(50); c.setMaxWidth(100);        
-            c = obj.sensorSetTable.jTable.getColumn('cluster'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('sensor'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('cycle points'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('index points'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('preprocessing'); c.setMinWidth(100); %c.setMaxWidth(200);
-            c = obj.sensorSetTable.jTable.getColumn('feature set'); c.setMinWidth(100); %c.setMaxWidth(200);
+            % make certain columns selectable via a dropdown
+            prepChains = cellstr(obj.project.poolPreprocessingChains.getCaption());
+            featSets = cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
+            obj.sensorSetTable.ColumnFormat = {...
+                'logical' 'char' 'char' prepChains featSets};
             
-            function dataCallback(rc,v)
-                redoCluster = false;
-                for j = 1:size(rc,1)
-                    r = rc(j,1);
-                    sensor = obj.sensorSetTable.getRowObjectsAt(r);
-                    switch rc(j,2)
-                        case 1
-                            sensor.setActive(v{j});
-                        case 2
-                            sensor.getCluster().setCaption(v{j});
-                            redoCluster = true;
-                        case 3
-                            sensor.setCaption(v{j});
-                        case 4
-                            idx = obj.project.poolCyclePointSets.getCaption() == string(v{j});
-                            sensor.cyclePointSet = obj.project.poolCyclePointSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentCyclePointSet = obj.project.poolCyclePointSets(idx);
-                                obj.getActiveModule().onCurrentCyclePointSetChanged(obj.project.poolCyclePointSets(idx));
-                            end
-                        case 5
-                            idx = obj.project.poolIndexPointSets.getCaption() == string(v{j});
-                            sensor.indexPointSet = obj.project.poolIndexPointSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentIndexPointSet = obj.project.poolIndexPointSets(idx);
-                                obj.getActiveModule().onCurrentIndexPointSetChanged(obj.project.poolIndexPointSets(idx));
-                            end
-                        case 6
-                            idx = obj.project.poolPreprocessingChains.getCaption() == string(v{j});
-                            sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentPreprocessingChain = obj.project.poolPreprocessingChains(idx);
-                                obj.getActiveModule().onCurrentPreprocessingChainChanged(obj.project.poolPreprocessingChains(idx));
-                            end
-                        case 7
-                            idx = obj.project.poolFeatureDefinitionSets.getCaption() == string(v{j});
-                            sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
-                            if obj.project.getCurrentSensor() == sensor
-                                obj.project.currentFeatureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
-                                obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(obj.project.poolFeatureDefinitionSets(idx));  
-                            end
-                    end
+            obj.sensorSetTable.CellEditCallback =...
+                @(src,event) editCallback(src,event,s,obj);
+            obj.sensorSetTable.CellSelectionCallback =...
+                @(src,event) selectCallback(src,event,s,obj);
+            
+            function editCallback(src, event, sensors, obj)
+                row = event.Indices(1);
+                col = event.Indices(2);
+                sensor = sensors(row);
+                switch col
+                    case 1
+                        sensor.setActive(event.EditData);
+                    case 2
+                        sensor.getCluster().setCaption(event.EditData);
+                    case 3
+                        sensor.setCaption(event.EditData);
+                    case 4
+                        idx = obj.project.poolPreprocessingChains.getCaption()...
+                            == string(event.EditData);
+                        
+                        % if the edit did not point to a valid chain revert
+                        % the edit and change nothing
+                        if ~idx
+                            src.Data{row, col} = event.PreviousData;
+                            src.ColumnFormat{col} = ...
+                                cellstr(obj.project.poolPreprocessingChains.getCaption());
+                            return
+                        end
+                        
+                        sensor.preprocessingChain = obj.project.poolPreprocessingChains(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentPreprocessingChain = ...
+                                obj.project.poolPreprocessingChains(idx);
+                            obj.getActiveModule().onCurrentPreprocessingChainChanged(...
+                                obj.project.poolPreprocessingChains(idx));
+                        end
+                    case 5
+                        idx = obj.project.poolFeatureDefinitionSets.getCaption()...
+                            == string(event.EditData);
+                        
+                        % if the edit did not point to a valid set revert
+                        % the edit and change nothing
+                        if ~idx
+                            src.Data{row, col} = event.PreviousData;
+                            src.ColumnFormat{col} = ...
+                                cellstr(obj.project.poolFeatureDefinitionSets.getCaption());
+                            return
+                        end
+                        
+                        sensor.featureDefinitionSet = obj.project.poolFeatureDefinitionSets(idx);
+                        if obj.project.getCurrentSensor() == sensor
+                            obj.project.currentFeatureDefinitionSet = ...
+                                obj.project.poolFeatureDefinitionSets(idx);
+                            obj.getActiveModule().onCurrentFeatureDefinitionSetChanged(...
+                                obj.project.poolFeatureDefinitionSets(idx));  
+                        end
                 end
-                if redoCluster
-                    for k = 1:numel(s)
-                        obj.sensorSetTable.setValue(s(k).getCluster().getCaption(),k,2);
-                    end
-                end
-                
-%                 pos = find(ismember(s,obj.project.getCurrentSensor())) - 1;
-%                 obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
             end
             
-            function mouseCallback(visRC,actualRC)
-%                 row = actualRC(1);
-                if visRC(2) > 0
-                    return
-                end
-                
-                newSensor = obj.sensorSetTable.getRowObjectsAt(visRC(1));
+            function selectCallback(src, event, sensors, obj)
+                row = event.Indices(1);
+                newSensor = sensors(row);
                 prevSensor = obj.project.getCurrentSensor();
                 prevCluster = prevSensor.getCluster();
-                newSensor.setCurrent()
+                
+                newSensor.setCurrent();
                 newSensor.getCluster().setCurrent();
                 
                 if prevCluster ~= newSensor.getCluster()
-                    obj.getActiveModule().onCurrentClusterChanged(newSensor.getCluster(),prevSensor.getCluster());
+                    obj.getActiveModule().onCurrentClusterChanged(...
+                        newSensor.getCluster(),prevSensor.getCluster());
                 end
                 if prevSensor ~= newSensor
                     obj.getActiveModule().onCurrentSensorChanged(newSensor,prevSensor);
                 end
-            end
-            
-            function rowSelectionCallback(visRows,actRows)
-                pos = find(ismember(s,obj.project.getCurrentSensor()));
-                %pos = obj.sensorSetTable.getActualRowsAt(pos);
-                pos = obj.sensorSetTable.getRowsAt(pos);
-                if ~isempty(pos)
-                    pos = pos - 1;  % next is a Java method (0-based)
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                else
-                    obj.sensorSetTable.jTable.clearSelection();
-                end
-            end
-            
-            function indexChangedCallback()
-                pos = find(ismember(s,obj.project.getCurrentSensor()));
-                %pos = obj.sensorSetTable.getActualRowsAt(pos);
-                pos = obj.sensorSetTable.getRowsAt(pos);
-                if ~isempty(pos)
-                    pos = pos - 1;  % next is a Java method (0-based)
-                    obj.sensorSetTable.jTable.setRowSelectionInterval(pos, pos);
-                else
-                    obj.sensorSetTable.jTable.clearSelection();
-                end
-            end
-
+            end            
         end
         
         function newProject(obj)
-            answer = questdlg('All unsaved changes in the current project will be lost. All loaded data will be discarded. Proceed?','Really?','Yes','No','No');
-            % do nothing when answered 'No'
-            if strcmp(answer, 'No')
-                return
+            selection = uiconfirm(obj.hFigure,...
+                'All unsaved changes in the current project will be lost. Proceed?',...
+                'Confirm new project','Icon','warning',...
+                'Options',{'Yes, Overwrite','No, Cancel'},...
+                'DefaultOption',2,'CancelOption',2);
+            switch selection
+                case 'No, Cancel'
+                    return
+                case 'Yes, Overwrite'
+                    obj.project = Project();
+
+                    obj.populateSensorSetTable();
+                    for i = 1:numel(obj.modules)
+                        obj.modules(i).reset();
+                    end            
             end
-            % swap to the start screen and clear everything when answered
-            % 'Yes'
-            obj.setModule(1)
-            
-            obj.project = Project();
-            
-            obj.populateSensorSetTable();
-            for i = 1:numel(obj.modules)
-                obj.modules(i).reset();
-            end            
         end        
         
         function saveProject(obj)
@@ -602,16 +573,16 @@ classdef Main < handle
                 oldPath = path;
             end
             
-            sb = statusbar(obj.hFigure,'Saving project...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Saving project',...
+                'Indeterminate','on');
+            drawnow
             
             project = obj.project; %#ok<NASGU,PROPLC>
             save(fullfile(path,file),'project','-v7.3');
             obj.projectPath = path;
             obj.projectFile = file;
             
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function loadProject(obj)
@@ -626,8 +597,9 @@ classdef Main < handle
             end
             oldPath = path;
             
-            sb = statusbar(obj.hFigure,'Loading project...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.hFigure,'Title','Loading project',...
+                'Indeterminate','on');
+            drawnow
             
             l = load(fullfile(path,file),'-mat');
             obj.project = l.project;
@@ -642,13 +614,16 @@ classdef Main < handle
             % set first module active
             % this is not done with the setModule method in order to avoid
             % calling onClose on the last module here
-            obj.modulePanel.SelectedChild = 1;
+            obj.modulePanel.Children(1).Visible = 1;
             obj.modules(1).onOpen();
-            [obj.moduleSidebar.Children.FontWeight] = deal('normal');
-            obj.moduleSidebar.Children(end).FontWeight = deal('bold');
+            obj.moduleSidebar.Children(1).FontWeight = 'bold';
             
-            sb = statusbar(obj.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+%             obj.modulePanel.SelectedChild = 1;
+%             obj.modules(1).onOpen();
+%             [obj.moduleSidebar.Children.FontWeight] = deal('normal');
+%             obj.moduleSidebar.Children(end).FontWeight = deal('bold');
+            
+            close(prog)
         end
         
         function createTestData(obj)

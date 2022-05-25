@@ -30,38 +30,7 @@ classdef Start < Gui.Modules.GuiModule
             obj@Gui.Modules.GuiModule(main);
         end
         
-        function [panel,menu] = makeLayout(obj)
-            %%
-            panel = Gui.Modules.Panel();
-            menu = [];
-            
-            layout = uiextras.VBox('Parent',panel, 'Padding',20, 'Spacing',10);
-
-            axes(layout)
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            [img,~,alpha] = imread('+Gui/+Modules/logo.png');
-            image(img,'AlphaData',alpha)
-            axis off
-            axis image
-            
-            buttonLayout = uiextras.HBox('Parent',layout, 'Spacing',10);
-            uicontrol('Parent',buttonLayout, 'String','Load project', ...
-                    'FontSize',30,...
-                    'Callback', @(varargin)obj.main.loadProject());
-            uicontrol('Parent',buttonLayout, 'String','Import data', ...
-                    'FontSize',30,...
-                    'Callback', @(varargin)obj.importData());
-                
-            uicontrol(layout, 'Style','text', ...
-                'String',sprintf(['\n\n\nIf you publish results obtained '...
-                'with DAV³E, please cite: Manuel Bastuck, Tobias Baur,' ...
-                'and Andreas Schütze: DAV3E – a MATLAB toolbox for multivariate '...
-                'sensor data evaluation, J. Sens. Sens. Syst. (2018), 7, '...
-                '489-506 (open access), doi: 10.5194/jsss-7-489-2018']),...
-                'FontSize',12);
-        end
-        
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
             % we use a grid layout with 3 rows of decreasing height
             moduleLayout = uigridlayout(uiParent,[3 1],...

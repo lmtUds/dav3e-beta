@@ -32,8 +32,7 @@ if ~exist('uiextras.BoxPanel','class')
 end
 
 try
-%     dave = Gui.Main();
-    dave = Gui.MainRework();
+    dave = Gui.Main();
 catch ME
     if strcmp(ME.message,'No constructor ''handle.listener'' with matching signature found.')
         error(errorMsg,'I''m afraid I can''t do that.');

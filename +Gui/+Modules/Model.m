@@ -60,62 +60,8 @@ classdef Model < Gui.Modules.GuiModule
         function set.currentModel(obj,val)
             obj.getProject().currentModel = val;
         end      
-        
-        function [panel,menu] = makeLayout(obj)
-            %%
-            panel = Gui.Modules.Panel();
-            
-            menu = uimenu('Label','Model');
-
-            layout = uiextras.HBox('Parent',panel);
-            leftLayout = uiextras.VBox('Parent',layout);
-            obj.detailsLayout = uiextras.HBox('Parent',layout, 'Spacing',5, 'Padding',5);
-
-            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','model', 'Padding',5);
-%             tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
-            
-            propGridLayout = uiextras.VBox('Parent',defsPanel);
-            
-            % model dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewModel;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemoveModel;
-            obj.setDropdown.EditCallback = @obj.dropdownModelRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownModelChange;            
-            
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addModelChainBlock);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeModelChainBlock);
-            uicontrol(propGridControlsLayout,'String','/\', 'Callback',@(h,e)obj.moveModelChainBlockUp);
-            uicontrol(propGridControlsLayout,'String','\/', 'Callback',@(h,e)obj.moveModelChainBlockDown);
-            
-            modelControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(modelControlsLayout,'String','train', 'Callback',@(h,e)obj.trainModel);
-%             uicontrol(modelControlsLayout,'String','show details', 'Callback',@(h,e)obj.showModelDetails);
-            propGridLayout.Sizes = [30,-1,20,40];
-
-            % This works fine for R2018a (and possibly lower), but causes a
-            % fatal Java crash with R2016b (and possibly higher)
-            % reason seems to be assigning the panel returned by this 
-            % function (with uitabgroup inside) to a new parent after this
-            % function has finished
-            % if we do it later, all is fine
-            % alternatively, MATLAB's native uipanel could be used
-            % David Sampson (creater of GUI Layout Toolbox) could so far
-            % not reproduce the issue
-%             obj.tabGroup = uitabgroup(obj.detailsLayout);
-            obj.tabLayout = uiextras.VBox('Parent',obj.detailsLayout);
-            obj.parametersDropdownPanel = Gui.Modules.Panel('Parent',obj.detailsLayout, 'Title','parameters', 'Padding',2);
-%             obj.parametersDropdownGrid = uiextras.Grid('Parent',obj.parametersDropdownPanel, 'Spacing',2, 'Padding',0);
-            obj.parametersDropdownPanel.Visible = 'off';
-
-            layout.Sizes = [-1,-3];
-            leftLayout.Sizes = [-1];
-        end
-        
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+                       
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
             %Define the main three column module layout
             moduleLayout = uigridlayout(uiParent,[1 3],...

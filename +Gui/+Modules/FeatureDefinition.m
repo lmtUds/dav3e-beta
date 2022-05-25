@@ -148,68 +148,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
 %             features.featureCaptions'
             close(prog)
         end
-        
-        function [panel,menu] = makeLayout(obj)
-            %%
-            panel = Gui.Modules.Panel();
-            
-            menu = uimenu('Label','FeatureDefinition');
-            uimenu(menu,'Label','plot features over time', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
-            uimenu(menu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
-            uimenu(menu,'Label','compute features', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
-            uimenu(menu,'Label','copy all ranges',getMenuCallbackName(),@(varargin)obj.copyRangesCallback);
-            uimenu(menu,'Label','paste all ranges',getMenuCallbackName(),@(varargin)obj.pasteRangesCallback);
-            
-            layout = uiextras.HBox('Parent',panel);
-            leftLayout = uiextras.VBox('Parent',layout);
-            axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
-            
-            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature definitions', 'Padding',5);
-            tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
-            
-            propGridLayout = uiextras.VBox('Parent',defsPanel);
-            
-            % feature definition set dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewFeatureDefinitionSet;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemoveFeatureDefinitionSet;
-            obj.setDropdown.EditCallback = @obj.dropdownFeatureDefinitionSetRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownFeatureDefinitionSetChange;
-            
-            % prop grid
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addFeatureDefinition);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeFeatureDefinition);
-            uicontrol(propGridControlsLayout,'String','/\');
-            uicontrol(propGridControlsLayout,'String','\/');
-            propGridLayout.Sizes = [30,-1,20];
-
-            obj.hAxPreview = axes(axesLayout); title('feature preview');
-            xlabel('time / s'); ylabel('features / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            
-            obj.hAxCycle = axes(axesLayout); title('cycles with grouping colors');
-            xlabel('time / s'); ylabel('data / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
-            
-            obj.hAxCycle.ButtonDownFcn = @obj.axesButtonDownCallback;
-
-            tableLayout = uiextras.VBox('Parent',tablePanel);
-            obj.rangeTable = JavaTable(tableLayout);
-            tableControlsLayout = uiextras.HBox('Parent',tableLayout);
-            uicontrol(tableControlsLayout,'String','add', 'Callback',@(h,e)obj.addRange);
-            uicontrol(tableControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeRange);
-            tableLayout.Sizes = [-1,20];
-            
-            layout.Sizes = [-1,-3];
-            leftLayout.Sizes = [-1,-1];
-        end
-        
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+                
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
             moduleLayout = uigridlayout(uiParent,[2 2],...
                 'Visible','off',...

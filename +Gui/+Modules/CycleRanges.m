@@ -39,32 +39,9 @@ classdef CycleRanges < Gui.Modules.GuiModule
         
         function delete(obj)
             delete(obj.rangeTable);
-        end         
+        end  
         
-        function [panel,menu] = makeLayout(obj)
-            %%
-            panel = Gui.Modules.Panel();
-            
-            menu = uimenu('Label','CycleRanges');
-            uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
-            uimenu(menu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
-            uimenu(menu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
-            uimenu(menu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
-
-            layout = uiextras.VBox('Parent',panel);
-            
-            obj.hAx = axes(layout); title('quasistatic signal');
-            obj.hAx.ButtonDownFcn = @obj.axesButtonDownCallback;
-            xlabel('cycle number'); ylabel('data / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            
-            obj.rangeTable = JavaTable(layout);
-            
-            layout.Sizes = [-3,-1];
-        end
-        
-        function [moduleLayout,moduleMenu] = makeLayoutRework(obj,uiParent,mainFigure)
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
             moduleLayout = uigridlayout(uiParent,[2 1],...
                 'Visible','off',...
