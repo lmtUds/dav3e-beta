@@ -68,21 +68,6 @@ classdef MainRework < handle
                 'CloseReq',@(h,e)obj.delete);
             f.Units = 'pixels';
             obj.hFigure = f;
-        
-            % remove some buttons that are not needed
-%             a = findall(gcf);
-%             b = findall(a,'ToolTipString','Save Figure');
-%             b = [b, findall(a,'ToolTipString','Open File')];
-%             b = [b, findall(a,'ToolTipString','New Figure')];
-%             b = [b, findall(a,'ToolTipString','Print Figure')];
-%             b = [b, findall(a,'ToolTipString','Show Plot Tools')];
-%             b = [b, findall(a,'ToolTipString','Hide Plot Tools')];
-%             b = [b, findall(a,'ToolTipString','Link Plot')];
-%             b = [b, findall(a,'ToolTipString','Insert Colorbar')];
-%             b = [b, findall(a,'ToolTipString','Open File')];
-%             b = [b, findall(a,'ToolTipString','Insert Legend')];
-%             b = [b, findall(a,'ToolTipString','Show Plot Tools and Dock Figure')];
-%             set(b,'Visible','Off');
             
             % menubar
             callback = getMenuCallbackName();
@@ -120,75 +105,37 @@ classdef MainRework < handle
             uimenu(mh,'Label','Virtual sensors',...
                 callback,@obj.showVirtualSensors);
             
-            mh = uimenu(f,'Label','Plots');
-            uimenu(mh,'Label','default plot',callback,@obj.openDefaultPlot);
-            uimenu(mh,'Label','square plot',callback,@obj.openSquarePlot);
-            uimenu(mh,'Label','div. plot vertical',callback,@obj.openDivPlotVertical);
-            uimenu(mh,'Label','scatter/histogram plot',callback,@obj.openScatterHistPlot);
-            uimenu(mh,'Label','very wide plot',callback,@obj.openVeryWidePlot);
+            mh = uimenu(f,'Label','Extract Plots');
+            uimenu(mh,'Label','Default Plot',callback,@obj.openDefaultPlot);
+            uimenu(mh,'Label','Square Plot',callback,@obj.openSquarePlot);
+            uimenu(mh,'Label','Two Plots vertical Stack',callback,@obj.openDivPlotVertical);
+            uimenu(mh,'Label','Scatter+Histogram Plot',callback,@obj.openScatterHistPlot);
+            uimenu(mh,'Label','Very wide Plot',callback,@obj.openVeryWidePlot);
             
             % statusbar
             prog = uiprogressdlg(f,'Title','Initialize',...
                 'Indeterminate','on');
             drawnow
             
-            % layout
-%             mainLayout = uiextras.VBoxFlex('Parent',f, 'Spacing',5);
             mainLayout = uigridlayout(f,[2 2]);
             mainLayout.RowHeight = {'3x','1x'};
             mainLayout.ColumnWidth = {'1x','7x'};
-%             content = uiextras.HBox('Parent',mainLayout);
-%             content = uigridlayout(mainlayout,[4 4]);
-%             content.Layout.Row = 1;
-%             content.Layout.Column = 2;
-%             bottomTable = uiextras.HBox('Parent',mainLayout);
+            
             bottomTable = uitable(mainLayout);
             bottomTable.Layout.Row = 2;
             bottomTable.Layout.Column = [1 2];
-%             modulesSidebar = uiextras.VButtonBox('Parent',content);
+            
             modulesSidebar = uigridlayout(mainLayout,...
                 [numel(obj.moduleNames) 1],...
                 'Padding',[0 0 0 0]);
             modulesSidebar.Layout.Row = 1;
             modulesSidebar.Layout.Column = 1;
-%             module = uiextras.CardPanel('Parent',content);
-%             module = uigridlayout(mainLayout,[1 1]);
+            
             module = uipanel(mainLayout,'BorderType','none');
             module.Layout.Row = 1;
             module.Layout.Column = 2;
-            %uicontrol('Parent',modulesSidebar, 'Background','y')
-            %uicontrol('Parent',module, 'Background','r')
-            %uicontrol('Parent',bottomTable, 'Background','b')
-            
-%             t = JavaTable(bottomTable,'sortable');
-%             t.setSortingEnabled(true)
-%             t.setFilteringEnabled(true);
-%             t.setColumnReorderingAllowed(false);
-%             
-%             % context menu
-%               bTableContextMenu = uicontextmenu(f);
-%               selectAll = uimenu(bTableContextMenu,...
-%                   'Text','Select all',...
-%                   'MenuSelectedFcn',@obj.selectVisibleSensors);
-%               deselectAll = uimenu(bTableContextMenu,...
-%                   'Text','Deselect all',...
-%                   'MenuSelectedFcn',@obj.deselectVisibleSensors);
-%               bottomTable.ContextMenu = bTableContextMenu;
-%             popupMenu = javax.swing.JPopupMenu();
-%             selectItem = javax.swing.JMenuItem('select all');
-%             deselectItem = javax.swing.JMenuItem('deselect all');
-%             popupMenu.add(selectItem);
-%             popupMenu.add(deselectItem);
-%             t.jTable.setComponentPopupMenu(popupMenu);
-%             set(handle(selectItem,'CallbackProperties'),'MousePressedCallback',@obj.selectVisibleSensors)
-%             set(handle(deselectItem,'CallbackProperties'),'MousePressedCallback',@obj.deselectVisibleSensors)
 %             
             obj.sensorSetTable = bottomTable;
-            
-%             mainLayout.Sizes = [-1,200];
-%             content.Sizes = [200,-5];
-%             modulesSidebar.ButtonSize = [190,35];
-%             modulesSidebar.VerticalAlignment = 'top';
             
             obj.modulePanel = module;
             obj.moduleSidebar = modulesSidebar;
@@ -297,23 +244,33 @@ classdef MainRework < handle
         end
         
         function openDefaultPlot(obj,varargin)
-            defaultPlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Default','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxDefault(Fig))
         end
         
         function openSquarePlot(obj,varargin)
-            squarePlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Square','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxSquare(Fig))
         end
         
         function openDivPlotVertical(obj,varargin)
-            twoPlotsVertical
+            msg = 'Click first plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: vert. Stack','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxStacked(Fig))
         end
         
         function openScatterHistPlot(obj,varargin)
-            centerHistSubplot
+            msg = 'Click center plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Scatter+Hist','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxScatterHist(Fig))
         end
         
         function openVeryWidePlot(obj,varargin)
-            veryWidePlot
+            msg = 'Click a plot, then Ok';
+            uialert(obj.hFigure,msg,'Plot Extraction: Very wide','Icon','info',...
+                'Modal',false,'CloseFcn',@(Fig,Struct)extractAxVeryWide(Fig))
         end
         
         function howto(obj,varargin)
