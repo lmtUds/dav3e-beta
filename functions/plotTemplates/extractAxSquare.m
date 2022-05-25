@@ -19,8 +19,8 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
 function extractAxSquare(MainFig)
-%EXTRACTAXSQUARE Extracts the CurrentAxes of MainFig into a default uiFigure
-    fig = uifigure('Name','Plot Extraction','Visible','off');
+%EXTRACTAXSQUARE Extracts the CurrentAxes of MainFig into a square(ish) uiFigure
+    fig = uifigure('Name','Plot Extraction: Square','Visible','off');
     fig.Position(3:4) = [460 420];
     grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
     ax = copyobj(MainFig.CurrentAxes,grid);

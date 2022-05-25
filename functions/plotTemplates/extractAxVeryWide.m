@@ -18,9 +18,10 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function extractAxDefault(MainFig)
-%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a default uiFigure
-    fig = uifigure('Name','Plot Extraction: Default','Visible','off');
+function extractAxVeryWide(MainFig)
+%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a very wide uiFigure
+    fig = uifigure('Name','Plot Extraction: Very wide','Visible','off');
+    fig.Position(3) = MainFig.CurrentAxes.Position(3) * 1.2;
     grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
     ax = copyobj(MainFig.CurrentAxes,grid);
     ax.Layout.Row = 1; ax.Layout.Column = 1;

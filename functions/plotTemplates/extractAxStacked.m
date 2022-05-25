@@ -18,12 +18,21 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function extractAxDefault(MainFig)
-%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a default uiFigure
-    fig = uifigure('Name','Plot Extraction: Default','Visible','off');
-    grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
+function extractAxStacked(MainFig)
+%EXTRACTAXSTACKED Extracts two Axes of MainFig into a default one uiFigure with stacked axes
+    fig = uifigure('Name','Plot Extraction: vert. Stack','Visible','off');
+    grid = uigridlayout(fig,[2 1],'Padding',[0 0 0 0]);
     ax = copyobj(MainFig.CurrentAxes,grid);
     ax.Layout.Row = 1; ax.Layout.Column = 1;
-    fig.Visible = 'on';
+    
+    msg = 'Click second plot, then Ok';
+    uialert(MainFig,msg,'Plot Extraction: vert. Stack','Icon','info',...
+        'Modal',false,'CloseFcn',@(Fig,Struct)addSecondAx(Fig,grid,fig))
+    
+    function addSecondAx(MainFig,grid,fig)
+        ax2 = copyobj(MainFig.CurrentAxes,grid);
+        ax2.Layout.Row = 2; ax2.Layout.Column = 1;
+        fig.Visible = 'on';
+    end
 end
 
