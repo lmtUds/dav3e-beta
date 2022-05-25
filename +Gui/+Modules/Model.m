@@ -258,9 +258,7 @@ classdef Model < Gui.Modules.GuiModule
         function updatePropGrid(obj)
             obj.propGrid.clear();
             obj.getModel().processingChain.updateChainParameters(obj.getProject());
-            obj.propGrid.addBlocks(obj.getModel().processingChain.getAllBlocksInChain());
-%             pgf = obj.getModel().makePropGridFields();
-%             obj.propGrid.addProperty(pgf);       
+            obj.propGrid.addBlocks(obj.getModel().processingChain.getAllBlocksInChain());     
         end
         
         function dropdownNewModel(obj,src,event,dropdown)
@@ -540,7 +538,7 @@ classdef Model < Gui.Modules.GuiModule
                 for j = 1:numel(blocks(i).detailsPages)
                     detailTab = uitab(blockGroup,'title',blocks(i).detailsPages{j});
                     detailGrid = uigridlayout(detailTab,[1 1],'Padding',[0 0 0 0]);
-                    [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
+                    updateFun = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
                     detailTab.UserData = updateFun;
                     %Select the tab  created once
                     blockGroup.SelectedTab = detailTab;

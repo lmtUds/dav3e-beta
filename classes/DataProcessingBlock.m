@@ -334,9 +334,9 @@ classdef DataProcessingBlock < Descriptions
             obj.updateParametersFcn(obj.parameters,project);
         end
         
-        function [panel,updateFun] = createDetailsPage(obj,caption,parent,project)
+        function updateFun = createDetailsPage(obj,caption,parent,project)
             fullpath = [char(obj.type) '.detailsPages.' caption];
-            [panel,updateFun] = eval([fullpath '(parent,project,obj);']);
+            updateFun = eval([fullpath '(parent,project,obj);']);
         end
         
         function addBefore(obj,targetBlock)

@@ -18,28 +18,24 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = confusionmatrix(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
+function updateFun = confusionmatrix(parent,project,dataprocessingblock)
+    elements = makeGui(parent);
     populateGui(elements,project,dataprocessingblock);
     updateFun = @()populateGui(elements,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    xlabel('DF1'); ylabel('DF2');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
+function elements = makeGui(parent)
+    ax = uiaxes(parent); title(ax,'');
+    xlabel(ax,'DF1'); ylabel(ax,'DF2'); box(ax,'on');
+    elements.ax = ax;
 end
 
 function populateGui(elements,project,dataprocessingblock)
     [target,pred] = project.currentModel.getValidatedDataForTrainedIndexSet().getTargetAndValidatedPrediction();
     if ~iscategorical(target) || isempty(target)
-        cla(elements.hAx);
+        cla(elements.ax);
         return
     end
-    [confmat,order] = confusionmat(target,pred);
-    axes(elements.hAx);
-    plotConfMat(confmat',cellstr(order));
+%     [confmat,order] = confusionmat(target,pred);
+%     plotConfMat(confmat',cellstr(order));
 end
