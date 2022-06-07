@@ -212,6 +212,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         if groupedBlocks{k}(i).parameters(j).internal
                             continue
                         end
+                        if groupedBlocks{k}(i).parameters(j).hidden
+                            continue
+                        end
                         rowCount = rowCount + 1; %row per parameter in the block
                         heights = [heights charHeight];
                     end
@@ -261,6 +264,9 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                         p = b.parameters(j);
 
                         if p.internal   %skip internal parameters
+                            continue
+                        end
+                        if p.hidden
                             continue
                         end
 
