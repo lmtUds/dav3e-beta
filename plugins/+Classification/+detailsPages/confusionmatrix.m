@@ -19,23 +19,14 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
 function updateFun = confusionmatrix(parent,project,dataprocessingblock)
-    elements = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+    populateGui(project,parent);
+    updateFun = @()populateGui(project,parent);
 end
 
-function elements = makeGui(parent)
-    ax = uiaxes(parent); title(ax,'');
-    xlabel(ax,'DF1'); ylabel(ax,'DF2'); box(ax,'on');
-    elements.ax = ax;
-end
-
-function populateGui(elements,project,dataprocessingblock)
+function populateGui(project,parent)
     [target,pred] = project.currentModel.getValidatedDataForTrainedIndexSet().getTargetAndValidatedPrediction();
-    if ~iscategorical(target) || isempty(target)
-        cla(elements.ax);
-        return
-    end
-%     [confmat,order] = confusionmat(target,pred);
-%     plotConfMat(confmat',cellstr(order));
+    
+    [confmat,order] = confusionmat(target,pred);
+    confusionchart(confmat,order,...
+        'Parent',parent,'Normalization','total-normalized');
 end
