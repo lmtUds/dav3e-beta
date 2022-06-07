@@ -282,7 +282,11 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                     switch p.selectionType
                                         case 'single'
                                             if iscell(p.value)
-                                                value = p.value{1};
+                                                if ~isempty(p.value)
+                                                    value = p.value{1};
+                                                else
+                                                    value = '';
+                                                end
                                             else
                                                 value = p.value;
                                             end
@@ -350,9 +354,12 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                 paramEntry.Layout.Row = rowCount;
                                 paramEntry.Layout.Column = 2;
                             catch ME
+                               disp('Error during update:')
                                disp(ME) 
-                               p.value
-                               p.enum
+                               val = p.value
+                               enum = p.enum
+                               edit = p.editable
+                               selType = p.selectionType
                             end
                             rowCount = rowCount + 1;   %advance to the next row
                         end
