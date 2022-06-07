@@ -27,6 +27,8 @@ function populateGui(project,parent)
     [target,pred] = project.currentModel.getValidatedDataForTrainedIndexSet().getTargetAndValidatedPrediction();
     
     [confmat,order] = confusionmat(target,pred);
-    confusionchart(confmat,order,...
-        'Parent',parent,'Normalization','total-normalized');
+    if ~isempty(confmat)
+        confusionchart(confmat,order,...
+            'Parent',parent,'Normalization','total-normalized');
+    end
 end
