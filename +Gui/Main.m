@@ -592,6 +592,10 @@ classdef Main < handle
             end
             
             [file,path] = uigetfile({'*.dave','DAV³E project'},'Choose project file',oldPath);
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
