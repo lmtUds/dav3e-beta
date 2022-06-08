@@ -48,7 +48,7 @@ function GroupingColorGradient(main,module)
     grouping = module.currentGrouping;
     groupList = uilistbox(grid,...
         'Items',deStar(grouping.getDestarredCategories()),...
-        'Value',{});
+        'Value',{},'MultiSelect','on');
     applyButton = uibutton(grid,'Text','Create gradient from base color',...
         'ButtonPushedFcn',@(src,event) ApplyClr(src,event,groupList,module,clrPicker));
 
@@ -62,6 +62,9 @@ function GroupingColorGradient(main,module)
     end
     function PickColor(src,event,main,fig)
         fig.Visible = 'off';
+        %avoid focus loss
+        main.hFigure.Visible = 'off';
+        main.hFigure.Visible = 'on';
         c = uisetcolor(src.BackgroundColor,'Set gradient base color');
         src.BackgroundColor = c;
         %avoid focus loss
