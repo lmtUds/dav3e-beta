@@ -498,6 +498,8 @@ classdef Grouping < Gui.Modules.GuiModule
                 origClr = clrArray{:};
                 try
                     rgbClr = uisetcolor(origClr,'Select a color');
+                    obj.main.hFigure.Visible = 'off';
+                    obj.main.hFigure.Visible = 'on';
                     src.Data{row,col} = clr2str(rgbClr);
                 catch ME
                     disp(ME)
