@@ -28,7 +28,9 @@ function populateGui(project,parent)
     
     [confmat,order] = confusionmat(target,pred);
     if ~isempty(confmat)
-        confusionchart(confmat,order,...
+        confChart = confusionchart(confmat,order,...
             'Parent',parent,'Normalization','total-normalized');
+        confChart.Layout.Row = 1;
+        confChart.Layout.Column = 1;
     end
 end
