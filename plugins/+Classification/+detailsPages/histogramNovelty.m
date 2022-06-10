@@ -58,7 +58,7 @@ function populateGui(parent,project,dataprocessingblock)
     
     tlTest = tiledlayout(grid,numel(dims),1);
     tlTest.Layout.Row = 1; tlTest.Layout.Column = 2;
-    [h2,c2] = histPlot(tlTrain,threshold,testGrouping,dims,...
+    [h2,c2] = histPlot(tlTest,threshold,testGrouping,dims,...
         groupingColors,[minLimTe;maxLimTe],testScores);
     
     c2 = c2 + string(' (testing)');
