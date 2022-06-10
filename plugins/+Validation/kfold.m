@@ -60,14 +60,15 @@ function updateParameters(params,project)
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
             params(i).hidden = ~groupbased;
-            params(i).updatePropGridField();
         elseif params(i).shortCaption == string('trainAlways')
-            if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
-                params(i).enum = cellstr(categories(grouping));
-                params(i).value = {};
+            if ~all(ismember(params(i).enum,... checks if enum is initialized
+                    cellstr(categories(grouping))))
+                params(i).enum = [{''}; cellstr(categories(grouping))];
+                if ~ismember(cellstr(categories(grouping)),params(i).value)
+                    params(i).value = ''; %default to blank if not a category
+                end
             end
             params(i).hidden = ~groupbased;
-            params(i).updatePropGridField();
         end
     end
 end

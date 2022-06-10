@@ -53,7 +53,6 @@ function updateParameters(params,project)
             if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
                 params(i).enum = cellstr(categories(grouping));
                 params(i).value = params(i).enum;
-                params(i).updatePropGridField();
             end
         end
     end
