@@ -228,10 +228,7 @@ classdef Grouping < Gui.Modules.GuiModule
             % temporarily, should check for changes
 %             obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
 %             obj.populateGroupingTable();
-            
-            obj.populateGroupsTable(obj.currentGrouping);
-            obj.deleteButton.Text = sprintf('Delete "%s"',obj.currentGrouping.getCaption());
-            
+
             % TODO: needs to check for any change in cycle ranges
 %             if obj.clusterHasChanged()
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
@@ -239,6 +236,8 @@ classdef Grouping < Gui.Modules.GuiModule
 %             if obj.sensorHasChanged()
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
 %             end
+            obj.populateGroupsTable(obj.currentGrouping);
+            obj.deleteButton.Text = sprintf('Delete "%s"',obj.currentGrouping.getCaption());    
 
 %             obj.getProject().createGroupingFrom(...
 %                 obj.getProject().getGroupingByCaption('valve V10'),...
