@@ -682,7 +682,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             set(obj.hAxPreview.Title,'Interpreter','none');
             
             obj.updateFeaturePreview();
-            set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
+%             set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
         
         function onClose(obj)

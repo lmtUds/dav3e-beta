@@ -231,7 +231,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
             obj.ranges.updateYLimits();
-            set(obj.main.hFigure,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
+%             set(obj.main.hFigure,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
         
         function onClose(obj)
