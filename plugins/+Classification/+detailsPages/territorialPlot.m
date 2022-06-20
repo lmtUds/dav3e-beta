@@ -62,6 +62,8 @@ function populateGui(parent,project,dataprocessingblock)
     cats = unique(deStar(p));
     p = reshape(p,res,res);
     
+    delete(parent.Children)
+    
     ax = uiaxes(parent);
     ax.Layout.Row = 1;
     ax.Layout.Column = 1;
