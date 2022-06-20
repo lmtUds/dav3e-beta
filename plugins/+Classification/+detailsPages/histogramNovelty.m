@@ -48,17 +48,13 @@ function populateGui(parent,project,dataprocessingblock)
     minLimTr = min(trainScores); maxLimTr = max(trainScores);
 
     delete(parent.Children);
-    grid = uigridlayout(parent,[1 2],'Padding',[0 0 0 0]);
-    grid.Layout.Row = 1; grid.Layout.Column = 1;
     
-    tlTrain = tiledlayout(grid,numel(dims),1);
-    tlTrain.Layout.Row = 1; tlTrain.Layout.Column = 1;
-    [h1,c1] = histPlot(tlTrain,threshold,trainGrouping,dims,...
+    tl = tiledlayout(parent,numel(dims),1);
+    tl.Layout.Row = 1; tl.Layout.Column = 1;
+    [h1,c1] = histPlot(tl,threshold,trainGrouping,dims,...
         groupingColors,[minLimTr;maxLimTr],trainScores);
     
-    tlTest = tiledlayout(grid,numel(dims),1);
-    tlTest.Layout.Row = 1; tlTest.Layout.Column = 2;
-    [h2,c2] = histPlot(tlTest,threshold,testGrouping,dims,...
+    [h2,c2] = histPlot(tl,threshold,testGrouping,dims,...
         groupingColors,[minLimTe;maxLimTe],testScores);
     
     c2 = c2 + string(' (testing)');
@@ -79,7 +75,7 @@ function [handles,captions] = histPlot(tileLayout,threshold,grouping,dims,...
     handles = [];
     captions = string.empty;
     for i = 1:numel(dims)
-        hsAx = nexttile(tileLayout);
+        hsAx = nexttile(tileLayout,i);
         hold(hsAx,'on');
         xlabel(hsAx,'novelty scores')
         ylabel(hsAx,'counts');
