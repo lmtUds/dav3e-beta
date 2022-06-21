@@ -537,7 +537,7 @@ classdef Model < Gui.Modules.GuiModule
                     'SelectionChangedFcn',@obj.onTabChanged);
                 for j = 1:numel(blocks(i).detailsPages)
                     detailTab = uitab(blockGroup,'title',blocks(i).detailsPages{j});
-                    detailGrid = uigridlayout(detailTab,[1 1],'Padding',[0 0 0 0]);
+                    detailGrid = uigridlayout(detailTab,[1 1],'Padding',[7 7 7 7]);
                     updateFun = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
                     detailTab.UserData = updateFun;
                     %Select the tab  created once
