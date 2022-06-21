@@ -24,7 +24,7 @@ function updateFun = correlation(parent,project,dataprocessingblock)
 end
 
 function populateGui(parent,project,dataprocessingblock)
-   try 
+    try 
         tar = project.currentModel.fullModelData.target;
         groupings = cat2num(project.currentModel.fullModelData.groupings);
         groupingCaptions = project.currentModel.fullModelData.groupingCaptions;
@@ -32,7 +32,7 @@ function populateGui(parent,project,dataprocessingblock)
         dat = project.currentModel.fullModelData.data;
         featCap = project.currentModel.fullModelData.featureCaptions;
         rank = project.currentModel.processingChain.blocks.getByCaption('automated Selection').parameters.getByCaption('rank').value;
-    
+
         mymap = customClrMap();
 
         limit = 9;
@@ -54,7 +54,8 @@ function populateGui(parent,project,dataprocessingblock)
         h = heatmap(parent,tbl,'features','gas','ColorVariable','correlation',...
                 'ColorLimits',[0 1],'Colormap',mymap);
         h.Layout.Column = 1; h.Layout.Row = 1;
-    catch
+    catch ME
+        disp(ME)
         disp('Could not display correlation details page')
     end
 %     errorTr = dataprocessingblock.parameters.getByCaption('error').value.training(:,:);
