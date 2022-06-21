@@ -18,27 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = histogram(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = histogram(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-%     hAx = axes(panel2); title('');
-%     xlabel('DF1'); ylabel('DF2');
-%     box on,
-%     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-%     elements.hAx = hAx;
-    elements.axesPanel = panel2;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-%     cla(elements.hAx,'reset');
-    delete(elements.axesPanel.Children);
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam)
         return
@@ -64,20 +49,21 @@ function populateGui(elements,project,dataprocessingblock)
     maxLim = max([trainData;testData]);
     
     cumEnergy = dataprocessingblock.parameters.getByCaption('cumEnergy').getValue();
-    [h1,c1] = histPlot(elements.axesPanel,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
-    [h2,c2] = histPlot(elements.axesPanel,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    
+    delete(parent.Children);
+    tl = tiledlayout(parent,numel(dims),1);
+    tl.Layout.Row = 1; tl.Layout.Column = 1;
+    [h1,c1] = histPlot(tl,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    [h2,c2] = histPlot(tl,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
     c2 = c2 + string(' (testing)');
 %     legend([h1,h2],[c1,c2]);
 end
 
-function [handles,captions] = histPlot(panel,data,grouping,dims,groupingColors,limits,cumEnergy)
+function [handles,captions] = histPlot(tl,data,grouping,dims,groupingColors,limits,cumEnergy)
     handles = [];
     captions = string.empty;
-    tl = tiledlayout(panel,numel(dims),1);
     for i = 1:numel(dims)
-        hsAx = nexttile(tl);
-%         legend(hsAx,'off');
-%         cla(hsAx);
+        hsAx = nexttile(tl,i);
         hold(hsAx,'on');
         cats = categories(deStar(grouping));
         for j = 1:numel(cats)
