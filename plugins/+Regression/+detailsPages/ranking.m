@@ -18,34 +18,18 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = ranking(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = ranking(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-    %hAx = axes(panel2); title('');
-    %xlabel('DF1'); ylabel('DF2');
-    %box on,
-    %set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    %elements.hAx = hAx;
-       
-    elements.table = uitable(panel2,'ColumnName',{'rank', 'id', 'feature'},...
-        'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
-    set(elements.table,'ColumnWidth',{40, 40, 450});
-    
-    %spinButton = uicontrol(layout, 'String','spin','Callback',@(varargin)spinAxes(hAx));
-    %elements.spinButton = spinButton;
-    %layout.Sizes = [-1,20];
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    rank = dataprocessingblock.parameters.getByCaption('rank').value(:);
+function populateGui(parent,project,dataprocessingblock)
+    ranks = dataprocessingblock.parameters.getByCaption('ranks').value(:);
     features = dataprocessingblock.parameters.getByCaption('featureCaptions').value;
-    T = table((1:numel(features))', rank(1:numel(features)), features');
-    elements.table.Data = cellstr(T{:,:});
+    T = table((1:numel(features))', ranks(1:numel(features)), features');
+    
+    delete(parent.Children)
+    t = uitable(parent,'ColumnName',{'rank', 'id', 'feature'},...
+        'ColumnWidth',{40, 40, '1x'},'Data',cellstr(T{:,:}));
+    t.Layout.Column = 1; t.Layout.Row = 1;
 end
