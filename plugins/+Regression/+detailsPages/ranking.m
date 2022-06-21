@@ -24,7 +24,7 @@ function updateFun = ranking(parent,project,dataprocessingblock)
 end
 
 function populateGui(parent,project,dataprocessingblock)
-    ranks = dataprocessingblock.parameters.getByCaption('ranks').value(:);
+    ranks = dataprocessingblock.parameters.getByCaption('rank').value(:);
     features = dataprocessingblock.parameters.getByCaption('featureCaptions').value;
     T = table((1:numel(features))', ranks(1:numel(features)), features');
     
