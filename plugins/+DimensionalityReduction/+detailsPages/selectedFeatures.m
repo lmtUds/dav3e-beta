@@ -71,8 +71,10 @@ function populateGui(elements,project,dataprocessingblock)
     %     
         redDat2 = 1./redDat;
         redDat3 = log10(redDat2);
-        minfill=min(redDat3(:))-abs(min(redDat3(:))*0.1);
-        maxfill=max(redDat3(:))+abs(max(redDat3(:))*0.1);
+        lowerBound = min(redDat3(~isinf(redDat3)),[],'all');
+        upperBound = max(redDat3(~isinf(redDat3)),[],'all');
+        minfill = lowerBound - abs(lowerBound) * 0.1;
+        maxfill = upperBound + abs(upperBound) * 0.1;
         
         featCap=project.currentModel.fullModelData.featureCaptions;
         yfill=[minfill,minfill,maxfill,maxfill]';
