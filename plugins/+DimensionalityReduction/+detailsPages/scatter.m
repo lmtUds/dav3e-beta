@@ -18,32 +18,28 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = scatter(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
+function updateFun = scatter(parent,project,dataprocessingblock)
+    elements = makeGui(parent);
     populateGui(elements,project,dataprocessingblock);
     updateFun = @()populateGui(elements,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-    hAx = axes(panel2); title('');
-    xlabel('DF1'); ylabel('DF2');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
+function elements = makeGui(parent)
+    grid = uigridlayout(parent,[2 1],'RowHeight',{'1x',22});
+    grid.Layout.Column = 1; grid.Layout.Row = 1; 
+    hAx = uiaxes(grid);
+    hAx.Layout.Column = 1; hAx.Layout.Row = 1;
     elements.hAx = hAx;
-    spinButton = uibutton(layout,'Text','Start spin',...
+    spinButton = uibutton(grid,'Text','Start spin',...
         'ButtonPushedFcn',@(src,event)spinAxes(src,event,hAx),...
         'Interruptible',true,'BusyAction','cancel');
+    spinButton.Layout.Column = 1; spinButton.Layout.Row = 2;
     setappdata(spinButton,'spinning',0);    % current plot spinning state
     setappdata(spinButton,'degree',0);      % degrees covered by the spin
     elements.spinButton = spinButton;
-    layout.Sizes = [-1,20];
 end
 
 function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam)
         return
@@ -66,6 +62,7 @@ function populateGui(elements,project,dataprocessingblock)
         dims = dims(1:3);
     end
     
+    cla(elements.hAx,'reset');
     [h1,c1] = scatterPlot(elements.hAx,trainData,trainGrouping,dims,groupingColors);
     [h2,c2] = scatterPlot(elements.hAx,testData,testGrouping,dims,groupingColors);
 %     h2.MarkerStyle = '^';
@@ -85,12 +82,6 @@ function populateGui(elements,project,dataprocessingblock)
         ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
         legend(elements.hAx,[h1,h2],[c1,c2]);
     end
-%     p1 = trainData(1:end-1,:);
-%     p2 = trainData(2:end,:);
-%     x = [trainData(1:end-1,1),trainData(2:end,1)];
-%     y = [trainData(1:end-1,2),trainData(2:end,2)];
-%     hold(elements.hAx,'on');
-%     plot(x,y,'-k','LineWidth',0.5);
 end
 
 function [handles,captions] = scatterPlot(hAx,data,grouping,dims,groupingColors)
@@ -136,11 +127,11 @@ function spinAxes(src,~,hAx)
     
     if spinning
         setappdata(src,'spinning',0);       %set state to paused
-        set(src,'String','Resume spin');    %alter the label
+        src.Text = 'Resume spin';    %alter the label
         drawnow;
     else %so not spinning
         setappdata(src,'spinning',1);       %set state to spinning
-        set(src,'String','Pause spin');     %alter the label
+        src.Text = 'Pause spin';     %alter the label
         
         % continue to spin until 360 degrees have been covered
         for i = getappdata(src,'degree'):1:360
@@ -155,7 +146,7 @@ function spinAxes(src,~,hAx)
         
         % after a full 360 degree spin restore the starting state
         if i == 360
-            set(src,'String','Start spin');
+            src.Text = 'Start spin';
             setappdata(src,'degree',0);
             setappdata(src,'spinning',0);
         end
