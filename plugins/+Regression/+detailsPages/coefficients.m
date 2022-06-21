@@ -20,22 +20,12 @@
 
 % !!! Only works for PLSR as regressor
 
-function [panel,updateFun] = coefficients(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = coefficients(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
+function populateGui(parent,project,dataprocessingblock)
     if ~dataprocessingblock.parameters.getByCaption('trained').value
         return
     end
@@ -57,11 +47,16 @@ function populateGui(elements,project,dataprocessingblock)
     featCap = cellstr(featCap(idx));
     X = categorical(featCap);
     X = reordercats(X,featCap);
-    bar(elements.hAx,X,coeffs);
-    set(elements.hAx,'TickLabelInterpreter','none');
+    
+    delete(parent.Children)
+    hAx = uiaxes(parent);
+    hAx.Layout.Column = 1; hAx.Layout.Row = 1;
+    
+    bar(hAx,X,coeffs);
+    set(hAx,'TickLabelInterpreter','none');
     
     %set(elements.hAx,'XTickLabel',featCap);
-    xtickangle(elements.hAx,20);
-    xlabel('feature');
-    ylabel('coefficient / a.u.')
+    xtickangle(hAx,20);
+    xlabel(hAx,'feature');
+    ylabel(hAx,'coefficient / a.u.')
 end
