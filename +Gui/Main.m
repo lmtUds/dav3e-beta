@@ -77,8 +77,8 @@ classdef Main < handle
             uimenu(mh,'Label','Save project', callback,@(varargin)obj.saveProject);
             uimenu(mh,'Label','Save project as...', callback,@(varargin)obj.saveProjectAs);
             m = uimenu(mh,'Label','Export', 'Separator','on');
-            uimenu(m,'Label','Data...',...
-                callback, []);
+%             uimenu(m,'Label','Data...',...
+%                 callback, []);
             uimenu(m,'Label','Data to workspace',...
                 callback, @obj.exportDataToWorkspace);
             uimenu(m,'Label','Full model data',...
@@ -212,6 +212,10 @@ classdef Main < handle
         
         function exportCycleRangesAndGroups(obj,varargin)
             [file, path] = uiputfile({'*.crg','CRG file'},'Choose Cycle Ranges and groupings file');
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -345,6 +349,10 @@ classdef Main < handle
         
         function exportFullModelData(obj,varargin)
             [file,path] = uiputfile({'*.mat'},'Save full model data');
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -360,6 +368,10 @@ classdef Main < handle
         
         function exportMergedFeature(obj,varargin)
             [file,path] = uiputfile({'*.mat'},'Save full model data');
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -567,6 +579,10 @@ classdef Main < handle
             
             if nargin < 2
                 [file,path] = uiputfile({'*.dave','DAV³E project'},'Save project file',oldPath);
+                % swap invisible shortly to regain window focus after
+                % uiputfile
+                obj.hFigure.Visible = 'off';
+                obj.hFigure.Visible = 'on';
                 if file == 0
                     return
                 end
