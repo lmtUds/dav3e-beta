@@ -18,22 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = performance(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = performance(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx);
+function populateGui(parent,project,dataprocessingblock)
     model = project.currentModel;
     model.trainingErrors;
     cap = {}; ind = {}; val = {};
@@ -56,16 +46,19 @@ function populateGui(elements,project,dataprocessingblock)
     red = [227,32,23] ./ 255;
     blue = [0,152,212] ./ 255;
     
+    delete(parent.Children)
+    ax = uiaxes(parent);
+    ax.Layout.Column = 1; ax.Layout.Row = 1;
     if isempty(ind)
-        b = bar(elements.hAx,...
+        b = bar(ax,...
             [model.trainingErrors,model.validationErrors,model.testingErrors] * factor);
-        hold(elements.hAx,'on');
+        hold(ax,'on');
         errors = [model.trainingErrorStds,model.validationErrorStds,model.testingErrorStds] * factor;
-        errorbar(elements.hAx,b.XData,b.YData,errors,'k','LineStyle','none');
-        set(elements.hAx,'XTickLabel',{'training error','validation error','testing error'});
-        ylabel(elements.hAx,label);
+        errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
+        ax.XTickLabel = {'training error','validation error','testing error'};
+        ylabel(ax,label);
         if all(isnan(model.testingErrors))
-            set(elements.hAx,'XTick',[1,2]);
+            ax.XTick = [1,2];
         end
         
     elseif numel(ind) == 1
@@ -73,16 +66,16 @@ function populateGui(elements,project,dataprocessingblock)
         x = [v{ind{1}}];
         y = model.trainingErrors * factor;
         yerr = model.trainingErrorStds * factor;
-        errorbar(elements.hAx,x,y,yerr,'ko--'); hold on;
+        errorbar(ax,x,y,yerr,'ko--'); hold on;
         y = model.validationErrors * factor;
         yerr = model.validationErrorStds * factor;
-        errorbar(elements.hAx,x,y,yerr,'rs--','color',red);
+        errorbar(ax,x,y,yerr,'rs--','color',red);
         y = model.testingErrors * factor;
         yerr = model.testingErrorStds * factor;
-        errorbar(elements.hAx,x,y,yerr,'b^--','color',blue);
+        errorbar(ax,x,y,yerr,'b^--','color',blue);
         c = strsplit(cap{1},'_'); xlabel(c{2});
-        ylabel(label);
-        legend(elements.hAx,{'training','validation','testing'});
+        ylabel(ax,label);
+        legend(ax,{'training','validation','testing'});
         
         errors.training = flip(model.trainingErrors);
         errors.validation = flip(model.validationErrors);
@@ -112,15 +105,15 @@ function populateGui(elements,project,dataprocessingblock)
         Z = zeros(numel(uy),numel(ux));
         idxs = sub2ind(size(Z),double(categorical(y)),double(categorical(x)));
         Z(idxs) = z;
-        surf(elements.hAx,ux,uy,Z);
+        surf(ax,ux,uy,Z);
         c = strsplit(cap{1},'_'); xlabel(c{2});
         c = strsplit(cap{2},'_'); ylabel(c{2});
-        zlabel(label);
+        zlabel(ax,label);
         
         half = linspace(.5,1,32)';
         full = linspace(1,1,32)';
         cm = flipud(([full,half,half;flipud([half,full,half])]));
-        colormap(elements.hAx,cm)
-        caxis([0 100]);
+        colormap(ax,cm)
+        caxis(ax,[0 100]);
     end
 end
