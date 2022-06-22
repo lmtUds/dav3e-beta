@@ -88,6 +88,10 @@ classdef CycleRanges < Gui.Modules.GuiModule
         function onClickImport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -126,6 +130,10 @@ classdef CycleRanges < Gui.Modules.GuiModule
         function onClickExport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
             if file == 0
                 return
             end
