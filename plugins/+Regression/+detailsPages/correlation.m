@@ -35,22 +35,24 @@ function populateGui(parent,project,dataprocessingblock)
 
         mymap = customClrMap();
 
-        limit = 9;
+        limit = min(9,numel(groupingCaptions));
         gas = cell(limit * numel(selFeat),1);
         features = cell(limit * numel(selFeat),1);
         correlation = zeros(limit * numel(selFeat),1);
         for j=1:limit
             for i = 1:numel(selFeat)
                 gas{(j-1)*numel(selFeat)+i,1} = groupingCaptions{j};
-                str = strsplit(featCap(rank(i)),'default/');
-                newStr = strrep(str(2),'_','-');
-                features{(j-1)*numel(selFeat)+i,1} = char(i+100+" "+newStr);
+                featNameParts = strsplit(featCap(rank(i)),'/'); %cluster/sensor/feature
+                featNameParts(3) = strrep(featNameParts(3),'_','-');
+                features{(j-1)*numel(selFeat)+i,1} = sprintf('%d %s/%s',...
+                                i+100,featNameParts(2),featNameParts(3));
                 correlation((j-1)*numel(selFeat)+i,1) = abs(corr(dat(:,rank(i)), groupings(:,j)));
             end
         end
 
         tbl = table(gas,features,correlation);
-
+        
+        delete(parent.Children)
         h = heatmap(parent,tbl,'features','gas','ColorVariable','correlation',...
                 'ColorLimits',[0 1],'Colormap',mymap);
         h.Layout.Column = 1; h.Layout.Row = 1;
