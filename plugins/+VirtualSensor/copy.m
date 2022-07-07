@@ -46,7 +46,6 @@ function updateParameters(params,project)
         % caption of the virtual sensor
         if strcmp(params(i).shortCaption, 'caption')
             params(i).value = virtual_sensor.caption;
-            params(i).updatePropGridField();
             params(i).onChangedCallback = @()changeCaption(params,project);
         % caption of the sensor
         elseif strcmp(params(i).shortCaption, 'sensor_caption')
@@ -55,7 +54,6 @@ function updateParameters(params,project)
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
-            params(i).updatePropGridField();
             params(i).onChangedCallback = @()updateParameters(params,project);
         % sensor object
         elseif strcmp(params(i).shortCaption, 'sensor')
@@ -67,12 +65,10 @@ function updateParameters(params,project)
                     
                 else
                    params(idSensorCaption).value = sensor.getCaption('cluster'); 
-                   params(idSensorCaption).updatePropGridField();
                 end
             else
                 params(i).value = sensor;
             end
-            params(i).updatePropGridField();
         end
     end
 end
@@ -84,7 +80,6 @@ function changeCaption(params,project)
             virtual_sensor = params(id).value;
             virtual_sensor.setCaption(params(i).value);
             params(i).value = virtual_sensor.getCaption();
-            params(i).updatePropGridField();
         end
     end
 end

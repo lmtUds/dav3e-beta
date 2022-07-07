@@ -145,7 +145,6 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = ~groupbasedVal;
-            params(i).updatePropGridField();
         % Testing
         elseif params(i).shortCaption == string('Testing')
             params(i).onChangedCallback = @()updateParameters(params,project);
@@ -155,34 +154,28 @@ function updateParameters(params,project)
             params(i).onChangedCallback = @()updateParameters(params,project);
             groupbasedTest = params(i).value;
             params(i).hidden = none;
-            params(i).updatePropGridField();
         elseif params(i).shortCaption == string('groupingTest')
             params(i).enum = cellstr(grouping_captions);
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = (~groupbasedTest && holdout) || none;
-            params(i).updatePropGridField();
             grouping = removecats(groupings(:,strcmp(grouping_captions,params(i).getValue())));
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('groupsTest')
              if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
                 params(i).enum = cellstr(categories(grouping));
                 params(i).value = params(i).enum;
-                params(i).updatePropGridField();
              end
              params(i).hidden = holdout || none;
-             params(i).updatePropGridField();
         elseif params(i).shortCaption == string('percentTest')
             params(i).hidden = ~holdout || none;
-            params(i).updatePropGridField();
         % evaluator
         elseif params(i).shortCaption == string('evaluator')
             params(i).onChangedCallback = @()updateParameters(params,project);
             plsr=strcmp(params(i).value, 'PLSR');
         elseif params(i).shortCaption == string('nCompPLSR')
             params(i).hidden = ~plsr;
-            params(i).updatePropGridField();
         end
     end
 end

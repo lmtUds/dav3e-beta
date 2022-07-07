@@ -31,7 +31,6 @@ classdef Parameter < Descriptions
     end
     
     properties (Transient)
-%         propGridField
         onChangedCallback
     end
     
@@ -67,16 +66,6 @@ classdef Parameter < Descriptions
             if isempty(obj.caption) || (obj.caption == string(''))
                 obj.setCaption(obj.shortCaption);
             end
-        end
-        
-        function updatePropGridField(obj)
-            if isempty(obj.propGridField)
-                return
-            end
-            obj.propGridField.enum = obj.enum;
-            obj.propGridField.value = obj.value;
-            obj.propGridField.visible = ~obj.hidden;
-            obj.propGridField.update();
         end
         
         function cap = getValueCaptions(obj)
