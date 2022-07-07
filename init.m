@@ -26,3 +26,4 @@ addpath(genpath('classes'));
 addpath(genpath('functions'));
 addpath(genpath('plugins'));
 addpath(genpath('toolboxes'));
+addpath(genpath('local'));
