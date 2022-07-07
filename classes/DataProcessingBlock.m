@@ -500,26 +500,7 @@ classdef DataProcessingBlock < Descriptions
             while ~isempty(b.nextBlock)
                 b = b.nextBlock;
             end            
-        end
-        
-        function pgf = makePropGridField(obj)
-            pgf = PropGridField(char(obj.getCaption()),'',...
-                    'UserData',obj,...
-                    'Editable',false,...
-                    'Category',char(obj.type));
-            pgf.setMatlabObj(obj);
-            for i = 1:numel(obj.parameters)
-                if obj.parameters(i).internal
-                    continue
-                end
-                prm = obj.parameters(i);
-%                 prmpgf = PropGridField(char(prm.getCaption()),prm.getValueCaptions(),...
-%                     'enum',prm.getEnumCaptions());
-%                 prmpgf.setMatlabObj(prm);
-                prmpgf = prm.makePropGridField();
-                pgf.addChild(prmpgf);
-            end
-        end        
+        end     
         
         function p = getByCaption(objArray,caption)
             p = objArray(objArray.getCaption() == caption);

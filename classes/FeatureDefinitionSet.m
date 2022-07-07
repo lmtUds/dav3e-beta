@@ -47,14 +47,6 @@ classdef FeatureDefinitionSet < Descriptions
             found = ismember(obj.featureDefinitions,featureDefinitions);
             obj.featureDefinitions(found) = [];
         end
-        
-        function pgf = makePropGridFields(obj)
-            pgf = PropGridField.empty;
-            for i = 1:numel(obj.featureDefinitions)
-                pgf(i) = obj.featureDefinitions(i).makePropGridFields();
-                pgf(i).setMatlabObj(obj.featureDefinitions(i));
-            end
-        end
                 
         function [fds,headers] = compute(obj,rawData,sensor)
 %             fds = FeatureDataSet();
