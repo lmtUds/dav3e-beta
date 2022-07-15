@@ -29,10 +29,5 @@ mkdir('../DAVEcompile');
 % -a ./FOLDER       add all project files in respective folder
 % -a ./*.m          add all local '.m' files
 % -d                set output directory
-% -a GUITOOLBOXPATH include Gui Layout Toolbox
-% 
-% GUITOOLBOXPATH needs to altered specific to the system DAVE is being
-% compiled on. Needs to point to GUI Layout Toolbox (>2014b) from
-% 'https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox'
-% example:'C:\Users\**User**\Documents\MATLAB\Add-Ons\Toolboxes\GUI Layout Toolbox'
-mcc -e -v -a ./+Gui -a ./classes -a ./functions -a ./plugins  -a ./toolboxes -a ./*.m -a GUITOOLBOXPATH -d '../DAVEcompile' 'DAVE.m'
+mcc -e -v -a ./+Gui -a ./classes -a ./functions -a ./plugins  ...
+    -a ./toolboxes -a ./*.m -d '../DAVEcompile' 'DAVE.m'
