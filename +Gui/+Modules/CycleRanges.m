@@ -90,8 +90,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
             [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
             % swap invisible shortly to regain window focus after
             % uigetfile
-            obj.hFigure.Visible = 'off';
-            obj.hFigure.Visible = 'on';
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -132,8 +132,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
             [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
             % swap invisible shortly to regain window focus after
             % uiputfile
-            obj.hFigure.Visible = 'off';
-            obj.hFigure.Visible = 'on';
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
