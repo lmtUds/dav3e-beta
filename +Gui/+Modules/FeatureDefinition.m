@@ -89,15 +89,18 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
-            figure; axes;
             d = obj.getProject().mergedFeatureData;
             data = d.data;
-%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
             offsets = (1:size(data,1))';
-            plot(repmat(offsets,1,size(data,2)),data);
-            l = legend(d.featureCaptions,'Interpreter','none');
-            l.ItemHitFcn = @obj.legendCallback;
-            xlabel('time / s'); ylabel('feature / a.u.');
+%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
+            
+            popOut = figure('Visible','off');
+            ax = axes(popOut);
+            plot(ax,repmat(offsets,1,size(data,2)),data);
+            legend(ax,d.featureCaptions,'Interpreter','none',...
+                'ItemHitFcn',@obj.legendCallback);
+            xlabel(ax,'time / s'); ylabel(ax,'feature / a.u.');
+            popOut.Visible = 'on';
         end
         
         function onClickMenuPlotFeaturesOverTimeStandardized(obj)
@@ -105,15 +108,18 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
-            figure; axes;
             d = obj.getProject().mergedFeatureData;
             data = (d.data - mean(d.data)) ./ std(d.data);
-%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
             offsets = (1:size(data,1))';
-            plot(repmat(offsets,1,size(data,2)),data);
-            l = legend(d.featureCaptions,'Interpreter','none');
-            l.ItemHitFcn = @obj.legendCallback;
-            xlabel('time / s'); ylabel('feature / a.u.');
+%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
+            
+            popOut = figure('Visible','off');
+            ax = axes(popOut);
+            plot(ax,repmat(offsets,1,size(data,2)),data);
+            legend(ax,d.featureCaptions,'Interpreter','none',...
+                'ItemHitFcn',@obj.legendCallback);
+            xlabel(ax,'time / s'); ylabel(ax,'feature / a.u.');
+            popOut.Visible = 'on';
         end
         
         function legendCallback(obj,src,evt)
