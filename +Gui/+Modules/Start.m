@@ -91,55 +91,38 @@ classdef Start < Gui.Modules.GuiModule
                 filterCell{i,1} = strjoin(extParam.getValue(),';');
                 filterCell{i,2} = char(blocks(i).getCaption());
             end
-%             mainPos = obj.main.hFigure.Position;
-%             chosenOne = choosedialog(mainPos);
-            chosenOne = 'simple';
-            if strcmp(chosenOne,'simple')
-                [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
-                % swap invisible shortly to regain window focus after
-                % uigetfile
-                obj.mainFigure.Visible = 'off';
-                obj.mainFigure.Visible = 'on';
-                
-                if path == 0
-                    return
-                end
-                oldPath = path;
-                if ~iscell(file)
-                    file = {file};
-                end
+            [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.mainFigure.Visible = 'off';
+            obj.mainFigure.Visible = 'on';
 
-                % statusbar (Working)
-%                 sb = statusbar(obj.main.hFigure,'Loading files...');
-%                 set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
-                prog = uiprogressdlg(obj.main.hFigure,...
-                    'Title','Loading Files','Indeterminate','on');
-                drawnow
-                
-                %perform the actual data import
-                obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
-                obj.getProject().clusters.getCaption();
-                %check for track clashes and put all sensors on separate tracks
-                %clashes they are likely as all data is
-                %put on the same "default" track on import
-                obj.resolveTracks();
-                
-                %fill the sensor data table
-                obj.main.populateSensorSetTable();
-
-                % statusbar (Ready)
-%                 sb = statusbar(obj.main.hFigure,'Ready.');
-%                 set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
-                close(prog)
-
-            % !!BETA!!: Automated multi file import is not implemented yet
-            % and therefore the selection dialog is currently also disabled.
-            elseif strcmp(chosenOne,'complex')
-                importPaths = pathsdialog(mainPos);
-                warning('No automated method available yet');
-            else
-                error('Unexpected return value for choosedialog()');
+            if path == 0
+                return
             end
+            oldPath = path;
+            if ~iscell(file)
+                file = {file};
+            end
+
+            % statusbar (Working)
+            prog = uiprogressdlg(obj.main.hFigure,...
+                'Title','Loading Files','Indeterminate','on');
+            drawnow
+
+            %perform the actual data import
+            obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
+            obj.getProject().clusters.getCaption();
+            %check for track clashes and put all sensors on separate tracks
+            %clashes are likely as all data is
+            %put on the same "default" track on import
+            obj.resolveTracks();
+
+            %fill the sensor data table
+            obj.main.populateSensorSetTable();
+
+            % statusbar (Ready)
+            close(prog)
         end
         
         function resolveTracks(obj)
