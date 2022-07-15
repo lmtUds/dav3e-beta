@@ -1,12 +1,12 @@
 # A New Home
 This repository was moved here from https://gitlab.com/manuel.bastuck/dav3e-beta. The old repository will stay available but will no longer be updated. Future development will take place here.
 # Quick Start
-* Download DAV³E and install the [GUI Layout Toolbox](https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox).
+* Download DAV³E.
 * Open [this example project](https://www.dropbox.com/s/p1ybuayfz6aw3mr/project_UST.zip?dl=0) in DAV³E to see how the [data described here](http://doi.org/10.5281/zenodo.1411209) have been evaluated.
 * Import and evaluate your own cyclic data. 
 * In case of problems, consult the [readme](#readme) or the [developers](mailto:dev@lmt.uni-saarland.de).
 # Compatibility
-MATLAB 2016b+ with Toolboxes:
+MATLAB 2020b+ with Toolboxes:
 * Image Processing Toolbox
 * Statistics and Machine Learning Toolbox
 * Deep Learning Toolbox (former Neural Network Toolbox)
