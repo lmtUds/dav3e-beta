@@ -173,20 +173,44 @@ classdef CycleRanges < Gui.Modules.GuiModule
             changes = sort([change,change+1]);
             changes = [1,changes,size(data,1)];
             nRanges = numel(changes)/2;
-            
+            rLimit = 2000;
+            if nRanges > rLimit
+                msg = sprintf([ 'Detected %d ranges to create.\n',...
+                                'This exceedes the limit of %d.\n',...
+                                'Processing this many ranges may lock up DAVE.'],...
+                                nRanges,rLimit); 
+                sel = uiconfirm(obj.main.hFigure,...
+                    msg,'Large range count',...
+                    'Options',{'Compute Anyway','Cancel'},...
+                    'Icon','warning');
+                if strcmp(sel,'Cancel')
+                    return
+                end
+            end
             cr = Range.empty;
             groupColors=[];
-            for ridx = 1:1:nRanges
-                beginTime(ridx) = offset+changes(1+2*(ridx-1))*samplingPeriod;
-                endTime(ridx) = offset+changes(2+2*(ridx-1))*samplingPeriod;
-                cr(ridx) = Range([beginTime(ridx), endTime(ridx)]);
-                cr(ridx).setCaption(data(round((changes(1+2*(ridx-1))+changes(2+2*(ridx-1)))/2)))
-                groupCaptions=strsplit(sensor.getCaption, ' ');
-                groupCaptions=groupCaptions(1,1);
-%                 rng(str2num(cr(ridx).getCaption())); %sets seed for random
-%                 color; works only as expected for integer data; not
-%                 absolutely necessary anyway
-                groupColors{ridx,1}=rand(1,3);
+            progDlg = uiprogressdlg(obj.main.hFigure,...
+                'Title','Ranges are being created...',...
+                'Message',sprintf('Creating range 1 of %d',nRanges));
+            try
+                for ridx = 1:1:nRanges
+                    beginTime(ridx) = offset+changes(1+2*(ridx-1))*samplingPeriod;
+                    endTime(ridx) = offset+changes(2+2*(ridx-1))*samplingPeriod;
+                    cr(ridx) = Range([beginTime(ridx), endTime(ridx)]);
+                    cr(ridx).setCaption(data(round((changes(1+2*(ridx-1))+changes(2+2*(ridx-1)))/2)))
+                    groupCaptions=strsplit(sensor.getCaption, ' ');
+                    groupCaptions=groupCaptions(1,1);
+    %                 rng(str2num(cr(ridx).getCaption())); %sets seed for random
+    %                 color; works only as expected for integer data; not
+    %                 absolutely necessary anyway
+                    groupColors{ridx,1}=rand(1,3);
+                    progDlg.Value = ridx / nRanges;
+                    progDlg.Message = sprintf('Creating range %d of %d',...
+                                                ridx,nRanges);
+                end
+                close(progDlg)
+            catch %make sure progDlg is closed
+                close(progDlg)
             end
            
             obj.addRange([],cr);
