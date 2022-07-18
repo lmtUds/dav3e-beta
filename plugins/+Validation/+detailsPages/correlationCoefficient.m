@@ -49,10 +49,10 @@ function populateGui(parent,project,dataprocessingblock)
     delete(parent.Children)
     ax = uiaxes(parent);
     ax.Layout.Column = 1; ax.Layout.Row = 1;
+    hold(ax,'on');
     if isempty(ind)
         b = bar(ax,...
             [model.trainingCorrs,model.validationCorrs,model.testingCorrs] * factor);
-        hold(ax,'on');
         errors = [model.trainingCorrStds,model.validationCorrStds,model.testingCorrStds] * factor;
         errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
         ax.XTickLabel = {'training error','validation error','testing error'};
