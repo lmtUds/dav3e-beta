@@ -345,6 +345,8 @@ classdef Project < handle
             data.featureSelection(invalid) = [];
             data.featureCaptions(invalid) = [];
             data.data(:,invalid) = [];
+%             %potential fiy for github issue #3
+%             data.groupings(isundefined(data.groupings)) = '<ignore>';
             obj.mergedFeatureData = data;
         end
         
