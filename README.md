@@ -12,6 +12,7 @@ MATLAB 2020b+ with Toolboxes:
 * Deep Learning Toolbox (former Neural Network Toolbox)
 * Signal Processing Toolbox
 * Wavelet Toolbox (only if you want to use the feature extraction method: best daubechies wavelets)
+* Curve Fitting Toolbox (only if you want to use the feature extraction method: gaussfit)
 # Readme
 DAV³E stands for "Data Analysis and Verification/Visualization/Validation Environment". It is a MATLAB-based toolbox for the evaluation of, mainly, cyclic sensor signals. It focuses on cycle-based raw data preprocessing, graphical feature extraction, and data annotation, but also provides commonly used machine learning methods (with cycle-specific extensions) to develop data-driven models. This allows for a sleek workflow from start to finish without having to change to third-party tools.
 
