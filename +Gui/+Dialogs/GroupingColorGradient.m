@@ -35,28 +35,47 @@ function GroupingColorGradient(main,module)
     end
     fig = uifigure('Name','Grouping color gradient',...
         'Visible','off','WindowStyle','modal');
-    grid = uigridlayout(fig,[4 1],'RowHeight',{'1x',22,'1x',22});
+    grid = uigridlayout(fig,[4 2],'RowHeight',{'1x',22,'1x',22});
 
-    clrPicker = uibutton(grid,'BackgroundColor',[0 0 1],...
+    clrPicker1 = uibutton(grid,'BackgroundColor',[0 0 1],...
         'ButtonPushedFcn',@(src,event) PickColor(src, event,main,fig),...
-        'Text','Click to set base color',...
+        'Text','Click to set base color 1',...
         'FontWeight','bold','FontSize',24);
-
+    clrPicker1.Layout.Column = 1;
+    clrPicker1.Layout.Row = 1;
+    
+    clrPicker2 = uibutton(grid,'BackgroundColor',[0 0 1],...
+        'ButtonPushedFcn',@(src,event) PickColor(src, event,main,fig),...
+        'Text','Click to set base color 2',...
+        'FontWeight','bold','FontSize',24);
+    clrPicker2.Layout.Column = 2;
+    clrPicker1.Layout.Row = 1;
+    
     infoLabel = uilabel(grid,...
         'Text','The selected groups will be ignored for color gradient',...
         'HorizontalAlignment','center');
+    infoLabel.Layout.Column = [1 2];
+    infoLabel.Layout.Row = 2;
+    
     grouping = module.currentGrouping;
     groupList = uilistbox(grid,...
         'Items',deStar(grouping.getDestarredCategories()),...
         'Value',{},'MultiSelect','on');
+    groupList.Layout.Column = [1 2];
+    groupList.Layout.Row = 3;
+    
     applyButton = uibutton(grid,'Text','Create gradient from base color',...
-        'ButtonPushedFcn',@(src,event) ApplyClr(src,event,groupList,module,clrPicker));
-
+        'ButtonPushedFcn',@(src,event) ApplyClr(src,event,groupList,module,clrPicker1,clrPicker2));
+    applyButton.Layout.Column = [1 2];
+    applyButton.Layout.Row = 4;
+    
     fig.Visible = 'on';
-    function ApplyClr(src,event,groupList,module,clrPicker)
-        clr = clrPicker.BackgroundColor();
+    
+    function ApplyClr(src,event,groupList,module,clrPicker1,clrPicker2)
+        clr1 = clrPicker1.BackgroundColor();
+        clr2 = clrPicker2.BackgroundColor();
         ignoreGroups = groupList.Value;
-        module.currentGrouping.makeColorGradientHSV(clr,ignoreGroups);
+        module.currentGrouping.makeColorGradientHSV(clr1,clr2,ignoreGroups);
         module.populateGroupsTable();
         module.updateRangeColors();
     end
