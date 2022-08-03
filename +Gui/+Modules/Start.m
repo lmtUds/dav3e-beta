@@ -131,14 +131,17 @@ classdef Start < Gui.Modules.GuiModule
             
             %extract track names
             tracks = arrayfun(@(x) x.track, obj.getProject().clusters);
+            if ~iscolumn(tracks)
+                tracks = tracks';
+            end
             %as long as duplicates remain we need to alter names
-            while length(unique(tracks)) ~= length(tracks)
+            while numel(unique(tracks)) ~= numel(tracks)
                 %loop through unique track names to find duplicate groups
                 uTracks = unique(tracks);
-                for i = 1:length(uTracks)
+                for i = 1:numel(uTracks)
 %                    occ = contains(tracks,uTracks(i));
                    occ = matches(tracks,uTracks(i));
-                   if sum(occ) > 1 %for if really a duplicate
+                   if sum(occ) > 1 %if really a duplicate
                        %enumerate all duplicates in the group by appending an
                        %increasing number
                        tracks(occ) = strcat(tracks(occ),string(1:sum(occ))');
