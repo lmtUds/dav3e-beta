@@ -67,6 +67,7 @@ classdef Main < handle
                 'Color','w',...
                 'CloseReq',@(h,e)obj.delete);
             f.Units = 'pixels';
+            f.Visible = 'off';            
             obj.hFigure = f;
             
             % menubar
@@ -113,7 +114,10 @@ classdef Main < handle
             uimenu(mh,'Label','Very wide Plot',callback,@obj.openVeryWidePlot);
             
             % statusbar
-            prog = uiprogressdlg(f,'Title','Initialize',...
+            proxyF = uifigure(...
+                'Name', 'Initialization',...
+                'NumberTitle', 'off');
+            prog = uiprogressdlg(proxyF,'Title','Initialize',...
                 'Indeterminate','on');
             drawnow
             
@@ -171,6 +175,9 @@ classdef Main < handle
             obj.moduleSidebar.Children(1).FontWeight = 'bold';
             
             close(prog)
+            delete(proxyF)
+            
+            obj.hFigure.Visible = 'on';
         end
  
         function importGasmixerFile(obj,varargin)
