@@ -373,6 +373,16 @@ classdef Grouping < Gui.Modules.GuiModule
             t.ColumnFormat = {'char','char'};
             t.ColumnEditable = [true true];
             
+            if size(clrArray,1) > 1
+                for i = 1:size(clrArray,1)
+                    s = uistyle('BackgroundColor',clrArray(i,:));
+                    addStyle(t,s,'cell',[i 2])
+                end
+            else
+                s = uistyle('BackgroundColor',clrArray);
+                addStyle(t,s,'column',2)
+            end
+            
             t.CellEditCallback = @(src,event) obj.groupsTableDataChanged(src,event);
             t.CellSelectionCallback = @(src,event) obj.groupsTableClicked(src,event);
             
@@ -486,6 +496,8 @@ classdef Grouping < Gui.Modules.GuiModule
                         rgbClr = str2clr(event.PreviousData);
                         src.Data{row,col} = event.PreviousData;
                     end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row column]);
                     obj.currentGrouping.setColor(key,rgbClr);
                     obj.currentGrouping.updateColors();
                     obj.updateRangeColors();
@@ -512,6 +524,8 @@ classdef Grouping < Gui.Modules.GuiModule
                     disp(ME)
                     rgbClr = origClr;
                 end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
                 obj.currentGrouping.setColor(key{:},rgbClr);                
                 obj.updateRangeColors();
             end

@@ -362,6 +362,18 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 ind = tableColSort(t,4,'a');
                 gRanges = gRanges(ind);
             end
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 6])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',6)
+                end
+            end
             obj.rangeTable.CellEditCallback = @(src,event) obj.rangeTableDataChangeCallback(src,event);
             obj.rangeTable.CellSelectionCallback = @(src,event) obj.rangeTableMouseClickedCallback(src,event);
         end
@@ -373,11 +385,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
             row = ismember(obj.rangeTable.UserData,gRange);
             pos = gRange.getPosition();
             time_pos = gRange.getTimePosition();
+            clr = gRange.getObject().getColorCell();
             obj.rangeTable.Data{row,2} = pos(1);
             obj.rangeTable.Data{row,3} = pos(2);
             obj.rangeTable.Data{row,4} = time_pos(1);
             obj.rangeTable.Data{row,5} = time_pos(2);
+            obj.rangeTable.Data{row,6} = clr2str(clr{:});
             tableColSort(obj.rangeTable,4,'a');
+            obj.populateRangeTable(obj.ranges);
         end
         
         function cycleRangeDragStartCallback(obj,gObj)
@@ -402,6 +417,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
 %             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
 %             obj.rangeTable.setCallbacksActive(true);
             tableColSort(obj.rangeTable,4,'a');
+            obj.populateRangeTable(obj.ranges);
             obj.rangeTable.Enable = 'on';
 %             obj.rangeTable.jTable.sortColumn(4);
         end
@@ -439,6 +455,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
                         rgbClr = str2clr(event.PreviousData);
                         src.Data{row,col} = event.PreviousData;
                     end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row column]);
                     rangeObj.setColor(rgbClr);
             end
             tableColSort(src,4,'a');
@@ -460,6 +478,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
                     disp(ME)
                     rgbClr = origClr;
                 end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
                 
                 rangeObj.setColor(rgbClr);
             end

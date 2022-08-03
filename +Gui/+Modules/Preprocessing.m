@@ -924,6 +924,19 @@ classdef Preprocessing < Gui.Modules.GuiModule
 
             ind = tableColSort(t,3,'a');
             obj.cyclePoints = obj.cyclePoints(ind);
+                        
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 4])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',4)
+                end
+            end
 %             t.setSortingEnabled(false)
 %             t.setFilteringEnabled(false);
 %             t.setColumnReorderingAllowed(false);
@@ -959,8 +972,22 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t.ColumnEditable = [true true true];
             t.Data = data;
             t.UserData = gPoints;
+            
             ind = tableColSort(t,2,'a');
             obj.indexPoints = obj.indexPoints(ind);
+            
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 3])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',3)
+                end
+            end
 %             t.setData(data,{'caption','point','color'});
 %             t.setRowObjects(gPoints);
 %             t.setColumnClasses({'str','double','clr'});
@@ -990,6 +1017,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.cyclePointTable.Data{idx,3} = gPoint.getTimePosition();
             ind = tableColSort(obj.cyclePointTable,3,'a');
             obj.cyclePoints = obj.cyclePoints(ind);
+            obj.populateCyclePointsTable();
         end
         
         function indexPointDraggedCallback(obj,gPoint)
@@ -1001,6 +1029,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.indexPointTable.Data{idx,2} = gPoint.getPosition();
             ind = tableColSort(obj.indexPointTable,2,'a');
             obj.indexPoints = obj.indexPoints(ind);
+            obj.populateIndexPointsTable();
         end
 
         function cyclePointDragStartCallback(obj,gObj)
@@ -1099,6 +1128,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         rgbClr = str2clr(event.PreviousData);
                         src.Data{row,col} = event.PreviousData;
                     end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row col]);
                     cPoint.setColor(rgbClr);
                     idx = ismember(obj.cyclePoints,cPoint);
                     obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
@@ -1122,6 +1153,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
                     disp(ME)
                     rgbClr = origClr;
                 end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
                 
                 cPoint.setColor(rgbClr);
                 idx = ismember(obj.cyclePoints,cPoint);
@@ -1166,6 +1199,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
                         rgbClr = str2clr(event.PreviousData);
                         src.Data{row,col} = event.PreviousData;
                     end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row col]);
                     iPoint.setColor(rgbClr);
                     idx = ismember(obj.indexPoints,iPoint);
                     obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
@@ -1189,7 +1224,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
                     disp(ME)
                     rgbClr = origClr;
                 end
-                
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
                 iPoint.setColor(rgbClr);
                 idx = ismember(obj.indexPoints,iPoint);
                 obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
