@@ -59,11 +59,11 @@ function Clusters(main)
             case 2
                 cluster.track = event.EditData;
             case 3
-                cluster.offset = event.EditData;
+                cluster.offset = event.NewData;
                 iOffset = cluster.getAutoIndexOffset(main.project.clusters);
                 cluster.indexOffset = iOffset;                        
             case 4
-                cluster.samplingPeriod = event.EditData;
+                cluster.samplingPeriod = event.NewData;
         end
     end
     function Refresh(main,table)
