@@ -578,15 +578,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         function onCurrentCyclePointSetChanged(obj,cps)
-            obj.cyclePointSetDropdown.setSelectedItem(cps.getCaption());
+            obj.cyclePointSetDropdown.Valus = char(cps.getCaption());
         end
         
         function onCurrentIndexPointSetChanged(obj,ips)
-            obj.indexPointSetDropdown.setSelectedItem(ips.getCaption());
+            obj.indexPointSetDropdown.Value = char(ips.getCaption());
         end
         
         function onCurrentPreprocessingChainChanged(obj,ppc)
-            obj.setDropdown.setSelectedItem(ppc.getCaption());
+            obj.setDropdown.Value = char(ppc.getCaption());
         end
         
         function val = get.currentPreprocessingChain(obj)
