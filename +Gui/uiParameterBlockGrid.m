@@ -297,9 +297,28 @@ classdef uiParameterBlockGrid < matlab.ui.componentcontainer.ComponentContainer
                                         case 'multiple'
                                             %gather how many of the allowed
                                             %multiples were selected
-                                            selectRatioText = ...
-                                                ['Sel. ',num2str(max(size(p.value))),...
-                                                '/',num2str(max(size(p.enum)))];
+%                                             selectRatioText = ...
+%                                                 ['Sel. ',num2str(max(size(p.value))),...
+%                                                 '/',num2str(max(size(p.enum)))];
+                                            selectRatioText = '';
+                                            for v = 1:numel(p.value)
+                                                if iscell(p.value)
+                                                    pval = p.value{v};
+                                                else
+                                                    pval = p.value(v);
+                                                end
+                                                if isnumeric(pval)
+                                                    pval = num2str(pval);
+                                                end
+                                                if v == 1 
+                                                    selectRatioText = [selectRatioText,...
+                                                                       char(pval)]; 
+                                                else
+                                                    selectRatioText = [selectRatioText,...
+                                                                       ',',...
+                                                                       char(pval)]; 
+                                                end
+                                            end
                                             %create a button to invoke a
                                             %selection dialog
                                             paramEntry = uibutton(grid,...
