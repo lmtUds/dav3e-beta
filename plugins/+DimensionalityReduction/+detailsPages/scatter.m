@@ -30,13 +30,13 @@ function elements = makeGui(parent)
     hAx = uiaxes(grid);
     hAx.Layout.Column = 1; hAx.Layout.Row = 1;
     elements.hAx = hAx;
-    spinButton = uibutton(grid,'Text','Start spin',...
-        'ButtonPushedFcn',@(src,event)spinAxes(src,event,hAx),...
-        'Interruptible',true,'BusyAction','cancel');
-    spinButton.Layout.Column = 1; spinButton.Layout.Row = 2;
-    setappdata(spinButton,'spinning',0);    % current plot spinning state
-    setappdata(spinButton,'degree',0);      % degrees covered by the spin
-    elements.spinButton = spinButton;
+%     spinButton = uibutton(grid,'Text','Start spin',...
+%         'ButtonPushedFcn',@(src,event)spinAxes(src,event,hAx),...
+%         'Interruptible',true,'BusyAction','cancel');
+%     spinButton.Layout.Column = 1; spinButton.Layout.Row = 2;
+%     setappdata(spinButton,'spinning',0);    % current plot spinning state
+%     setappdata(spinButton,'degree',0);      % degrees covered by the spin
+%     elements.spinButton = spinButton;
 end
 
 function populateGui(elements,project,dataprocessingblock)
