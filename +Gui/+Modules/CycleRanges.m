@@ -214,6 +214,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 close(progDlg)
             end
            
+            if numel(obj.main.project.groupings)==1
+                if strcmp(obj.main.project.groupings.caption,'grouping')
+                    if isempty(obj.main.project.groupings.ranges)
+                        obj.main.project.removeGrouping(obj.main.project.groupings)
+                    end
+                end
+            end
+            
             obj.addRange([],cr);
             
              for i = 1:numel(groupCaptions)
