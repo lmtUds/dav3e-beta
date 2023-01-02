@@ -867,7 +867,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             % get rid of feature offset for graphing
             for i = 1:size(y,2)
-                y(:,i) = y(:,i) - nanmean(y(:,i));%zscore(y(:,i));
+                y(:,i) = y(:,i) - mean(y(:,i),'omitnan');%zscore(y(:,i));
             end
             
             %set preview line data and make it visible
