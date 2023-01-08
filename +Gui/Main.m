@@ -536,11 +536,14 @@ classdef Main < handle
             end
             
             function selectCallback(src, event, sensors, obj)
-                row = event.Indices(1);
-                newSensor = sensors(row);
-                prevSensor = obj.project.getCurrentSensor();
-                prevCluster = prevSensor.getCluster();
-                
+                if isempty(event.Indices) 
+                    return
+                else
+                    row = event.Indices(1);
+                    newSensor = sensors(row);
+                    prevSensor = obj.project.getCurrentSensor();
+                    prevCluster = prevSensor.getCluster();
+                end
                 newSensor.setCurrent();
                 newSensor.getCluster().setCurrent();
                 
