@@ -413,10 +413,13 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function groupingTableColumnSelectionChanged(obj,src,event)
-            row = event.Indices(1,1);
-            column = event.Indices(1,2);
-            g = src.UserData(column);
-            
+            if isempty(event.Indices)
+                return
+            else
+                row = event.Indices(1,1);
+                column = event.Indices(1,2);
+                g = src.UserData(column);
+            end
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
