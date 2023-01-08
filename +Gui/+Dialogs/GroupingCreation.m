@@ -105,6 +105,7 @@ function GroupingCreation(main,module)
         p.createGroupingFrom(baseGrouping,maskGrouping,maskCats,action);
         module.populateGroupingTable();
         module.populateGroupsTable();
+        delete(fig);
     end
     function UpdateList(src,event,list,main)
         gps = main.project.groupings;
