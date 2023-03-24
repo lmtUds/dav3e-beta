@@ -270,11 +270,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.indexPointSetDropdown = qsPointsDropdown;
             obj.indexPointTable = qsPointsTable;
             
-            chainTabGP = uitabgroup(moduleLayout);
+            chainTabGP = uitabgroup(moduleLayout,'AutoResizeChildren','off');
             chainTabGP.Layout.Row = [7 22];
             chainTabGP.Layout.Column = 1;
             % create and fill the grid layout of the 'preprocessing chain' section
-            chainTab = uitab(chainTabGP,'Title','Preprocessing Chain');
+            chainTab = uitab(chainTabGP,'Title','Preprocessing Chain','AutoResizeChildren','off');
             chainGrid = uigridlayout(chainTab, [15 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
                 'RowHeight',{'1x','6x','1x'},...
@@ -317,7 +317,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.propGrid = PropGrid(propGridPanel);
             obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid,...
                 'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
-                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
+                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event));%,...
+                %);
             obj.propGrid.Layout.Row = [2 14];
             obj.propGrid.Layout.Column = [1 4];
 %             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
@@ -701,6 +703,14 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.main.populateSensorSetTable();
             end
         end        
+        %% sizeChanged Callback
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,0,9,35]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+            %disp('Resized')
+        end
         %% dropdown callbacks for cycle point sets
         function dropdownNewCyclePointSet(obj,src,event,dropdown)
             cps = obj.getProject().addCyclePointSet();
