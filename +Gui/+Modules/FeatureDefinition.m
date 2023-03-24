@@ -295,7 +295,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function sizechangedCallback(obj, src, event)
             obj.propGrid.panel.Visible = 'off';
             pos_parent = obj.propGrid.Position;
-            obj.propGrid.panel.Position = pos_parent - [0,0,9,35]; %values possibly subject to change 
+            obj.propGrid.panel.Position = pos_parent - [0,0,9,50]; %values possibly subject to change 
             obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
         end
         
