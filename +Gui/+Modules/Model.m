@@ -78,7 +78,7 @@ classdef Model < Gui.Modules.GuiModule
             %leftmost column
             defsGrid = uigridlayout(moduleLayout, [5 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','12x','1x','2x'},...
+                'RowHeight',{'1x','1x','15x','1x','2x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
             defsGrid.Layout.Row = 1;
@@ -113,7 +113,8 @@ classdef Model < Gui.Modules.GuiModule
 %             propGridPanel.Layout.Column = [1 4];
 
             obj.propGrid = Gui.uiParameterBlockGrid('mainFigure',obj.main.hFigure,'Parent',defsGrid,...
-                'ValueChangedFcn',@(src,event) obj.updatePropGrid());%,...
+                'ValueChangedFcn',@(src,event) obj.updatePropGrid(),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event)););%,...
 %                 'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
             obj.propGrid.Layout.Row = 3;
             obj.propGrid.Layout.Column = [1 4];
@@ -185,7 +186,14 @@ classdef Model < Gui.Modules.GuiModule
             parameterPanel.Layout.Column = 3;
             obj.parametersDropdownPanel = parameterPanel;
         end
-
+        
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,110,9,50]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+        end
+        
         function addModelChainBlock(obj,desc)
             if nargin < 2
                 methods = Model.getAvailableMethods(true);
