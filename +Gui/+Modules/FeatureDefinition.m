@@ -173,7 +173,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                         
             defsGrid = uigridlayout(moduleLayout, [4 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','5x','1x'},...
+                'RowHeight',{'1x','1x','8x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
             defsGrid.Layout.Row = 1;
@@ -207,7 +207,8 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             defsRem.Layout.Column = 4;
             
             propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid,...'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
-                'SelectionChangedFcn',@(src,event) obj.propGridFieldClickedCallback(src,event));
+                'SelectionChangedFcn',@(src,event) obj.propGridFieldClickedCallback(src,event),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event));
             propGrid.Layout.Row = 3;
             propGrid.Layout.Column = [1 4];
             
@@ -239,7 +240,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                         
             rangeGrid = uigridlayout(moduleLayout, [4 2],...
                 'ColumnWidth',{'2x','1x'},...
-                'RowHeight',{'1x','1x','5x','1x'},...
+                'RowHeight',{'1x','1x','8x','1x'},...
                 'RowSpacing',4,...
                 'Padding',[4 4 4 4]);
             rangeGrid.Layout.Row = 2;
@@ -290,7 +291,14 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             obj.hAxCycle = cycleAx;
         end
-
+        
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,0,9,35]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+        end
+        
         function copyRangesCallback(obj)
             obj.copiedRangeInfo = obj.ranges.getObject().toStruct();
         end
