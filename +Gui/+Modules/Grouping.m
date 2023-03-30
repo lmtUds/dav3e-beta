@@ -105,7 +105,7 @@ classdef Grouping < Gui.Modules.GuiModule
            
             obj.hAx = groupAx;
             
-            groupingTable = uitable(moduleLayout);
+            groupingTable = uitable(moduleLayout,'ColumnRearrangeable','on');
             groupingTable.Layout.Row = [2 3];
             groupingTable.Layout.Column = 1;
             
