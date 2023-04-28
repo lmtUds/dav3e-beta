@@ -85,7 +85,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
             % create a grid layout for the preprocessing panel
-            moduleLayout = uigridlayout(uiParent,[22 2],...
+            moduleLayout = uigridlayout(uiParent,[1 2],...
                 'Visible','off',...
                 'Padding',[0 0 0 0],...
                 'ColumnWidth',{'3x','8x'},...
@@ -98,11 +98,23 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 'Label','global y-limits',...
                 'Checked','off',...
                 getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
-                        
+            
+            ctrlGrid = uigridlayout(moduleLayout,[2 1],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x'},...
+                'RowHeight',{180,'1x'},'RowSpacing',7);
+            ctrlGrid.Layout.Column = 1;
+            
+            axGrid = uigridlayout(moduleLayout,[2 1],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x'},...
+                'RowHeight',{'1x'}, 'RowSpacing',7);
+            axGrid.Layout.Column = 2;
+            
             % create and fill the grid layout of the 'compare with' section
-            mainTabGp = uitabgroup(moduleLayout);
-            mainTabGp.Layout.Row = [1 6];
-            mainTabGp.Layout.Column = 1;
+            mainTabGp = uitabgroup(ctrlGrid);
+            mainTabGp.Layout.Row = 1;
+            %mainTabGp.Layout.Column = 1;
             
             cmpTab = uitab(mainTabGp,'Title','Compare/Points');
             cmpTabGrid = uigridlayout(cmpTab,[2 1],...
@@ -270,9 +282,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.indexPointSetDropdown = qsPointsDropdown;
             obj.indexPointTable = qsPointsTable;
             
-            chainTabGP = uitabgroup(moduleLayout,'AutoResizeChildren','off');
-            chainTabGP.Layout.Row = [7 22];
-            chainTabGP.Layout.Column = 1;
+            chainTabGP = uitabgroup(ctrlGrid,'AutoResizeChildren','off');
+            chainTabGP.Layout.Row = 2;
+            %chainTabGP.Layout.Column = 1;
             % create and fill the grid layout of the 'preprocessing chain' section
             chainTab = uitab(chainTabGP,'Title','Preprocessing Chain','AutoResizeChildren','off');
             chainGrid = uigridlayout(chainTab, [3 4],...
@@ -350,9 +362,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             % fill out right side of PP-Module with quasistatic and cycle
             % plots 
-            qsAx = uiaxes(moduleLayout);
-            qsAx.Layout.Row = [1 11];
-            qsAx.Layout.Column = 2;
+            qsAx = uiaxes(axGrid);
+            qsAx.Layout.Row = 1;
+            qsAx.Layout.Column = 1;
             qsAx.Title.String = 'Quasistatic signal';
             qsAx.XLabel.String = 'Cycle number';
             qsAx.YLabel.String = 'Data / a.u.';
@@ -360,9 +372,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             obj.hAxQuasistatic = qsAx;
             
-            cyAx = uiaxes(moduleLayout);
-            cyAx.Layout.Row = [12 22];
-            cyAx.Layout.Column = 2;
+            cyAx = uiaxes(axGrid);
+            cyAx.Layout.Row = 2;
+            cyAx.Layout.Column = 1;
             cyAx.Title.String = 'Selected cycles';
             cyAx.XLabel.String = 'Time /s';
             cyAx.YLabel.String = 'Data / a.u.';
