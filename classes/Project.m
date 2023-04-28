@@ -236,7 +236,12 @@ classdef Project < handle
         function createGroupingFrom(obj,baseGrouping,maskGrouping,maskCats,action)
             new = obj.addGrouping();
             new.vals = baseGrouping.vals;
-            new.colors = baseGrouping.colors;
+%             %new.colors = baseGrouping.colors;
+%             new.updateColors();
+            tempKeys = baseGrouping.colors.keys;
+            tempColors = baseGrouping.colors.values;
+            new.colors = containers.Map(tempKeys,tempColors);
+
             new.setCaption(baseGrouping.getCaption());
             obj.makeCaptionsUnique(new,obj.groupings);
             
@@ -248,12 +253,13 @@ classdef Project < handle
                 case '*'
                     for i = 1:numel(new.vals)
                         if mask(i)
-                            new.vals(i) = [char(new.vals(i)) '*'];
+                            new.vals(i) = [char(new.vals(i)) '*'];    
                         end
                     end
                 otherwise
                     error('Unknown action argument.');
             end
+            new.updateColors();
         end
         
         function featData = computeFeatures(obj)
