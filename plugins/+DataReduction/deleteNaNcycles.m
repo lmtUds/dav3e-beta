@@ -40,9 +40,10 @@ function [data,params] = apply(data,params)
 %     warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
     d = data.data; 
     t = data.target;
-    [nanCyc,~] = find(isnan(d)==1);
-    nanTar = find(isnan(t)==1);
-    params.a = unique([nanCyc;nanTar]);
+    [nanCyc,~] = find(isnan(d));
+    nanTar = find(ismember(t,'NaN'));
+    undefTar = find(isundefined(t));
+    params.a = unique([nanCyc;nanTar;undefTar]);
     data.reduceData(@reduceFun, params.a);
 end
 
