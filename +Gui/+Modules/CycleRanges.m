@@ -49,7 +49,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
             uimenu(menu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
             uimenu(menu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
-            uimenu(menu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
+            uimenu(menu,'Label','make cycle ranges and grouping from selected ("binary") sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
 
             layout = uiextras.VBox('Parent',panel);
             
@@ -149,7 +149,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             caps = data(changes);
 
 % Only data with the values 0 and 1 are used to make cycle ranges
-% ("digital" approach); comment these lines out to create cycle ranges of
+% ("binary" approach); comment these lines out to create cycle ranges of
 % non-digital data; however, note that these should contain a very limited
 % number of (stable) values (best: integers), as every change/new value is 
 % assigned to a new cycle range (i.e., takes long if there are, e.g., a lot 
