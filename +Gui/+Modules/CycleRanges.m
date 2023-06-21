@@ -174,6 +174,14 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 end
             end
             
+            if numel(obj.main.project.groupings)==1
+                if strcmp(obj.main.project.groupings.caption,'grouping')
+                    if isempty(obj.main.project.groupings.ranges)
+                        obj.main.project.removeGrouping(obj.main.project.groupings)
+                    end
+                end
+            end
+            
             for cridx=numel(cr):-1:1
                 if sum(cr(1,cridx).timePosition)==0
                     cr(cridx)=[];
