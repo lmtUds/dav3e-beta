@@ -139,34 +139,48 @@ classdef CycleRanges < Gui.Modules.GuiModule
             data = data';
             data = data(:);
             
-%             if numel(unique(data))>2
-%                 warning('This function is limited to a sensor that only has the values 0 and 1.')
-%                 return;
-%             end
-            
-%             lastOff = find(diff(data) == 1);
-%             lastOn = find(diff(data) == -1);
-%             changes = sort([[lastOff,lastOn],[lastOff,lastOn]+1]);
             change = find(diff(data) ~= 0)';
             changes = sort([change,change+1]);
             changes = [1,changes,size(data,1)];
+%             nRanges = numel(changes)/2;
+            
+            times = offset+changes*samplingPeriod; %v1
+%             times = offset+([0,sort([change,change]),size(data,1)])*samplingPeriod; %v2
+            caps = data(changes);
+
+% Only data with the values 0 and 1 are used to make cycle ranges
+% ("digital" approach); comment these lines out to create cycle ranges of
+% non-digital data; however, note that these should contain a very limited
+% number of (stable) values (best: integers), as every change/new value is 
+% assigned to a new cycle range (i.e., takes long if there are, e.g., a lot 
+% of different floats)
+            changes = changes(caps==1 | caps==0);
+            times = times(caps==1 | caps==0);
+            caps = caps(caps==1 | caps==0);
+            
             nRanges = numel(changes)/2;
             
             cr = Range.empty;
             groupColors=[];
             for ridx = 1:1:nRanges
-                beginTime(ridx) = offset+changes(1+2*(ridx-1))*samplingPeriod;
-                endTime(ridx) = offset+changes(2+2*(ridx-1))*samplingPeriod;
-                cr(ridx) = Range([beginTime(ridx), endTime(ridx)]);
-                cr(ridx).setCaption(data(round((changes(1+2*(ridx-1))+changes(2+2*(ridx-1)))/2)))
+                if caps(1+2*(ridx-1))==1
+                cr(ridx) = Range([times(1+2*(ridx-1)), times(2+2*(ridx-1))]);
+                cr(ridx).setCaption(caps(1+2*(ridx-1)));
+                
                 groupCaptions=strsplit(sensor.getCaption, ' ');
                 groupCaptions=groupCaptions(1,1);
-%                 rng(str2num(cr(ridx).getCaption())); %sets seed for random
-%                 color; works only as expected for integer data; not
-%                 absolutely necessary anyway
+
                 groupColors{ridx,1}=rand(1,3);
+                end
             end
-           
+            
+            for cridx=numel(cr):-1:1
+                if sum(cr(1,cridx).timePosition)==0
+                    cr(cridx)=[];
+                    groupColors(cridx)=[];
+                end
+            end
+            
             obj.addRange([],cr);
             
              for i = 1:numel(groupCaptions)
