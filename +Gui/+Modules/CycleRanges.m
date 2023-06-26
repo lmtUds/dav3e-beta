@@ -69,8 +69,11 @@ classdef CycleRanges < Gui.Modules.GuiModule
             startVal = str2double(answer{1});
             endVal = str2double(answer{2});
             r = obj.getProject().ranges;
-            cPos = r.getCyclePosition(obj.getCurrentCluster());
-            r.setCyclePosition(cPos + [startVal -endVal],obj.getCurrentCluster());
+%             cPos = r.getCyclePosition(obj.getCurrentCluster());
+%             r.setCyclePosition(cPos + [startVal -endVal],obj.getCurrentCluster());
+            cycLen = obj.getCurrentCluster().getCycleDuration();
+            tPos = r.getTimePosition();
+            r.setTimePosition(tPos + [startVal -endVal]*cycLen);
             obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
         end
         
