@@ -128,13 +128,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n %s', ME.message),'WindowStyle','modal');
+                errordlg(sprintf('Could not compute features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n %s', ME.message),'WindowStyle','modal');
+                errordlg(sprintf('Could not merge features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
                 disp('''Could not merge features'' help (most obvious cases):');
                 disp('''Cluster collision'' means that you have to check the timing (offset and length) of your clusters, as there are unexpected overlaps of clusters in one track.');
                 disp('''Index in position 1 exceeds array bounds'' might either originate from a mislabeled track, which leads to unintended parallel tracks and deletion of clusters during merging process (no clusters in both tracks at the same time).');
