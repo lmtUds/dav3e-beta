@@ -1229,9 +1229,9 @@ classdef Data < Descriptions
 %                         longestCycleDuration = clusterRow(j).getCycleDuration();
                         longestCycleIndex = j;
                         longestCycleCluster = clusterRow(longestCycleIndex);
-                        warning('backtrace', 'off')
-                        warning('Feature merging: I exchanged the longestCycleCluster, as another cluster has less cycles (and the same cycle duration).');
-                        warning('backtrace', 'on')
+%                         warning('backtrace', 'off')
+%                         warning('Feature merging: I exchanged the longestCycleCluster, as another cluster has less cycles (and the same cycle duration).');
+%                         warning('backtrace', 'on')
                     end
                 end
                 
@@ -1273,9 +1273,9 @@ classdef Data < Descriptions
                                     % There is nothing to do here, it is the longestCycleCluster
                                 else %it is another cluster with the same cycle duration and number of cycles
                                     cycleNumbers = clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets)*[1 1]; %this should work in this case, as features are calculated based on time (offset), and if cycle durations and numbers of cycles are the same, then no averaging is necessary and the features can be taken from the corresponding cycles directly.
-                                    warning('backtrace', 'off')
-                                    warning('Feature merging: I took the cycle numbers from the calculated features; no averaging needed.');
-                                    warning('backtrace', 'on')
+%                                     warning('backtrace', 'off')
+%                                     warning('Feature merging: I took the cycle numbers from the calculated features; no averaging needed.');
+%                                     warning('backtrace', 'on')
                                 end
                             else %it is a cluster with same cycle duration, but the number of cycles is different
 % %                                 % old version:
