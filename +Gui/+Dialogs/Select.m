@@ -95,6 +95,7 @@ end
 listBox = uilistbox(grid,'Items',ListItems);
 listBox.Multiselect = multiSelect;
 listBox.Value = listBox.Items(initialSelect);
+listBox.DoubleClickedFcn = @okFcn;
 listBox.Layout.Column = [1 2];
 if allowAdd
     addEdit = uieditfield(grid);
