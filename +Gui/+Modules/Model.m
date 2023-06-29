@@ -78,9 +78,9 @@ classdef Model < Gui.Modules.GuiModule
             %leftmost column
             defsGrid = uigridlayout(moduleLayout, [5 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
-                'RowHeight',{'1x','1x','15x','1x','2x'},...
+                'RowHeight',{'fit','fit','15x','fit',40},...
                 'RowSpacing',4,...
-                'Padding',[4 4 4 4]);
+                'Padding',[0 0 0 0]);
             defsGrid.Layout.Row = 1;
             defsGrid.Layout.Column = 1;
             
@@ -134,7 +134,7 @@ classdef Model < Gui.Modules.GuiModule
             defsElementAdd.Layout.Column = 1;
             
             defsElementDel = uibutton(defsGrid,...
-                'Text','Delete',...
+                'Text','Delete...',...
                 'ButtonPushedFcn',@(h,e)obj.removeModelChainBlock);
             defsElementDel.Layout.Row = 4;
             defsElementDel.Layout.Column = 2;
@@ -189,9 +189,9 @@ classdef Model < Gui.Modules.GuiModule
         
         function sizechangedCallback(obj, src, event)
             obj.propGrid.panel.Visible = 'off';
-            pos_parent = obj.propGrid.Position;
-            obj.propGrid.panel.Position = pos_parent - [0,110,9,50]; %values possibly subject to change 
-            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+            pos_parent = obj.propGrid.Position
+            obj.propGrid.panel.Position = pos_parent - [0,65,0,11]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                      % depending on screen resolution?
         end
         
         function addModelChainBlock(obj,desc)
