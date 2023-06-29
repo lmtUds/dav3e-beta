@@ -221,7 +221,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             defsElementAdd.Layout.Column = [1 2];
             
             defsElementDel = uibutton(defsGrid,...
-                'Text','Delete',...
+                'Text','Delete...',...
                 'ButtonPushedFcn',@(src,event) obj.removeFeatureDefinition);
             defsElementDel.Layout.Row = 4;
             defsElementDel.Layout.Column = [3 4];
@@ -295,7 +295,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function sizechangedCallback(obj, src, event)
             obj.propGrid.panel.Visible = 'off';
             pos_parent = obj.propGrid.Position;
-            obj.propGrid.panel.Position = pos_parent - [0,0,9,35]; %values possibly subject to change 
+            obj.propGrid.panel.Position = pos_parent - [0,25,9,12]; %values possibly subject to change 
             obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
         end
         
