@@ -343,7 +343,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             chainElementAdd.Layout.Column = 1;
             
             chainElementDel = uibutton(chainGrid,...
-                'Text','Delete',...
+                'Text','Delete...',...
                 'ButtonPushedFcn',@(src,event)obj.removePreprocessing(src,event));
             chainElementDel.Layout.Row = 3;
             chainElementDel.Layout.Column = 2;
@@ -719,8 +719,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
         function sizechangedCallback(obj, src, event)
             obj.propGrid.panel.Visible = 'off';
             pos_parent = obj.propGrid.Position;
-            obj.propGrid.panel.Position = pos_parent - [0,0,9,35]; %values possibly subject to change 
-            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+            obj.propGrid.panel.Position = pos_parent - [0,25,9,12]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                      % depending on screen resolution?
             %disp('Resized')
         end
         %% dropdown callbacks for cycle point sets
