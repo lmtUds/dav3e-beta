@@ -227,15 +227,30 @@ classdef Model < Gui.Modules.GuiModule
             obj.updatePropGrid();
         end
 
-        function removeModelChainBlock(obj)
-            block = obj.propGrid.getSelectedBlock();
-            if isempty(block)
+%         function removeModelChainBlock(obj)
+%             block = obj.propGrid.getSelectedBlock();
+%             if isempty(block)
+%                 return
+%             end
+%             obj.getModel().removeFromChain(block);
+%             obj.updatePropGrid();
+%         end
+        
+        function removeModelChainBlock(obj, src, event)
+            mod = obj.currentModel.processingChain.blocks;
+            captions = mod.getCaption();
+            [sel,ok] = Gui.Dialogs.Select('ListItems',captions,'MultiSelect',false);
+            if ~ok
                 return
             end
-            obj.getModel().removeFromChain(block);
+            rem = mod(ismember(captions,sel));
+            obj.currentModel.removeFromChain(rem);
             obj.updatePropGrid();
-        end
-        
+            obj.getCurrentSensor().preComputePreprocessedData();
+%             obj.updatePlotsInPlace();
+%             obj.setGlobalYLimits();
+        end        
+
         function moveModelChainBlockUp(obj)
             block = obj.propGrid.getSelectedBlock();
             if isempty(block)
