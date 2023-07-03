@@ -1226,12 +1226,12 @@ classdef Data < Descriptions
                 for j = 1:numel(clusterRow)
                     if clusterRow(j).getCycleDuration()==longestCycleDuration &&...
                             numel(clusterRow(j).featureData.offsets)<numel(longestCycleCluster.featureData.offsets)
-%                         longestCycleDuration = clusterRow(j).getCycleDuration();
+                        longestCycleDuration = clusterRow(j).getCycleDuration();
                         longestCycleIndex = j;
                         longestCycleCluster = clusterRow(longestCycleIndex);
-%                         warning('backtrace', 'off')
+                        warning('backtrace', 'off');
 %                         warning('Feature merging: I exchanged the longestCycleCluster, as another cluster has less cycles (and the same cycle duration).');
-%                         warning('backtrace', 'on')
+                        warning('backtrace', 'on');
                     end
                 end
                 
@@ -1252,86 +1252,92 @@ classdef Data < Descriptions
                 end
                 longestCycleTimes(outOfRange,:) = [];
                 
+                %Account for "missing" cycles in clusters other than longestCycleCluster (as they would lead to dimension mismatch later on)
                 for j = 1:numel(clusterRow)
-                    % add tolerance to account for imperfect cycle
-                    % alignment
+%The following lines work, but they do not delete addional cycles; the similar approach based on features (below) does.
+%                     clusterTimeRange = [clusterRow(j).offset,clusterRow(j).offset+clusterRow(j).getCycleDuration()*clusterRow(j).nCycles];
+%                     outOfClusterRange = (longestCycleTimes(:,1)<clusterTimeRange(1)) |...
+%                         (longestCycleTimes(:,2)>clusterTimeRange(end));
+%                     if any(outOfClusterRange)
+% %                         size(longestCycleTimes,1)
+%                         longestCycleTimes(outOfClusterRange,:) = [];
+% %                         size(longestCycleTimes,1)
+%                         warning('backtrace', 'off');
+% %                         warning('I deleted some additional cycles based on cluster ranges.');
+%                         warning('backtrace', 'on');
+%                     end
+                    featureTimeRange = clusterRow(j).featureData.offsets;
+                    featureTimeRange(end+1) = featureTimeRange(end)+clusterRow(j).getCycleDuration();
+                    outOfFeatureRange = (longestCycleTimes(:,1)<featureTimeRange(1)) |...
+                        (longestCycleTimes(:,2)>featureTimeRange(end));
+                    if any(outOfFeatureRange)
+%                         size(longestCycleTimes,1)
+                        longestCycleTimes(outOfFeatureRange,:) = [];
+%                         size(longestCycleTimes,1)
+                        warning('backtrace', 'off');
+%                         warning('I deleted some additional cycles based on feature ranges.');
+                        warning('backtrace', 'on');
+                    end
+                end
+                if isempty(longestCycleTimes)
+                    continue;
+                end
+                
+                for j = 1:numel(clusterRow)
+                    % add tolerance to account for imperfect cycle alignment
                     lct = longestCycleTimes + clusterRow(j).getCycleDuration()*[-1 1]*tol;
                     %if clusterRow(j).getCycleDuration() < 
                     % no tolerance at the edges since this could lead to
                     % values outside the valid range and, thus, NaNs
 %                     lct(1,1) = longestCycleTimes(1,1); lct(end,end) = longestCycleTimes(end,end);
-                    cycleNumbers = clusterRow(j).timeRangeToCycleNumber(lct); %if replaced by timeToCycleNumber, the following is not necessary, but it does not provide the expected output/function ("no averaging necessary" detection is not possible, and cycles that actually are outside of a cycle range are averaged).
+%                     cycleNumbers = clusterRow(j).timeRangeToCycleNumber(lct);
                     
-                    %If there are no cycles to be averaged, as the cycle durations are too similar or even equal
-                    %(then the diff(cycleNumbers,[],2) will be -1 (or 0), and the cycleDurations should indeed be equal),
-                    %then just copy the cycleNumbers from the features, if the numbers of cycles are the same, or...
-                    %take the closest cycles instead of averaging multiple cycles.
-                    if all(diff(cycleNumbers,[],2)<=0) 
-                        if clusterRow(j).getCycleDuration() == longestCycleDuration %(or .../... >0.75? But then, averaging would be necessary to obtain same nCycles!?)
-                            if numel(clusterRow(j).featureData.offsets) == numel(longestCycleCluster.featureData.offsets)
-                                if clusterRow(j).caption==longestCycleCluster.caption
-                                    % There is nothing to do here, it is the longestCycleCluster
-                                else %it is another cluster with the same cycle duration and number of cycles
-                                    cycleNumbers = clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets)*[1 1]; %this should work in this case, as features are calculated based on time (offset), and if cycle durations and numbers of cycles are the same, then no averaging is necessary and the features can be taken from the corresponding cycles directly.
-                                    cycleNumbers(outOfRange,:) = [];
-%                                     warning('backtrace', 'off')
-%                                     warning('Feature merging: I took the cycle numbers from the calculated features; no averaging needed.');
-%                                     warning('backtrace', 'on')
-                                end
-                            else %it is a cluster with same cycle duration, but the number of cycles is different
-% %                                 % old version:
-% %                                 % get cycle which is closest to "longestCycle" for each row (cycle "group") in clusterRow
-% %                                 cycleNumbersNew=cycleNumbers(1:end-1,:);
-% %                                 for cidx = 1:size(cycleNumbers,1)-1
-% %                                     cycleTimeDelta = clusterRow(j).offset+clusterRow(j).getCycleDuration()*(cycleNumbers(cidx,:)-1)-longestCycleTimes(:,1);
-% %                                     [mina, minaidx] = min(abs(cycleTimeDelta),[],2);
-% %                                     [minb, minbidx] = min(mina);
-% %                                     cycleNumbersNew(cidx,:)=[1, 1]*cycleNumbers(cidx,minaidx(minbidx,1));
-% %                                 end
-% %                                 % do the same for last entry; this is separate because otherwise there could be one last cycle missing 
-% %                                 cycleTimeDelta = clusterRow(j).offset+clusterRow(j).getCycleDuration()*(cycleNumbers(end,:)-1)-longestCycleTimes(:,1);
-% %                                 [mina, minaidx] = min(abs(cycleTimeDelta),[],2);
-% %                                 minbidx = find(mina==min(mina));
-% %                                 for minidx = 1:numel(minbidx)
-% %                                     cycleNumbersNew=[cycleNumbersNew;[1 1]*cycleNumbers(end,minaidx(minbidx(minidx),1))];
-% %                                 end
-% %                                 % finally, get rid of double entries (can happen at the start of "longestCycles")
-% %                                 cycleNumbersNew = unique(cycleNumbersNew)*[1 1];
-% %                                 cycleNumbers = cycleNumbersNew;
-% %
-                                % new version:
-                                %Needed for the cases in which there are more cycles in one cluster than in the (exchanged) longestCycleCluster.
-                                %Check whether the number of longestCycleCluster-cycleNumbers that are not in the feature-cylceNumbers is zero
-                                if sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0.5), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
-                                        == 0 %=the number of cycles is different, but at least I can calculate the closest cycleNumbers
-                                    cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0.5)*[1 1]; %here, the closest cycles are calculated based on longestCycleTimes (offsets), and if cycle durations are the same, then no averaging is necessary and the features can be taken from the corresponding cycles directly.
-%                                     warning('backtrace', 'off')
-%                                     warning('Feature merging: I took the cycle numbers closest to the "reference" ones; no averaging needed.');
-%                                     warning('backtrace', 'on')
-                                elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-0.5), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
-                                        == 0 %=there are cycles that cannot be calculated based on the longestCycleCluster directly; but maybe there is a way I can reconstruct, based on slight shifting
-                                    cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-0.5)*[1 1];
-%                                     warning('backtrace', 'off')
-%                                     warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v2); no averaging needed.');
-%                                     warning('backtrace', 'on')
-                                elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*1), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
-                                        == 0
-                                    cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*1)*[1 1];
-%                                     warning('backtrace', 'off')
-%                                     warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v3); hope it is right; no averaging needed.');
-%                                     warning('backtrace', 'on')
-                                elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-1), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
-                                        == 0
-                                    cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-1)*[1 1];
-%                                     warning('backtrace', 'off')
-%                                     warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v4); hope it is right; no averaging needed.');
-%                                     warning('backtrace', 'on')
-                                end
-                            end
-                        else
-                            error("Feature merging: I tried to find the right cycle numbers to merge. I did not succeed, and I don't know what happened here.");
+                    %Combined with deleting clusters based on feature ranges (see above), 
+                    %the following takes the cycleNumbers depending on the cycleDuration 
+                    %(if it is shorter than the longestCycleCluster, then it follows the "old" way using lct; 
+                    %if it is equal, then a different approach is used (see below)), 
+                    %and therefor only provides valid cycleNumbers (hopefully...).
+                    if clusterRow(j).getCycleDuration() < longestCycleDuration % = cycle is shorter than longestCycle
+                        cycleNumbers = clusterRow(j).timeRangeToCycleNumber(lct);
+                    else % = cycle is as long as the longestCycle
+                        %Then try to find cycleNumbers that will work during averaging of cycles; 
+                        %this function is still called although there is nothing to average (as the cycleDuration are the same) 
+                        %because this will finally confirm that the cycleNumbers fit to the features calculated.
+                        %To find fitting cycleNumbers, slight "shifts" are introduced to account for smaller mismatches.
+                        %+0.5 is the one that works in most cases (and makes most sence, is actually not a shift at all), 
+                        %however, the other shifts should still give valid results.
+                        if sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0.5), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
+                                == 0
+                            cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0.5)*[1 1]; %JJ: here, closest cycles are calculated based on longestCycleTimes (offsets), and if cycle durations are the same, then no averaging is necessary and the features can be taken from the corresponding cycles directly.
+                            warning('backtrace', 'off');
+%                             warning('Feature merging: I took the cycle numbers closest to the "reference" ones; no averaging needed.');
+                            warning('backtrace', 'on');
+                        elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
+                                == 0
+                            cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*0)*[1 1];
+                            warning('backtrace', 'off');
+%                             warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v2); no averaging needed.');
+                            warning('backtrace', 'on');
+                        elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-0.5), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
+                                == 0
+                            cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-0.5)*[1 1];
+                            warning('backtrace', 'off');
+%                             warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v3); no averaging needed.');
+                            warning('backtrace', 'on');
+                        elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*1), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
+                                == 0
+                            cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*1)*[1 1];
+                            warning('backtrace', 'off');
+%                             warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v4); hope it is right; no averaging needed.');
+                            warning('backtrace', 'on');
+                        elseif sum(~ismember(clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-1), clusterRow(j).timeToCycleNumber(clusterRow(j).featureData.offsets))) ...
+                                == 0
+                            cycleNumbers = clusterRow(j).timeToCycleNumber(longestCycleTimes(:,1)+clusterRow(j).getCycleDuration()*-1)*[1 1];
+                            warning('backtrace', 'off');
+%                             warning('Feature merging: I took the cycle numbers closest to the "reference" ones (v5); hope it is right; no averaging needed.');
+                            warning('backtrace', 'on');
                         end
-                    end                    
+                    end                  
                     
                     [nData,newGroupings] = averageCyclesByIndex(clusterRow(j),cycleNumbers);
                     newData = [newData,nData];
@@ -1382,18 +1388,18 @@ function [newData,newGroupings] = averageCyclesByIndex(cluster,indices)
     
 %     Added for cycle indices that are both too big and too small, which can 
 %     especially happen in case of identical cycle durations (see above, 
-%     calculation of cycleNumbersNew), leading to indices that cannot be 
-%     found in the cycleNumbers; these are deleted here. Edit: I think it is 
-%     not necessary anymore as the calculation above was changed. Still
-%     here for logging/debugging.
+%     calculation of cycleNumbers), leading to indices that cannot be 
+%     found in the cycleNumbers; these are deleted here.
+%     Edit: I think it is not needed anymore as the calculation above was changed. 
+%     Still here for logging/debugging.
     if all(diff(indices,[],2)==0)
         tooSmall = ~ismember(indices(:,1),cycleNumbers);
         tooBig = ~ismember(indices(:,2),cycleNumbers);
         if any(tooBig.*tooSmall)
             indices(find(tooBig.*tooSmall),:) = []; 
-            warning('backtrace', 'off')
-            warning('Feature merging/averaging cycles: I deleted some indices/cycleNumbers, as they were just not right.');
-            warning('backtrace', 'on')
+            warning('backtrace', 'off');
+            warning('Feature merging/averaging cycles: I deleted some indices/cycleNumbers, as they were just not right. (This should not happen and might be caused by an error; better check what I did.)');
+            warning('backtrace', 'on');
         end
     end
     
@@ -1428,7 +1434,9 @@ function [newData,newGroupings] = averageCyclesByIndex(cluster,indices)
         return
     end
     
+    warning('backtrace', 'off');
     warning('Cycles do not have equal lengths and are combined by averaging shorter cycles.');
+    warning('backtrace', 'on');
     
     indices(diffs<0,2) = indices(diffs<0,1);
     diffs(diffs<0) = 0;
