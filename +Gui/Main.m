@@ -567,12 +567,14 @@ classdef Main < handle
                 case 'No, Cancel'
                     return
                 case 'Yes, Overwrite'
+                    obj.setModule(1);                   % set active Module to 'Start' to avoid Errors
+                    
                     obj.project = Project();
 
                     obj.populateSensorSetTable();
                     for i = 1:numel(obj.modules)
                         obj.modules(i).reset();
-                    end            
+                    end
             end
         end        
         
