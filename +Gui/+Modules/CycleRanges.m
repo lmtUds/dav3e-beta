@@ -512,8 +512,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
             if nargin >= 3
                 r = ranges;
             else
-                nCycles = obj.getCurrentCluster().nCycles;
-                r = obj.getCurrentCluster().makeCycleRange([pos,pos+nCycles*0.1]);
+%                 nCycles = obj.getCurrentCluster().nCycles;
+                r = obj.getCurrentCluster().makeCycleRange([pos,pos+10]); % Length of Range: 10 cycles %[pos,pos+nCycles*0.02]);
             end
             obj.getProject().addCycleRange(r);
             rg = r.makeGraphicsObject('cycle',true);
