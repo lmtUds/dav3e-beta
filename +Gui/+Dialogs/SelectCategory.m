@@ -106,7 +106,8 @@ for i = 1:size(uCats,2)
     catLabel.Layout.Column = [1 2];
     catBox = uilistbox(grid,'Items',catLists{i},'UserData',uCats{i},...
         'Multiselect',multiSelect,'Value',{},...
-        'ValueChangedFcn',@(src,event) listSelect(src,event,i,catBoxes,multiSelect));
+        'ValueChangedFcn',@(src,event) listSelect(src,event,i,catBoxes,multiSelect),...
+        'DoubleClickedFcn',@(src,event) doubleclickedOkFcn(src,event));
     catBox.Layout.Column = [1 2];
     catBoxes{i} = catBox;
 end
@@ -144,6 +145,20 @@ uiwait(fig);
         Selection = sel;
         delete(fig)
     end
+    
+    function doubleclickedOkFcn(src,event)              % handle double Click in Model->Add Dialogue
+      sel = {};
+      selCats = {};
+      
+      sel = [sel, src.Value];
+      selCats = [selCats, src.UserData];
+
+      ExitStatus = 1;
+      SelectionCategories = selCats;
+      Selection = sel;
+      delete(fig)
+    end  
+    
     function cancelFcn(src,event)
         delete(fig)
     end
