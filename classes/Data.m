@@ -1423,8 +1423,6 @@ function [newData,newGroupings] = averageCyclesByIndex(cluster,indices)
         end
     end
 
-    indTrans(cycleNumbers) = 1:numel(cycleNumbers);
-    
     diffs = diff(indices,[],2);
     if all(diffs==0)
         rows = ismember(cycleNumbers,indices(:,1));
@@ -1444,6 +1442,8 @@ function [newData,newGroupings] = averageCyclesByIndex(cluster,indices)
 %     if any(diffs<0)
 %         error('Internal error. Cycle indices seem to be messed up.');
 %     end
+
+    indTrans(cycleNumbers) = 1:numel(cycleNumbers);
     
     numGroupings = zeros(size(groupings));
     newNumGroupings = zeros(size(groupings));
@@ -1454,7 +1454,7 @@ function [newData,newGroupings] = averageCyclesByIndex(cluster,indices)
     newData = zeros(size(data));
     for i = 1:size(indices,1)
         if diffs(i) > 0
-            newData(indTrans(indices(i,1)),:) = sum(data(indTrans(indices(i,1)):indTrans(indices(i,2)),:),1)/diffs(i);
+            newData(indTrans(indices(i,1)),:) = sum(data(indTrans(indices(i,1)):indTrans(indices(i,2)),:),1)/(diffs(i)+1);
             for  j = 1:size(groupings,2)
                 [~,newNumGroupings(indTrans(indices(i,1)),:)] = max(histcounts(numGroupings(indTrans(indices(i,1)):indTrans(indices(i,2)),:),(0:max(numGroupings(:,j)))+0.5));
             end
