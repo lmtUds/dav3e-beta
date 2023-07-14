@@ -376,7 +376,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             if nargin < 2
                 fds = obj.currentFeatureDefinitionSet.getFeatureDefinitions();
                 [sel,ok] = Gui.Dialogs.Select('ListItems',fds.getCaption(),...
-                    'MultiSelect',false);
+                    'MultiSelect',true);
                 if ~ok
                     return
                 end
@@ -930,6 +930,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         end
         function rangeTableSelectionCallback(obj,src,event)
             obj.selectedRanges = unique(event.Indices(:,1));
+            if isempty(event.Indices)
+                return
+            end
+            row = event.Indices(1);
+            removeStyle(obj.rangeTable);
+            style = uistyle("BackgroundColor",[221,240,255]./256);
+            addStyle(src,style,"Row",row);
         end
         function rangeTableDataChangeCallback(obj,src,event)
             %%
