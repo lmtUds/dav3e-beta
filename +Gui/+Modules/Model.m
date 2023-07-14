@@ -189,7 +189,7 @@ classdef Model < Gui.Modules.GuiModule
         
         function sizechangedCallback(obj, src, event)
             obj.propGrid.panel.Visible = 'off';
-            pos_parent = obj.propGrid.Position
+            pos_parent = obj.propGrid.Position;
             obj.propGrid.panel.Position = pos_parent - [0,65,0,11]; %values possibly subject to change 
             obj.propGrid.panel.Visible = 'on';                      % depending on screen resolution?
         end
@@ -612,16 +612,36 @@ classdef Model < Gui.Modules.GuiModule
                     'Create at least one grouping.',...
                     'Grouping required');
             elseif isempty(obj.getProject().mergedFeatureData)
-%                 selection = uiconfirm(obj.main.hFigure,...
-%                                 {'Features must be computed first.','Compute features now?'},...
-%                                 'Confirm feature computation','Icon','warning',...
-%                                 'Options',{'Yes, Compute now','No, Cancel'},...
-%                                 'DefaultOption',2,'CancelOption',2);
-%                 switch selection
-%                     case 'No, Cancel'
-%                         allowed = false;
-%                         return
-%                 end
+                selection = uiconfirm(obj.main.hFigure,...
+                                {'No features available, features must be computed first.','Compute features now?'},...
+                                'Confirm feature computation','Icon','warning',...
+                                'Options',{'Yes, Compute now','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, Cancel'
+                        allowed = false;
+                        return
+                end
+                try
+                    allowed = obj.computeFeatures();
+                    obj.currentModel.reset();
+                    obj.makeModelTabs()
+                catch ME
+                    uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation error');
+                end
+            else
+                selection = uiconfirm(obj.main.hFigure,...
+                                {'Compute features again or use existing features?','Recommended after changing settings.'},...
+                                'Confirm feature computation','Icon','warning',...
+                                'Options',{'Yes, Compute now','No, Keep existing features'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, Cancel'
+                        allowed = false;
+                        return
+                end
                 try
                     allowed = obj.computeFeatures();
                     obj.currentModel.reset();
