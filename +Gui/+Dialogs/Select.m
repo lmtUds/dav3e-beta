@@ -66,7 +66,8 @@ end
 %build the ui figure
 fig = uifigure('Name',name,'WindowStyle','modal','Visible','off',...
     'DeleteFcn',@figDelFcn);
-fig.Position(3) = 200;
+fig.Position(3) = 270;
+centerFigure(fig);
 n = 0;
 rowHeights = {};
 if ~isempty(message)

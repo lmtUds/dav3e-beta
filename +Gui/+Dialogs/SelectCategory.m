@@ -87,7 +87,7 @@ end
 fig = uifigure('Name',name,'WindowStyle','modal','Visible','off',...
     'DeleteFcn',@cancelFcn);
 fig.Position(3) = 300;
-
+centerFigure(fig);
 if ~isempty(message)
     outerGrid = uigridlayout(fig,[3,2],'RowHeight',{'fit','1x',baseCharHeight});
     msgLbl = uilabel(outerGrid,'Text',message,'WordWrap','on');

@@ -21,6 +21,7 @@
 function Licenses()
     fig = uifigure('Name','Licenses','Visible','off',...
         'WindowStyle','modal');
+    centerFigure(fig);
     gridOuter = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
 
     if isdeployed

@@ -37,6 +37,7 @@ function GroupingCreation(main,module)
     fig = uifigure('Name','Grouping creation',...
         'Visible','off','WindowStyle','modal');
     fig.Position(4) = 300;
+    centerFigure(fig);
     grid = uigridlayout(fig,[5 4],'RowHeight',{'fit',22,22,'1x',22});
     labelRow = 2;
     dropdownRow = 3;

@@ -20,6 +20,7 @@
 
 function VirtualSensors(main)
     fig = uifigure('Name','Virtual Sensors','WindowStyle','modal');
+    centerFigure(fig);
     grid = uigridlayout(fig,[2 2],'RowHeight',{'1x',22});
     propG = Gui.uiParameterBlockGrid('Parent',grid,...
         'ValueChangedFcn',@(src,event)Update(src,event,main));

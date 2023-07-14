@@ -35,6 +35,7 @@ function GroupingColorGradient(main,module)
     end
     fig = uifigure('Name','Grouping color gradient',...
         'Visible','off','WindowStyle','modal');
+    centerFigure(fig);
     grid = uigridlayout(fig,[4 2],'RowHeight',{100,22,'1x',22});
 
     clrPicker1 = uibutton(grid,'BackgroundColor',[0.0820 0.8359 0.4961],...
