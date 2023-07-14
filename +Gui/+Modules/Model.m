@@ -306,7 +306,7 @@ classdef Model < Gui.Modules.GuiModule
                 obj.getModel().train(data);
             catch ME
                 f = gcf;
-                errordlg(sprintf('Error during model training.\n %s', ME.message),'I''m afraid I can''t do that.');
+                errordlg(sprintf('Error during model training.\n%s', ME.message),'I''m afraid I can''t do that.');
                 set(0, 'CurrentFigure', f)
             end
 
@@ -467,7 +467,7 @@ classdef Model < Gui.Modules.GuiModule
                         obj.currentModel.reset();
                         obj.makeModelTabs()
                     catch ME
-                        errordlg(sprintf('Error during feature computation.\n %s', ME.message),'I''m afraid I can''t do that.');
+                        errordlg(sprintf('Error during feature computation.\n%s', ME.message),'I''m afraid I can''t do that.');
                     end
                 end
             end

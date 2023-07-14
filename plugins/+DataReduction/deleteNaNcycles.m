@@ -30,14 +30,6 @@ function info = deleteNaNcycles()
 end
 
 function [data,params] = apply(data,params)
-%     paramOut = struct();
-%     h = data.featureCaptions(params.a);
-%     params.b = [h{:}]; 
-%     
-%     data.data(:,params.a) = [];
-%     data.featureSelection(params.a) = [];
-%     data.featureCaptions(params.a) = [];
-%     warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
     d = data.data; 
     t = data.target;
     [nanCyc,~] = find(isnan(d));
