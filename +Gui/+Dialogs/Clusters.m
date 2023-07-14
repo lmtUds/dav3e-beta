@@ -21,20 +21,25 @@
 function Clusters(main)
     fig = uifigure('Name','Cluster Properties',...
         'WindowStyle','modal','Visible','off');
-    grid = uigridlayout(fig,[2 3],'RowHeight',{'1x', 22});
+    fig.Position(3) = 680;
+    centerFigure(fig);
+    grid = uigridlayout(fig,[2 4],'RowHeight',{'1x', 22});
     table = uitable(grid,...
         'CellEditCallback',@(src,event)TableEdit(src,event,main,fig));
-    table.Layout.Column = [1 3];
+    table.CellSelectionCallback = @(src,event)selectionChanged(src,event,table);
+    table.Layout.Column = [1 4];
     plotBtn = uibutton(grid,'Text','Plot Tracks',...
         'ButtonPushedFcn',@(src,event) PlotTracks(src,event,main));
     plotBtn.Layout.Column = 1;
     plotBtn = uibutton(grid,'Text','Normalize Cycle Durations',...
         'ButtonPushedFcn',@(src,event) NormCycleDurations(src,event,main,table));
     plotBtn.Layout.Column = 2;
-    plotBtn = uibutton(grid,'Text','Delete Clusters',...
+    plotBtn = uibutton(grid,'Text','Delete Clusters...',...
         'ButtonPushedFcn',@(src,event) DeleteClusters(src,event,main,table));
     plotBtn.Layout.Column = 3;
-
+    plotBtn = uibutton(grid,'Text','Apply Changes & Close',...
+        'ButtonPushedFcn',@(src,event) closeFigure(src,event,main,table));
+    plotBtn.Layout.Column = 4;
     Refresh(main,table);
     fig.Visible = 'on';
     uiwait(fig)
@@ -155,5 +160,19 @@ function Clusters(main)
         main.project.clusters(ismember(captions,selection)) = [];
         Refresh(main,table);
         main.populateSensorSetTable();
+    end
+    function selectionChanged(src,event,table)
+        if isempty(event.Indices)
+            return
+        end
+        row = event.Indices(1,1);
+        removeStyle(table);
+        style = uistyle("BackgroundColor",[221,240,255]./256);
+        addStyle(src,style,"Row",row);
+    end
+
+    function closeFigure(src,event,main,table)
+        Refresh(main,table);
+        close(fig);
     end
 end
