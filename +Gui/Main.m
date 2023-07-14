@@ -544,9 +544,13 @@ classdef Main < handle
                     prevSensor = obj.project.getCurrentSensor();
                     prevCluster = prevSensor.getCluster();
                 end
+                
                 newSensor.setCurrent();
                 newSensor.getCluster().setCurrent();
-                
+                removeStyle(obj.sensorSetTable);                           % Clear marking of previously selected Row                
+                style = uistyle("BackgroundColor",[51,153,255]./256);       
+                addStyle(src,style,"Row",row);                             % apply marking of newly selected Row
+
                 if prevCluster ~= newSensor.getCluster()
                     obj.getActiveModule().onCurrentClusterChanged(...
                         newSensor.getCluster(),prevSensor.getCluster());
