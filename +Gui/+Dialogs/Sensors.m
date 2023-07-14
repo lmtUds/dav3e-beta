@@ -21,6 +21,7 @@
 function Sensors(main)
     fig = uifigure('Name','Sensors','WindowStyle','modal',...
         'Visible','off');
+    centerFigure(fig);
     grid = uigridlayout(fig,[1 1],'RowHeight',{'1x'});
     t = uitable(grid);
 
@@ -44,6 +45,7 @@ function Sensors(main)
     t.ColumnFormat = {'char',abcissaStr,'numeric','logical'};
     t.UserData = s;
     t.CellEditCallback = @(src,event) tableDataChange(src,event);
+    t.CellSelectionCallback = @(src,event) selectionChanged(src,event,t);
     fig.Visible = 'on';
 
     function tableDataChange(src,event)
@@ -64,5 +66,14 @@ function Sensors(main)
         end
         o.modified();
         main.populateSensorSetTable();
+    end
+    function selectionChanged(src,event,t)
+        if isempty(event.Indices)
+            return
+        end
+        row = event.Indices(1,1);
+        removeStyle(t);
+        style = uistyle("BackgroundColor",[221,240,255]./256);
+        addStyle(src,style,"Row",row);
     end
 end
