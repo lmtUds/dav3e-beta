@@ -423,6 +423,9 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
+            removeStyle(obj.groupingTable);
+            style = uistyle("BackgroundColor",[221,240,255]./256);
+            addStyle(src,style,"Column",column);
             
             % if a double click on the whole column happended
             % rename the grouping
