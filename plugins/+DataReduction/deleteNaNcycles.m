@@ -39,11 +39,6 @@ function [data,params] = apply(data,params)
     data.reduceData(@reduceFun, params.a);
 end
 
-% function params = train(data,params)
-%     d = data.getSelectedData();
-%     [params.a,~] = find(isnan(d)==1);
-% end
-
 function [newData,newGrouping,newTarget,newOffsets] = reduceFun(data,grouping,target,offsets,varargin)
     n = varargin{1};
     data(n,:)=[];
