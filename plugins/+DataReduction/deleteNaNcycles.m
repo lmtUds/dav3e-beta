@@ -33,7 +33,7 @@ function [data,params] = apply(data,params)
     d = data.data; 
     t = data.target;
     [nanCyc,~] = find(isnan(d));
-    nanTar = find(ismember(t,'NaN'));
+    nanTar = find(ismember(t,'NaN')); %find(isnan(t))
     undefTar = find(isundefined(t));
     params.a = unique([nanCyc;nanTar;undefTar]);
     data.reduceData(@reduceFun, params.a);
