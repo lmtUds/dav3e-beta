@@ -33,8 +33,13 @@ function [data,params] = apply(data,params)
     d = data.data; 
     t = data.target;
     [nanCyc,~] = find(isnan(d));
-    nanTar = find(ismember(t,'NaN')); %find(isnan(t))
-    undefTar = find(isundefined(t));
+    if iscategorical(t)
+        nanTar = find(ismember(t,'NaN'));
+        undefTar = find(isundefined(t));
+    else
+        nanTar = find(isnan(t));
+        undefTar = [];
+    end
     params.a = unique([nanCyc;nanTar;undefTar]);
     data.reduceData(@reduceFun, params.a);
 end
