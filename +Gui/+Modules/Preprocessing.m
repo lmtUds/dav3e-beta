@@ -1175,6 +1175,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 origClr = cPoint.getObject.getColor();
                 try
                     rgbClr = uisetcolor(origClr,'Select a color');
+                    movegui(gcf,'center');
                     obj.main.hFigure.Visible = 'off';
                     obj.main.hFigure.Visible = 'on';
                     src.Data{row,col} = clr2str(rgbClr);
@@ -1248,6 +1249,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 origClr = iPoint.getObject.getColor();
                 try
                     rgbClr = uisetcolor(origClr,'Select a color');
+                    movegui(gcf,'center');
                     obj.main.hFigure.Visible = 'off';
                     obj.main.hFigure.Visible = 'on';
                     src.Data{row,col} = clr2str(rgbClr);
