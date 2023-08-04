@@ -85,7 +85,7 @@ classdef Main < handle
             callback = getMenuCallbackName();
             mh = uimenu(f,'Label','File');
             uimenu(mh,'Label','New project', callback,@(varargin)obj.newProject);
-            uimenu(mh,'Label','Open project', callback,@(varargin)obj.loadProject);
+            uimenu(mh,'Label','Load project...', callback,@(varargin)obj.loadProject);
             uimenu(mh,'Label','Save project', callback,@(varargin)obj.saveProject);
             uimenu(mh,'Label','Save project as...', callback,@(varargin)obj.saveProjectAs);
             m = uimenu(mh,'Label','Export', 'Separator','on');
@@ -131,6 +131,20 @@ classdef Main < handle
             bottomTable = uitable(mainLayout);
             bottomTable.Layout.Row = 2;
             bottomTable.Layout.Column = [1 2];
+
+            cm = uicontextmenu();
+            m1 = uimenu(cm,'Text','Set all sensors active',...
+                'MenuSelectedFcn',@(src,event) m1clickedCallback(obj));
+            m2 = uimenu(cm,'Text','Set all sensors inactive',...
+                'MenuSelectedFcn',@(src,event) m2clickedCallback(obj));
+            m3 = uimenu(cm,'Text','Toggle current track active/inactive (all clusters and sensors)',...
+                 'MenuSelectedFcn',@(src,event) m3clickedCallback(obj));
+            m4 = uimenu(cm,'Text','Toggle current cluster active/inactive (all sensors)',...
+                'MenuSelectedFcn',@(src,event) m4clickedCallback(obj));
+            m5 = uimenu(cm,'Text','Toggle current sensor active/inactive in all clusters (same track)',...
+                 'MenuSelectedFcn',@(src,event) m5clickedCallback(obj));
+            bottomTable.ContextMenu = cm;
+
             
             modulesSidebar = uigridlayout(mainLayout,...
                 [numel(obj.moduleNames) 1],...
@@ -183,6 +197,87 @@ classdef Main < handle
             obj.hFigure.Visible = 'on';
         end
  
+       
+        function m1clickedCallback(obj)
+                selSensor = obj.project.getCurrentSensor();
+                state = true; % true fest vorgeben
+                clusters = obj.project.clusters();
+
+                for cidx=1:numel(clusters)
+                    for sidx=1:numel(obj.project.clusters(cidx).sensors())
+                        newSensor = obj.project.clusters(cidx).sensors(sidx);
+                        newSensor.setActive(state); 
+                    end
+                end
+                selSensor.setCurrent();
+                obj.populateSensorSetTable();
+        end
+        
+        function m2clickedCallback(obj)
+                selSensor = obj.project.getCurrentSensor();
+                state = false; %false fest vorgeben
+                clusters = obj.project.clusters();
+
+                for cidx=1:numel(clusters)
+                    for sidx=1:numel(obj.project.clusters(cidx).sensors())
+                        newSensor = obj.project.clusters(cidx).sensors(sidx);
+                        newSensor.setActive(state); 
+                    end
+                end
+                selSensor.setCurrent();
+                obj.populateSensorSetTable();
+        end
+        
+        function m3clickedCallback(obj)
+                selSensor = obj.project.getCurrentSensor();
+                selTrack = selSensor.cluster.track;
+                state = selSensor.isActive();
+                clusters = obj.project.clusters();
+                
+                for cidx=1:numel(clusters)
+                    if strcmp(clusters(cidx).track, selTrack)
+                        for sidx=1:numel(obj.project.clusters(cidx).sensors())
+                            newSensor = obj.project.clusters(cidx).sensors(sidx);
+                            newSensor.setActive(~state);
+                        end
+                    end
+                end
+                selSensor.setCurrent();
+                obj.populateSensorSetTable();
+        end
+        
+        function m4clickedCallback(obj)
+                selSensor = obj.project.getCurrentSensor();
+                selCluster = selSensor.cluster;
+                state = selSensor.isActive();
+                
+                for sidx=1:numel(selCluster.sensors())
+                    newSensor = selCluster.sensors(sidx);
+                    newSensor.setActive(~state);
+                end
+                selSensor.setCurrent();
+                obj.populateSensorSetTable();
+        end
+
+        function m5clickedCallback(obj)
+                selSensor = obj.project.getCurrentSensor();
+                selTrack = selSensor.cluster.track;
+                state = selSensor.isActive();
+                clusters = obj.project.clusters();
+                
+                for cidx=1:numel(clusters)
+                    for sidx=1:numel(obj.project.clusters(cidx).sensors())
+                        if strcmp(clusters(cidx).sensors(sidx).caption, selSensor.caption) ...
+                                && strcmp(clusters(cidx).track, selTrack)
+                            newSensor = obj.project.clusters(cidx).sensors(sidx);
+                            newSensor.setActive(~state);
+                        end
+                    end
+                end
+                selSensor.setCurrent();
+                obj.populateSensorSetTable();
+        end
+
         function importGasmixerFile(obj,varargin)
             prog = uiprogressdlg(obj.hFigure,'Title','Import cycle ranges and groupings',...
                 'Indeterminate','on');
