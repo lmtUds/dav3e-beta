@@ -116,7 +116,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             mainTabGp.Layout.Row = 1;
             %mainTabGp.Layout.Column = 1;
             
-            cmpTab = uitab(mainTabGp,'Title','Compare/Points');
+            cmpTab = uitab(mainTabGp,'Title','Cluster Timing / Compare');
             cmpTabGrid = uigridlayout(cmpTab,[2 1],...
                 'Padding',[0 0 0 0],'RowHeight',{'1x','2x'});
             
@@ -197,7 +197,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.hCompareWith.hVirtualOffsetEdit = virtOffsetEdit;
             
            % pointsTabGp = uitabgroup(main);
-            cycleTab = uitab(mainTabGp,'Title','Cycle Points');
+            cycleTab = uitab(mainTabGp,'Title','Cycles');
             % create and fill the grid layout of the 'cycle points' section
             cyclePointsGrid = uigridlayout(cycleTab, [2 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
@@ -994,7 +994,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             
             t = obj.indexPointTable;
             
-            t.ColumnName = {'caption','point','color'};
+            t.ColumnName = {'caption','cycle point','color'};
             t.ColumnFormat = {'char' 'numeric' 'char'};
             t.ColumnEditable = [true true true];
             t.Data = data;
