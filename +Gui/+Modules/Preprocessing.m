@@ -950,7 +950,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t.UserData = gPoints;
 
             ind = tableColSort(t,3,'a');
-            obj.cyclePoints = obj.cyclePoints(ind);
+%             obj.cyclePoints = obj.cyclePoints(ind);
+%             disabled due to unwanted behaviour involving two or more
+%             cusors
                         
             if ~isempty(data)
                 clrArray = clrArray(ind,:); %sort colors, then style
@@ -1000,8 +1002,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             t.Data = data;
             t.UserData = gPoints;
             
-            ind = tableColSort(t,2,'a');
-            obj.indexPoints = obj.indexPoints(ind);
+             ind = tableColSort(t,2,'a');
+%             obj.indexPoints = obj.indexPoints(ind);
             
             if ~isempty(data)
                 clrArray = clrArray(ind,:); %sort colors, then style
@@ -1042,8 +1044,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
             idx = ismember(obj.cyclePoints,gPoint);
             obj.cyclePointTable.Data{idx,2} = gPoint.getPosition();
             obj.cyclePointTable.Data{idx,3} = gPoint.getTimePosition();
-            ind = tableColSort(obj.cyclePointTable,3,'a');
-            obj.cyclePoints = obj.cyclePoints(ind);
+%             ind = tableColSort(obj.cyclePointTable,3,'a');
+%             obj.cyclePoints = obj.cyclePoints(ind);
             obj.populateCyclePointsTable();
         end
         
@@ -1054,8 +1056,8 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
             idx = ismember(obj.indexPoints,gPoint);
             obj.indexPointTable.Data{idx,2} = gPoint.getPosition();
-            ind = tableColSort(obj.indexPointTable,2,'a');
-            obj.indexPoints = obj.indexPoints(ind);
+%             ind = tableColSort(obj.indexPointTable,2,'a');
+%             obj.indexPoints = obj.indexPoints(ind);
             obj.populateIndexPointsTable();
         end
 
