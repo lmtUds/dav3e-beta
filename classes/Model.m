@@ -47,6 +47,20 @@ classdef Model < Descriptions
         datas
         
         trained = false;
+
+        fullModelTrainingError
+%         fullModelValidationError
+        fullModelTestingError
+        fullModelTrainingErrorStd
+%         fullModelValidationErrorStd
+        fullModelTestingErrorStd
+
+        fullModelTrainingCorr
+%         fullModelValidationCorr
+        fullModelTestingCorr
+        fullModelTrainingCorrStd
+%         fullModelValidationCorrStd
+        fullModelTestingCorrStd
     end
     
     properties(Hidden)
