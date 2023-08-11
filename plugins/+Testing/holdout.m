@@ -31,6 +31,7 @@ function info = holdout()
         ];
     info.apply = @apply;
     info.updateParameters = @updateParameters;
+    info.detailsPages = {'performance','correlationCoefficient'};
 end
 
 function [data,params] = apply(data,params)

@@ -199,6 +199,23 @@ classdef Model < Descriptions
             traindata.target = b.revertChain(traindata.target);
             obj.fullModelData = traindata;
             obj.trained = true;
+
+            fullModelErrors = traindata.computeErrors();
+            fullModelCorrs = traindata.computePearsonCorrelation();
+        
+            obj.fullModelTrainingError = [fullModelErrors.training];
+%             obj.fullModelValidationError = [fullModelErrors.validation];
+            obj.fullModelTestingError = [fullModelErrors.testing];
+            obj.fullModelTrainingErrorStd = [fullModelErrors.trainingStd];
+%             obj.fullModelValidationErrorStd = [fullModelErrors.validationStd];
+            obj.fullModelTestingErrorStd = [fullModelErrors.testingStd];
+
+            obj.fullModelTrainingCorr = [fullModelCorrs.training];
+%             obj.fullModelValidationCorr = [fullModelCorrs.validation];
+            obj.fullModelTestingCorr = [fullModelCorrs.testing];
+            obj.fullModelTrainingCorrStd = [fullModelCorrs.trainingStd];
+%             obj.fullModelValidationCorrStd = [fullModelCorrs.validationStd];
+            obj.fullModelTestingCorrStd = [fullModelCorrs.testingStd];
         end
         
         function data = getValidatedDataForTrainedIndexSet(obj)
