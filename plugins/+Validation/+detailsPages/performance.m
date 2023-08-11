@@ -46,19 +46,16 @@ function populateGui(parent,project,dataprocessingblock)
     red = [227,32,23] ./ 255;
     blue = [0,152,212] ./ 255;
     
-    hypSelect = sum(model.trainedIndexSet ~= model.hyperParameterIndices,1) == 0;
-    
     delete(parent.Children)
     ax = uiaxes(parent);
     ax.Layout.Column = 1; ax.Layout.Row = 1;
     hold(ax,'on');
     if isempty(ind)
         b = bar(ax,...
-            [model.trainingErrors(hypSelect),...
-            model.validationErrors(hypSelect),...
-            model.testingErrors(hypSelect)] * factor);
+            [model.trainingErrors,model.validationErrors,model.testingErrors] * factor);
         errors = [model.trainingErrorStds,model.validationErrorStds,model.testingErrorStds] * factor;
         errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
+        ax.XTick = b.XData;
         ax.XTickLabel = {'training error','validation error','testing error'};
         ylabel(ax,label);
         if all(isnan(model.testingErrors))

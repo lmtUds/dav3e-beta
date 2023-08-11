@@ -55,6 +55,7 @@ function populateGui(parent,project,dataprocessingblock)
             [model.trainingCorrs,model.validationCorrs,model.testingCorrs] * factor);
         errors = [model.trainingCorrStds,model.validationCorrStds,model.testingCorrStds] * factor;
         errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
+        ax.XTick = b.XData;
         ax.XTickLabel = {'training error','validation error','testing error'};
         ylabel(ax,label);
         if all(isnan(model.testingCorrs))
