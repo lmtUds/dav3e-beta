@@ -23,7 +23,6 @@ function updateFun = correlationCoefficient(parent,project,dataprocessingblock)
     updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-
 function populateGui(parent,project,dataprocessingblock)
     model = project.currentModel;
     model.trainingCorrs;
@@ -39,7 +38,7 @@ function populateGui(parent,project,dataprocessingblock)
     if iscategorical(model.datas(1).target)
         return
     else
-        factor = -1;
+        factor = 1;
         label = 'correlation coefficient';
     end
     
@@ -56,7 +55,7 @@ function populateGui(parent,project,dataprocessingblock)
         errors = [model.trainingCorrStds,model.validationCorrStds,model.testingCorrStds] * factor;
         errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
         ax.XTick = b.XData;
-        ax.XTickLabel = {'training error','validation error','testing error'};
+        ax.XTickLabel = {'training','validation','testing'};
         ylabel(ax,label);
         if all(isnan(model.testingCorrs))
             ax.XTick = [1,2];

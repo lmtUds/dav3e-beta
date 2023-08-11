@@ -52,8 +52,12 @@ function populateGui(parent,project,dataprocessingblock)
     hold(ax,'on');
     if isempty(ind)
         b = bar(ax,...
-            [model.trainingErrors,model.validationErrors,model.testingErrors] * factor);
-        errors = [model.trainingErrorStds,model.validationErrorStds,model.testingErrorStds] * factor;
+            [model.trainingErrors,...
+            model.validationErrors,...
+            model.testingErrors] * factor);
+        errors = [model.trainingErrorStds,...
+            model.validationErrorStds,...
+            model.testingErrorStds] * factor;
         errorbar(ax,b.XData,b.YData,errors,'k','LineStyle','none');
         ax.XTick = b.XData;
         ax.XTickLabel = {'training error','validation error','testing error'};
@@ -88,6 +92,7 @@ function populateGui(parent,project,dataprocessingblock)
         x = flip(x);
         data = model.getValidatedDataForTrainedIndexSet();
         
+        fprintf('performance:\n');
         fprintf('min: %d\n', data.getBestParametersFromErrors('min',errors,x));
         fprintf('minOneStd: %d\n', data.getBestParametersFromErrors('minOneStd',errors,x));
         fprintf('minDivStd: %d\n', data.getBestParametersFromErrors('minDivStd',errors,x));
