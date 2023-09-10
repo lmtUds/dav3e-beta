@@ -322,14 +322,15 @@ classdef Grouping < Gui.Modules.GuiModule
         end
         
         function populateGroupingTable(obj)            
+            t = obj.groupingTable;
             gps = obj.getProject().groupings;
             header = gps.getCaption();
             r = obj.getCurrentCluster().getCycleRanges();
             data = cellstr(gps.getValues(r));
             
-            t = obj.groupingTable;
+%             t = obj.groupingTable;
             t.Data = data;
-%             t.UserData = r;
+%              t.UserData = r;
             t.UserData = gps;
             
             t.ColumnName = header;
@@ -475,14 +476,18 @@ classdef Grouping < Gui.Modules.GuiModule
             p.groupings.getCaption()
         end
         
-        function groupingTableDataChanged(obj,src,event)
+        function groupingTableDataChanged(obj,src,event,cluster,oldCluster)
+%             cluster = obj.getCurrentCluster();
+%             obj.handleClusterChange(obj,cluster,oldCluster);
             row = event.Indices(1);
             column = event.Indices(2);
             grouping = src.UserData(column);
+            row = find(grouping.ranges == obj.ranges(1, row).object);
             range = grouping.ranges(row);
             
             grouping.setValue(event.EditData,range);
             grouping.updateColors();
+            obj.populateGroupingTable();
             obj.populateGroupsTable(grouping);
         end
         
