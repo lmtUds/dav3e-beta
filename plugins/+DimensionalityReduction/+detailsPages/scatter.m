@@ -25,7 +25,8 @@ function updateFun = scatter(parent,project,dataprocessingblock)
 end
 
 function elements = makeGui(parent)
-    grid = uigridlayout(parent,[2 1],'RowHeight',{'1x',22});
+%     grid = uigridlayout(parent,[2 1],'RowHeight',{'1x',22});
+    grid = uigridlayout(parent,[1 1],'RowHeight',{'1x'});
     grid.Layout.Column = 1; grid.Layout.Row = 1; 
     hAx = uiaxes(grid);
     hAx.Layout.Column = 1; hAx.Layout.Row = 1;
@@ -74,12 +75,12 @@ function populateGui(elements,project,dataprocessingblock)
     end
     if numel(dims) == 3
         grid(elements.hAx,'on');
-        zlabel(elements.hAx,sprintf('DF3 (%0.1f %%)',100*cumEnergy(3)));
+        zlabel(elements.hAx,sprintf('PC3 (%0.1f %%)',100*cumEnergy(3)));
         set(elements.hAx,'View',[37.5,30]);
     end
-    xlabel(elements.hAx,sprintf('DF1 (%0.1f %%)',100*cumEnergy(1)));
+    xlabel(elements.hAx,sprintf('PC1 (%0.1f %%)',100*cumEnergy(1)));
     if numel(dims) >= 2
-        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
+        ylabel(elements.hAx,sprintf('PC2 (%0.1f %%)',100*cumEnergy(2)));
         legend(elements.hAx,[h1,h2],[c1,c2]);
     end
 end

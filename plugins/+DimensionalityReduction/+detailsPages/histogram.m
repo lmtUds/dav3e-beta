@@ -83,7 +83,7 @@ function [handles,captions] = histPlot(tl,data,grouping,dims,groupingColors,limi
         end
 %         set(handles,'MarkerEdgeColor',[1,1,1],'MarkerEdgeAlpha',0.7,'MarkerFaceAlpha',0.7);
         legend(hsAx,captions)
-        xlabel(hsAx,sprintf('DF%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
+        xlabel(hsAx,sprintf('PC%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
         ylabel(hsAx,'counts');
         hold(hsAx,'off');
     end
