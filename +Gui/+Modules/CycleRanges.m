@@ -50,9 +50,10 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 'RowSpacing',7);
             
             moduleMenu = uimenu(mainFigure,'Label','CycleRanges');
-            uimenu(moduleMenu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
             uimenu(moduleMenu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
-            uimenu(moduleMenu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
+            uimenu(moduleMenu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label','change range length (batch)','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
+            
             uimenu(moduleMenu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
 
             rangeAx = uiaxes(moduleLayout);
