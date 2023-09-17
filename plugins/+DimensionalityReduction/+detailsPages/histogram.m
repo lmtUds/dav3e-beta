@@ -53,14 +53,17 @@ function populateGui(parent,project,dataprocessingblock)
     delete(parent.Children);
     tl = tiledlayout(parent,numel(dims),1);
     tl.Layout.Row = 1; tl.Layout.Column = 1;
-    [h1,c1] = histPlot(tl,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
-    [h2,c2] = histPlot(tl,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    [h1,~,c1] = histPlot(tl,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    [h2,h22,c2] = histPlot(tl,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    set(h2,'EdgeColor','k','LineWidth',1); %,'LineStyle','--'
+    set(h22,'EdgeColor','k','LineWidth',1); %,'LineStyle','--'
     c2 = c2 + string(' (testing)');
-%     legend([h1,h2],[c1,c2]);
+    legend([h1,h2],[c1,c2]);
 end
 
-function [handles,captions] = histPlot(tl,data,grouping,dims,groupingColors,limits,cumEnergy)
+function [handles,handles2,captions] = histPlot(tl,data,grouping,dims,groupingColors,limits,cumEnergy)
     handles = [];
+    handles2 = [];
     captions = string.empty;
     for i = 1:numel(dims)
         hsAx = nexttile(tl,i);
@@ -79,10 +82,18 @@ function [handles,captions] = histPlot(tl,data,grouping,dims,groupingColors,limi
                     captions(end+1) = cats{j};
                 end
             end
+            if i == 2
+                if isempty(handles2)
+                    handles2 = p;
+                else
+                    handles2(end+1) = p;
+                end
+            end
             set(p,'FaceColor',groupingColors(cats{j}));
+            set(p,'EdgeColor',groupingColors(cats{j})/1.5);
         end
 %         set(handles,'MarkerEdgeColor',[1,1,1],'MarkerEdgeAlpha',0.7,'MarkerFaceAlpha',0.7);
-        legend(hsAx,captions)
+%         legend(hsAx,captions)
         xlabel(hsAx,sprintf('DF%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
         ylabel(hsAx,'counts');
         hold(hsAx,'off');
