@@ -41,6 +41,8 @@ classdef Model < Gui.Modules.GuiModule
         
         rangeTable
         propGrid
+        
+        addDataTipRowsMenu
     end
     
     properties (Dependent)
@@ -73,6 +75,10 @@ classdef Model < Gui.Modules.GuiModule
             
             %Add the menubar item for this module
             moduleMenu = uimenu(mainFigure,'Label','Model');
+            obj.addDataTipRowsMenu = uimenu(moduleMenu,...
+                'Label','scatter plots: add offset, cycle, and grouping info to data tips (time-consuming!)',...
+                'Checked','off',...
+                getMenuCallbackName(),@obj.addDataTipRowsMenuClicked);
             
             %Create the grid to house the model definition section in the
             %leftmost column
@@ -185,6 +191,13 @@ classdef Model < Gui.Modules.GuiModule
             parameterPanel.Layout.Row = 1;
             parameterPanel.Layout.Column = 3;
             obj.parametersDropdownPanel = parameterPanel;
+        end
+        
+        function addDataTipRowsMenuClicked(obj,h,varargin)
+            switch h.Checked
+                case 'on', h.Checked = 'off';
+                case 'off', h.Checked = 'on';
+            end
         end
         
         function sizechangedCallback(obj, src, event)

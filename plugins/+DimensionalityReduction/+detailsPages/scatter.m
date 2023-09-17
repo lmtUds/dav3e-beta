@@ -20,8 +20,22 @@
 
 function updateFun = scatter(parent,project,dataprocessingblock)
     elements = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+    try
+        daveHandle = parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent;
+        modelMenuHandle = daveHandle.Children(3);
+        addDataTipCheckBox = modelMenuHandle.Children(1);
+        if strcmp(addDataTipCheckBox.Text,'scatter plots: add offset, cycle and grouping info to data tips (time-consuming!)')
+            addDataTipRows = addDataTipCheckBox.Checked;
+        else
+            warning('Index or text of data tip checkbox in model menu bar seems to have changed.');
+            addDataTipRows = false;
+        end
+    catch ME
+        warning(['Status of the data tip checkbox unknown: ',ME.message]);
+        addDataTipRows = false;
+    end
+    populateGui(elements,project,dataprocessingblock,addDataTipRows);
+    updateFun = @()populateGui(elements,project,dataprocessingblock,addDataTipRows);
 end
 
 function elements = makeGui(parent)
@@ -39,7 +53,7 @@ function elements = makeGui(parent)
 %     elements.spinButton = spinButton;
 end
 
-function populateGui(elements,project,dataprocessingblock)
+function populateGui(elements,project,dataprocessingblock,addDataTipRows)
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam)
         return
@@ -62,9 +76,39 @@ function populateGui(elements,project,dataprocessingblock)
         dims = dims(1:3);
     end
     
+    if addDataTipRows
+        trainingOffsets = project.currentModel.fullModelData.offsets(project.currentModel.fullModelData.getSelectedCycles('training'));
+        testingOffsets = project.currentModel.fullModelData.offsets(project.currentModel.fullModelData.getSelectedCycles('testing'));
+        if numel(project.clusters) == 1
+            trainingCycles = project.clusters(1).timeToCycleNumber(trainingOffsets); %currentCluster
+            testingCycles = project.clusters(1).timeToCycleNumber(testingOffsets); %currentCluster
+        else
+            warning('There is more than one cluster; cycle number not unambiguous, therefore not applicable.');
+            trainingCycles = [];
+            testingCycles = [];
+        end
+        allGroupingCaptions = project.currentModel.fullModelData.groupingCaptions;
+        numGroupings = numel(allGroupingCaptions);
+        allTrainGroupings = categorical(zeros(size(trainGrouping,1),numGroupings));
+        allTestGroupings = categorical(zeros(size(testGrouping,1),numGroupings));
+        for agidx = 1:numGroupings
+            allTrainGroupings(:,agidx) = categorical(tryCat2num(project.currentModel.fullModelData.getSelectedGrouping('training',allGroupingCaptions{agidx})));
+            allTestGroupings(:,agidx) = categorical(tryCat2num(project.currentModel.fullModelData.getSelectedGrouping('testing',allGroupingCaptions{agidx})));
+        end
+    else
+        trainingOffsets = [];
+        trainingCycles = [];
+        testingOffsets = [];
+        testingCycles = [];
+        allTrainGroupings = [];
+        allTestGroupings = [];
+        allGroupingCaptions = [];
+    end
+
     cla(elements.hAx,'reset');
-    [h1,c1] = scatterPlot(elements.hAx,trainData,trainGrouping,dims,groupingColors);
-    [h2,c2] = scatterPlot(elements.hAx,testData,testGrouping,dims,groupingColors);
+    [h1,c1] = scatterPlot(elements.hAx,trainData,trainGrouping,groupingCaption,dims,groupingColors,trainingOffsets,trainingCycles,allTrainGroupings,allGroupingCaptions);
+    [h2,c2] = scatterPlot(elements.hAx,testData,testGrouping,groupingCaption,dims,groupingColors,testingOffsets,testingCycles,allTestGroupings,allGroupingCaptions);
+    
 %     h2.MarkerStyle = '^';
     set(h2,'Marker','^'); 
 %     set(h2,'LineWidth',2);
@@ -83,7 +127,7 @@ function populateGui(elements,project,dataprocessingblock)
     end
 end
 
-function [handles,captions] = scatterPlot(hAx,data,grouping,dims,groupingColors)
+function [handles,captions] = scatterPlot(hAx,data,grouping,groupingCaption,dims,groupingColors,offsets,cycles,allGroupings,allGroupingCaptions)
     handles = [];
     captions = string.empty;
     hold(hAx,'on');
@@ -106,6 +150,31 @@ function [handles,captions] = scatterPlot(hAx,data,grouping,dims,groupingColors)
             error('Expected one, two, or three dimensions.');
         end
         
+        if ~isempty(offsets) && ~isempty(allGroupings) && ~isempty(allGroupingCaptions) %&& ~isempty(cycles) 
+            p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Offset:',offsets(idx));
+            p.DataTipTemplate.DataTipRows(end).Format = '%.10i';
+            p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('OffsetStr:',string(offsets(idx)));
+            p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('DateTime:',datetime(offsets(idx),'ConvertFrom','posixtime','TimeZone','Europe/Berlin'));
+            if ~isempty(cycles)
+                p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('CycleNo:',cycles(idx));
+%                 txt = ['\leftarrow '+string(cycles(idx))];
+%                 text(hAx,data(idx,dims(1)),data(idx,dims(2)),data(idx,dims(3)),txt,'FontSize',7);
+            else
+                p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('CycleNo:',repelem(categorical(cellstr('n.a.')),size(offsets(idx),1),1));
+            end
+            p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('TrainedGrouping:',repelem(categorical(cellstr(groupingCaption)),size(grouping(idx),1),1));
+            p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Group_TrainedGrouping:',grouping(idx));
+            for agidx = 1:numel(allGroupingCaptions)
+                p.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow([allGroupingCaptions{agidx},':'],allGroupings(idx,agidx));
+                if strcmp(p.DataTipTemplate.DataTipRows(end).Label,'...') %TODO: method to select grouping to use here
+%                     txt = ['\leftarrow '+string(allGroupings(idx,agidx))];
+%                     text(hAx,data(idx,dims(1)),data(idx,dims(2)),data(idx,dims(3)),txt,'FontSize',7);
+                end
+            end
+            p.DataTipTemplate.Interpreter = 'none';
+            p.DataTipTemplate.FontSize = 8;
+        end
+        
         if isempty(handles)
             handles = p;
             captions = string(cats{i});
@@ -118,6 +187,10 @@ function [handles,captions] = scatterPlot(hAx,data,grouping,dims,groupingColors)
     end
 %     set(handles,'MarkerEdgeAlpha',0.5,'MarkerFaceAlpha',0.7,'LineWidth',0.01);
     hold(hAx,'off');
+    
+%     dcm = datacursormode;
+% %     dcm.Enable = 'on';
+%     dcm.DisplayStyle = 'window';
 end
 
 function spinAxes(src,~,hAx)
