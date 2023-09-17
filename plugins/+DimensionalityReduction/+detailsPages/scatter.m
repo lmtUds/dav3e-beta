@@ -67,20 +67,19 @@ function populateGui(elements,project,dataprocessingblock)
     [h2,c2] = scatterPlot(elements.hAx,testData,testGrouping,dims,groupingColors);
 %     h2.MarkerStyle = '^';
     set(h2,'Marker','^'); 
-    c2 = c2 + string(' (testing)');
 %     set(h2,'LineWidth',2);
+    c2 = c2 + string(' (testing)');
+    legend(elements.hAx,[h1,h2],[c1,c2]);
+    xlabel(elements.hAx,sprintf('DF1 (%0.1f %%)',100*cumEnergy(1)));
     if numel(dims) == 2
         set(h1,'MarkerFaceAlpha',0.7);
+        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
     end
     if numel(dims) == 3
-        grid(elements.hAx,'on');
+        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
         zlabel(elements.hAx,sprintf('DF3 (%0.1f %%)',100*cumEnergy(3)));
         set(elements.hAx,'View',[37.5,30]);
-    end
-    xlabel(elements.hAx,sprintf('DF1 (%0.1f %%)',100*cumEnergy(1)));
-    if numel(dims) >= 2
-        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
-        legend(elements.hAx,[h1,h2],[c1,c2]);
+        grid(elements.hAx,'on');
     end
 end
 
