@@ -66,7 +66,7 @@ function populateGui(parent,project,dataprocessingblock)
         x = [v{ind{1}}];
         y = model.trainingCorrs * factor;
         yerr = model.trainingCorrStds * factor;
-        errorbar(ax,x,y,yerr,'ko--'); hold on;
+        errorbar(ax,x,y,yerr,'ko--'); hold(ax,'on');
         y = model.validationCorrs * factor;
         yerr = model.validationCorrStds * factor;
         errorbar(ax,x,y,yerr,'rs--','color',red);
@@ -112,7 +112,7 @@ function populateGui(parent,project,dataprocessingblock)
         Z1(idxs) = z1;
         Z2(idxs) = z2;
         Z3(idxs) = z3;
-        surf(ax,ux,uy,Z1,'FaceColor','k','FaceAlpha',0.5); hold on;
+        surf(ax,ux,uy,Z1,'FaceColor','k','FaceAlpha',0.5); hold(ax,'on');
         surf(ax,ux,uy,Z2,'FaceColor',red);
         surf(ax,ux,uy,Z3,'FaceColor',blue,'FaceAlpha',0.5);
         c = strsplit(cap{1},'_'); xlabel(c{2});
