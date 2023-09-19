@@ -33,7 +33,9 @@ classdef Model < Gui.Modules.GuiModule
         setDropdown
         detailsLayout
         tabLayout
+        dynamicGrid
         parametersDropdownPanel
+        errorPanel
         parameterPopups
         
         featurePreviewX
@@ -178,13 +180,27 @@ classdef Model < Gui.Modules.GuiModule
             
             %Create the panel for the parameter adjusting section after
             %training
-            parameterPanel = uipanel(moduleLayout,...
+            
+            dynamicGrid = uigridlayout(moduleLayout,[2 1],...
+                'Visible','off',...
+                'Padding',[0 0 0 0]);
+            dynamicGrid.Layout.Row = 1;
+            dynamicGrid.Layout.Column = 3;
+            obj.dynamicGrid = dynamicGrid;
+            
+            parameterPanel = uipanel(dynamicGrid,...
                 'Title','Adjust Parameters',...
                 'BorderType','none',...
                 'Visible','off');
             parameterPanel.Layout.Row = 1;
-            parameterPanel.Layout.Column = 3;
             obj.parametersDropdownPanel = parameterPanel;
+
+            errorPanel = uipanel(dynamicGrid,...
+                'Title','Errors',...
+                'BorderType','none',...
+                'Visible','off');
+            errorPanel.Layout.Row = 2;
+            obj.errorPanel = errorPanel;
         end
         
         function sizechangedCallback(obj, src, event)
@@ -243,14 +259,41 @@ classdef Model < Gui.Modules.GuiModule
             if ~ok
                 return
             end
+%             if nargin < 2
+%                 mod = obj.currentModel.processingChain.blocks;
+%                 methods = Model.getAvailableMethods(true);
+% %                 s = keys(fe);
+%                 s = {};
+%                 c = {};
+%                 fields = mod.getCaption();
+%                  for i = 1:numel(fields)
+%                     if numel(keys(methods.(fields{i}))) == 0
+%                         continue
+%                     end
+%                     s = horzcat(s,keys(methods.(fields{i})));
+%                     c = horzcat(c,repmat(fields(i),1,size(keys(methods.(fields{i})),2)));
+%                 end
+%                 [sel,ext,cats] = Gui.Dialogs.SelectCategory('ListItems',s,'Categories',c);
+%                 if ~ext
+%                     return
+%                 end
+%             else
+%                 sel = {desc};
+%             end
+
+
             rem = mod(ismember(captions,sel));
             obj.currentModel.removeFromChain(rem);
             obj.updatePropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
 %             obj.updatePlotsInPlace();
 %             obj.setGlobalYLimits();
-        end        
+%         end  
+            
 
+        end
+
+    
         function moveModelChainBlockUp(obj)
             block = obj.propGrid.getSelectedBlock();
             if isempty(block)
@@ -416,7 +459,8 @@ classdef Model < Gui.Modules.GuiModule
             
             obj.makeModelTabs();
             obj.makeParameterDropdowns(caps,inds);
-            
+            obj.makeErrorPanel();
+
             obj.updatePropGrid();
             
             close(prog)
@@ -427,6 +471,7 @@ classdef Model < Gui.Modules.GuiModule
             obj.parametersDropdownPanel.Children.delete();
             obj.parameterPopups = [];
             
+            obj.parametersDropdownPanel.Parent.RowHeight = {'1x','1x'};
             %get the hyper parameters that are varied with caption and
             %values available for variation
             [cap,~,val] = obj.getModel().getVariedHyperParameters();
@@ -457,23 +502,94 @@ classdef Model < Gui.Modules.GuiModule
                         obj.parameterPopups(i) = popup;
                     end
                 end
-                obj.parametersDropdownPanel.Parent.ColumnWidth{3} = '1x';
+                obj.parametersDropdownPanel.Parent.Parent.ColumnWidth{3} = '1x';
+                obj.dynamicGrid.Visible = 'on';
                 obj.parametersDropdownPanel.Visible = 'on';
+
             else
-                obj.parametersDropdownPanel.Parent.ColumnWidth{3} = 0;
+%                 obj.parametersDropdownPanel.Parent.Parent.ColumnWidth{3} = 0; 
                 obj.parametersDropdownPanel.Visible = 'off';
+                obj.parametersDropdownPanel.Parent.RowHeight = {0 '1x'};
             end
         end
         
+        function makeErrorPanel(obj)
+            
+            obj.errorPanel.Children.delete();
+            obj.parameterPopups = [];
+
+            errorGrid = uigridlayout(obj.errorPanel,[5 2],...
+                'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,5,1),...
+                'Padding',[0 0 0 0],'RowSpacing',5);
+            
+            trainErrorCap = uilabel(errorGrid,'Text','trainingError','WordWrap','on');
+            trainErrorCap.Layout.Row = 1;
+            trainErrorCap.Layout.Column = 1;
+
+            valErrorCap = uilabel(errorGrid,'Text','validationError','WordWrap','on');
+            valErrorCap.Layout.Row = 2;
+            valErrorCap.Layout.Column = 1;
+
+            testErrorCap = uilabel(errorGrid,'Text','testingError','WordWrap','on');
+            testErrorCap.Layout.Row = 3;
+            testErrorCap.Layout.Column = 1;
+              
+            fullModelTrainErrorCap = uilabel(errorGrid,'Text','fullModelTrainingError','WordWrap','on');
+            fullModelTrainErrorCap.Layout.Row = 4;
+            fullModelTrainErrorCap.Layout.Column = 1;
+
+            fullModelTestErrorCap = uilabel(errorGrid,'Text','fullModelTestingError','WordWrap','on');
+            fullModelTestErrorCap.Layout.Row = 5;
+            fullModelTestErrorCap.Layout.Column = 1;
+
+            caps = {}; inds = [];
+            for i = 1:numel(obj.parameterPopups)
+                caps{i} = obj.parameterPopups(i).UserData;
+                logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+                proxArray = 1:size(obj.parameterPopups(i).Items,2);
+                inds(i) = proxArray(logInd)
+            end
+            if isempty(inds)
+                inds = 1;
+            end
+
+            trainErrorVal = uilabel(errorGrid,'Text',num2str(obj.currentModel.trainingErrors(inds)));
+            trainErrorVal.Layout.Row = 1;
+            trainErrorVal.Layout.Column = 2;
+
+            valErrorVal = uilabel(errorGrid,'Text',num2str(obj.currentModel.validationErrors(inds)));
+            valErrorVal.Layout.Row = 2;
+            valErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(errorGrid,'Text',num2str(obj.currentModel.testingErrors(inds)));
+            testErrorVal.Layout.Row = 3;
+            testErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(errorGrid,'Text',num2str(obj.currentModel.fullModelTrainingError));
+            testErrorVal.Layout.Row = 4;
+            testErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(errorGrid,'Text',num2str(obj.currentModel.fullModelTestingError));
+            testErrorVal.Layout.Row = 5;
+            testErrorVal.Layout.Column = 2;
+
+            obj.errorPanel.Parent.Parent.ColumnWidth{3} = '1x';
+            obj.dynamicGrid.Visible = 'on';
+            obj.errorPanel.Visible = 'on';
+
+
+        end
+
+
         function parameterDropdownChanged(obj,varargin)
             caps = {}; inds = [];
             for i = 1:numel(obj.parameterPopups)
                 caps{i} = obj.parameterPopups(i).UserData;
                 logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
                 proxArray = 1:size(obj.parameterPopups(i).Items,2);
-                inds(i) = proxArray(logInd);
+                inds(i) = proxArray(logInd)
             end
-            
+
             data = obj.getProject().mergedFeatureData.copy();
             data.setValidation('none');
             data.setTesting('none');
@@ -482,8 +598,13 @@ classdef Model < Gui.Modules.GuiModule
             % update current details page
             obj.getCurrentDetailsPageTab().UserData();
             obj.updatePropGrid();
+
+            % update errors
+             obj.makeErrorPanel();
         end
         
+        
+
         function tab = getCurrentDetailsPageTab(obj)
             %double children bc. a grid is inbetween
             tab = obj.tabGroup.SelectedTab.Children.Children.SelectedTab.Children.Children.SelectedTab;
