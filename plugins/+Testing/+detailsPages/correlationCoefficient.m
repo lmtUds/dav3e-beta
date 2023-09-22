@@ -70,7 +70,7 @@ function populateGui(parent,project,dataprocessingblock)
 %         x = [v{ind{1}}];
 %         y = model.fullModelTrainingCorr * factor;
 %         yerr = model.fullModelTrainingCorrStd * factor;
-%         errorbar(ax,x,y,yerr,'ko--'); hold on;
+%         errorbar(ax,x,y,yerr,'ko--'); hold(ax,'on');
 % %         y = model.fullModelValidationCorr * factor;
 % %         yerr = model.fullModelValidationCorrStd * factor;
 % %         errorbar(ax,x,y,yerr,'rs--','color',red);
@@ -104,21 +104,30 @@ function populateGui(parent,project,dataprocessingblock)
 %         x = double([v1{ind{1}}]);
 %         v2 = val{2};
 %         y = double([v2{ind{2}}]);
-%         z = model.fullModelValidationCorr * factor;
+%         z1 = model.fullModelTrainingCorr * factor;
+% %         z2 = model.fullModelValidationCorr * factor;
+%         z3 = model.fullModelTestingCorr * factor;
 %         ux = unique(x);
 %         uy = unique(y);
-%         Z = zeros(numel(uy),numel(ux));
+%         Z1 = zeros(numel(uy),numel(ux));
+% %         Z2 = zeros(numel(uy),numel(ux));
+%         Z3 = zeros(numel(uy),numel(ux));
 %         idxs = sub2ind(size(Z),double(categorical(y)),double(categorical(x)));
-%         Z(idxs) = z;
-%         surf(ax,ux,uy,Z);
+%         Z1(idxs) = z1;
+% %         Z2(idxs) = z2;
+%         Z3(idxs) = z3;
+%         surf(ax,ux,uy,Z1,'FaceColor','k','FaceAlpha',0.5); hold(ax,'on');
+% %         surf(ax,ux,uy,Z2,'FaceColor',red);
+%         surf(ax,ux,uy,Z3,'FaceColor',blue,'FaceAlpha',0.5);
 %         c = strsplit(cap{1},'_'); xlabel(c{2});
 %         c = strsplit(cap{2},'_'); ylabel(c{2});
 %         zlabel(ax,label);
-%         
-%         half = linspace(.5,1,32)';
-%         full = linspace(1,1,32)';
-%         cm = flipud(([full,half,half;flipud([half,full,half])]));
-%         colormap(ax,cm)
-%         caxis(ax,[0 100]);
+%         legend(ax,{'training','testing'}); %,'validation'
+% 
+% %         half = linspace(.5,1,32)';
+% %         full = linspace(1,1,32)';
+% %         cm = flipud(([full,half,half;flipud([half,full,half])]));
+% %         colormap(ax,cm)
+% %         caxis(ax,[0 100]);
 %     end
 end

@@ -29,8 +29,17 @@ function populateGui(project,parent)
     [confmat,order] = confusionmat(target,pred);
     if ~isempty(confmat)
         delete(parent.Children)
-        confChart = confusionchart(confmat,order,...
-            'Parent',parent,'Normalization','total-normalized');
+        confChart = confusionchart(confmat',order,...
+            'Parent',parent)
+        % confChart.Normalization = 'column-normalized';
+        % confChart.RowSummary = 'row-normalized';
+        confChart.ColumnSummary = 'column-normalized';
+        colorFactor = 0.75;
+        confChart.DiagonalColor = [0 1 0]*colorFactor;
+        confChart.OffDiagonalColor = [1 0 0]*colorFactor;
+        confChart.XLabel = 'Target: True Class'; confChart.YLabel = 'Output: Predicted Class';
+        confChart.Title = sprintf('Accuracy: %.2f%%', 100*trace(confmat)/sum(confmat(:)));  %adapted from https://github.com/vtshitoyan/plotConfMat/blob/master/plotConfMat.m, Copyright (c) 2018 Vahe Tshitoyan, MIT License
+        % sortClasses(confChart,sort(categories(order)));
         confChart.Layout.Row = 1;
         confChart.Layout.Column = 1;
     end
