@@ -635,7 +635,7 @@ classdef Model < Gui.Modules.GuiModule
             
             % update current details page
             obj.getCurrentDetailsPageTab().UserData();
-            obj.updatePropGrid();
+%             obj.updatePropGrid();
 
             % update errors
             obj.makeErrorPanel();
