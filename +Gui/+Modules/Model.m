@@ -796,7 +796,10 @@ classdef Model < Gui.Modules.GuiModule
             % module, which makes sure that the features are always up to
             % date, but is quite inefficient
             % TODO
-            obj.getProject().mergedFeatureData = Data.empty;
+            % Edit: was removed/commented, as there is a new dialog asking
+            % if features should be calculated even though there already
+            % are mergedFeatures.
+%             obj.getProject().mergedFeatureData = Data.empty;
         end     
     end
 end
