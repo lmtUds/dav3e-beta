@@ -269,35 +269,30 @@ classdef Model < Gui.Modules.GuiModule
             mod = obj.currentModel.processingChain.blocks;
             captions = mod.getCaption();
             types = mod.getType();
+
+            % Sort to make it the same order as in the "Add" dialog
+            methods = string(fieldnames(Model.getAvailableMethods(true)))';  %all method blocks
+            methods = intersect(methods,types,'stable'); %only used blocks
+            [~,methodidx] = ismember(methods, types); %find (first) index of method blocks in used methods
+            methodidx = unique([methodidx,[1:numel(types)]],'stable'); %add missing entries at the end (rest is handled by for loop in SelectCategory)
+            mod = mod(methodidx); %sort accordingly
+            captions = captions(methodidx); %sort accordingly
+            types = types(methodidx); %sort accordingly
+
 %             [sel,ok] = Gui.Dialogs.Select('ListItems',captions,'MultiSelect',false);
-            [sel,ok] = Gui.Dialogs.SelectCategory('ListItems',captions,'Categories',types,'MultiSelect',false);
+            [sel,ok,cat] = Gui.Dialogs.SelectCategory('ListItems',captions,'Categories',types,'MultiSelect',false);
             if ~ok
                 return
             end
-%             if nargin < 2
-%                 mod = obj.currentModel.processingChain.blocks;
-%                 methods = Model.getAvailableMethods(true);
-% %                 s = keys(fe);
-%                 s = {};
-%                 c = {};
-%                 fields = mod.getCaption();
-%                  for i = 1:numel(fields)
-%                     if numel(keys(methods.(fields{i}))) == 0
-%                         continue
-%                     end
-%                     s = horzcat(s,keys(methods.(fields{i})));
-%                     c = horzcat(c,repmat(fields(i),1,size(keys(methods.(fields{i})),2)));
-%                 end
-%                 [sel,ext,cats] = Gui.Dialogs.SelectCategory('ListItems',s,'Categories',c);
-%                 if ~ext
-%                     return
-%                 end
-%             else
-%                 sel = {desc};
-%             end
 
-
-            rem = mod(ismember(captions,sel));
+            rem = mod(ismember(captions,sel) & ismember(types,cat));
+            %TODO: Better prevent model chain blocks from being added if already in model chain (instead of handling a delete conflict as follows).
+            if numel(rem)>1
+                rem = rem(1,end);
+                warning('Backtrace','off')
+                warning('More than one model chain block fits the deletion selection. The last one added has been removed, the other remain(s).')
+                warning('Backtrace','on')
+            end
             obj.currentModel.removeFromChain(rem);
             obj.updatePropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
