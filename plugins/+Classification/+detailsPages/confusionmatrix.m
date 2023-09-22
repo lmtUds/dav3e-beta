@@ -30,7 +30,7 @@ function populateGui(project,parent)
     if ~isempty(confmat)
         delete(parent.Children)
         confChart = confusionchart(confmat',order,...
-            'Parent',parent)
+            'Parent',parent);
         % confChart.Normalization = 'column-normalized';
         % confChart.RowSummary = 'row-normalized';
         confChart.ColumnSummary = 'column-normalized';

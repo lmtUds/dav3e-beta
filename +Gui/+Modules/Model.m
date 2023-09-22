@@ -298,9 +298,6 @@ classdef Model < Gui.Modules.GuiModule
             obj.getCurrentSensor().preComputePreprocessedData();
 %             obj.updatePlotsInPlace();
 %             obj.setGlobalYLimits();
-%         end  
-            
-
         end
 
     
@@ -557,7 +554,7 @@ classdef Model < Gui.Modules.GuiModule
                 caps{i} = obj.parameterPopups(i).UserData;
                 logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
                 proxArray = 1:size(obj.parameterPopups(i).Items,2);
-                inds(i) = proxArray(logInd)
+                inds(i) = proxArray(logInd);
             end
             if isempty(inds)
                 inds = 1;
@@ -586,8 +583,6 @@ classdef Model < Gui.Modules.GuiModule
             obj.errorPanel.Parent.Parent.ColumnWidth{3} = '1x';
             obj.dynamicGrid.Visible = 'on';
             obj.errorPanel.Visible = 'on';
-
-
         end
 
 
@@ -597,7 +592,7 @@ classdef Model < Gui.Modules.GuiModule
                 caps{i} = obj.parameterPopups(i).UserData;
                 logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
                 proxArray = 1:size(obj.parameterPopups(i).Items,2);
-                inds(i) = proxArray(logInd)
+                inds(i) = proxArray(logInd);
             end
 
             data = obj.getProject().mergedFeatureData.copy();
@@ -610,11 +605,9 @@ classdef Model < Gui.Modules.GuiModule
             obj.updatePropGrid();
 
             % update errors
-             obj.makeErrorPanel();
+            obj.makeErrorPanel();
         end
         
-        
-
         function tab = getCurrentDetailsPageTab(obj)
             %double children bc. a grid is inbetween
             tab = obj.tabGroup.SelectedTab.Children.Children.SelectedTab.Children.Children.SelectedTab;
