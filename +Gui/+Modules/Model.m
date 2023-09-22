@@ -339,6 +339,14 @@ classdef Model < Gui.Modules.GuiModule
             obj.currentModel = model;
             dropdown.Items{end+1} = char(model.getCaption());
             dropdown.Value = char(model.getCaption());
+            
+            prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+            drawnow
+            obj.updatePropGrid;
+            obj.updateTabs();
+            close(prog)
         end
         
         function dropdownRemoveModel(obj,src,event,dropdown)
@@ -365,6 +373,18 @@ classdef Model < Gui.Modules.GuiModule
             
             dropdown.Items(idx) = [];
             dropdown.Value = char(obj.currentModel.getCaption());
+
+            prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+            drawnow
+            obj.updatePropGrid;
+            obj.updateTabs();
+            if obj.currentModel.trained
+                [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
+                obj.makeParameterDropdowns(caps,inds);
+            end
+            close(prog)
         end
         
         function dropdownModelCallback(obj,src,event)
@@ -384,20 +404,21 @@ classdef Model < Gui.Modules.GuiModule
                     obj.getProject().models(index);
                 obj.updatePropGrid;
                 obj.updateTabs();
-
-                [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
-                obj.makeParameterDropdowns(caps,inds);
+                if obj.currentModel.trained
+                    [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
+                    obj.makeParameterDropdowns(caps,inds);
+                end
                 close(prog)
             end
         end
         
-        function dropdownModelRename(obj,h,newName,index)
+        function dropdownModelRename(obj,h,newName,index)   %Not used anymore?!?
             newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().models.getCaption()));
             obj.getProject().models(index).setCaption(newName);
             h.renameItemAt(newName,h.getSelectedIndex());
         end
         
-        function dropdownModelChange(obj,h,newItem,newIndex)
+        function dropdownModelChange(obj,h,newItem,newIndex)   %Not used anymore?!?
             prog = uiprogressdlg(obj.main.hFigure,'Title','Changing model',...
                 'Indeterminate','on');
             drawnow
