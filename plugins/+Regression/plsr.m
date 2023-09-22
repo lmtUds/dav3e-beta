@@ -32,9 +32,9 @@ function info = plsr()
         Parameter('shortCaption','nComp', 'value',int32(1), 'enum',1:20, 'selection','multiple'),...
         Parameter('shortCaption','projectedData', 'value',[], 'internal',true),...
         Parameter('shortCaption','lastTrainData', 'value',[], 'internal',true),...
-        Parameter('shortCaption','trainError','value',1,'editable',false),...
-        Parameter('shortCaption','validationError','value',1,'editable',false),...
-        Parameter('shortCaption','testError','value',1,'editable',false)...
+        ...Parameter('shortCaption','trainError','value',1,'editable',false),...
+        ...Parameter('shortCaption','validationError','value',1,'editable',false),...
+        ...Parameter('shortCaption','testError','value',1,'editable',false)...
         ];
     info.apply = @apply;
     info.train = @train;
@@ -117,37 +117,37 @@ function params = reset(params)
 end
 
 function updateParameters(params,project)
-    for i = 1:numel(params)
-        if params(i).shortCaption == string('trainError')
-            val = project.currentModel.trainingErrors;
-            tris = project.currentModel.trainedIndexSet;
-            hpi = project.currentModel.hyperParameterIndices;
-            val = val(sum(tris~=hpi,1) == 0);
-            if ~isnan(val)
-                params(i).value = val;
-            else
-                params(i).value = 1;
-            end
-        elseif params(i).shortCaption == string('validationError')
-            val = project.currentModel.validationErrors;
-            tris = project.currentModel.trainedIndexSet;
-            hpi = project.currentModel.hyperParameterIndices;
-            val = val(sum(tris~=hpi,1) == 0);
-            if ~isnan(val)
-                params(i).value = val;
-            else
-                params(i).value = 1;
-            end
-        elseif params(i).shortCaption == string('testError')
-            val = project.currentModel.testingErrors;
-            tris = project.currentModel.trainedIndexSet;
-            hpi = project.currentModel.hyperParameterIndices;
-            val = val(sum(tris~=hpi,1) == 0);
-            if ~isnan(val)
-                params(i).value = val;
-            else
-                params(i).value = 1;
-            end
-        end       
-    end
+%     for i = 1:numel(params)
+%         if params(i).shortCaption == string('trainError')
+%             val = project.currentModel.trainingErrors;
+%             tris = project.currentModel.trainedIndexSet;
+%             hpi = project.currentModel.hyperParameterIndices;
+%             val = val(sum(tris~=hpi,1) == 0);
+%             if ~isnan(val)
+%                 params(i).value = val;
+%             else
+%                 params(i).value = 1;
+%             end
+%         elseif params(i).shortCaption == string('validationError')
+%             val = project.currentModel.validationErrors;
+%             tris = project.currentModel.trainedIndexSet;
+%             hpi = project.currentModel.hyperParameterIndices;
+%             val = val(sum(tris~=hpi,1) == 0);
+%             if ~isnan(val)
+%                 params(i).value = val;
+%             else
+%                 params(i).value = 1;
+%             end
+%         elseif params(i).shortCaption == string('testError')
+%             val = project.currentModel.testingErrors;
+%             tris = project.currentModel.trainedIndexSet;
+%             hpi = project.currentModel.hyperParameterIndices;
+%             val = val(sum(tris~=hpi,1) == 0);
+%             if ~isnan(val)
+%                 params(i).value = val;
+%             else
+%                 params(i).value = 1;
+%             end
+%         end       
+%     end
 end
