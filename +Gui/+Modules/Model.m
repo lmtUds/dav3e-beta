@@ -268,7 +268,9 @@ classdef Model < Gui.Modules.GuiModule
         function removeModelChainBlock(obj, src, event)
             mod = obj.currentModel.processingChain.blocks;
             captions = mod.getCaption();
-            [sel,ok] = Gui.Dialogs.Select('ListItems',captions,'MultiSelect',false);
+            types = mod.getType();
+%             [sel,ok] = Gui.Dialogs.Select('ListItems',captions,'MultiSelect',false);
+            [sel,ok] = Gui.Dialogs.SelectCategory('ListItems',captions,'Categories',types,'MultiSelect',false);
             if ~ok
                 return
             end
