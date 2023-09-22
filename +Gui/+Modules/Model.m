@@ -383,6 +383,7 @@ classdef Model < Gui.Modules.GuiModule
             if obj.currentModel.trained
                 [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
                 obj.makeParameterDropdowns(caps,inds);
+                obj.makeErrorPanel();
             end
             close(prog)
         end
@@ -407,6 +408,7 @@ classdef Model < Gui.Modules.GuiModule
                 if obj.currentModel.trained
                     [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
                     obj.makeParameterDropdowns(caps,inds);
+                    obj.makeErrorPanel();
                 end
                 close(prog)
             end
@@ -429,7 +431,7 @@ classdef Model < Gui.Modules.GuiModule
 
             [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
             obj.makeParameterDropdowns(caps,inds);
-            
+            obj.makeErrorPanel();
             close(prog)
         end        
         
@@ -676,6 +678,8 @@ classdef Model < Gui.Modules.GuiModule
 %                 delete(obj.parametersDropdownGrid.Children);
                 obj.parametersDropdownPanel.Children.delete();
                 obj.parametersDropdownPanel.Visible = 'off';
+                obj.errorPanel.Children.delete();
+                obj.errorPanel.Visible = 'off';
             end
             
             % if model not trained, no ouput tabs -> return
