@@ -73,7 +73,9 @@ function populateGui(elements,project,dataprocessingblock,addDataTipRows)
     testGrouping = deStar(categorical(tryCat2num(project.currentModel.fullModelData.getSelectedGrouping('testing',groupingCaption))));
     dims = 1:size(trainData,2);
     if numel(dims) > 3
+        warning('backtrace','off');
         warning('Showing only first three of %d dimensions.',numel(dims));
+        warning('backtrace','on');
         dims = dims(1:3);
     end
     

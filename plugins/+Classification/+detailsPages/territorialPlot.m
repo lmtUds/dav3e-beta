@@ -31,7 +31,9 @@ function populateGui(parent,project,dataprocessingblock)
     trainData = dataParam.getValue().training;
     dims = 1:size(trainData,2);
     if numel(dims) ~= 2
+        warning('backtrace','off');
         warning('Territorial plot only available for 2D.')
+        warning('backtrace','on');
         return
     end
 %     if numel(dims) > 2

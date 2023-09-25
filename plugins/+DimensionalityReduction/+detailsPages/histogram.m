@@ -60,7 +60,7 @@ function populateGui(parent,project,dataprocessingblock)
     end
 
     delete(parent.Children);
-    tl = tiledlayout(parent,numel(dims),1);
+    tl = tiledlayout(parent,numel(dims),1); %TODO: better solution without warning?
     tl.Layout.Row = 1; tl.Layout.Column = 1;
     [h1,c1] = histPlot(tl,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy,0,labelStr);
     [h2,c2] = histPlot(tl,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy,1,labelStr);
