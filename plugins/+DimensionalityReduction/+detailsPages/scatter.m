@@ -110,19 +110,28 @@ function populateGui(elements,project,dataprocessingblock,addDataTipRows)
     [h1,c1] = scatterPlot(elements.hAx,trainData,trainGrouping,groupingCaption,dims,groupingColors,trainingOffsets,trainingCycles,allTrainGroupings,allGroupingCaptions);
     [h2,c2] = scatterPlot(elements.hAx,testData,testGrouping,groupingCaption,dims,groupingColors,testingOffsets,testingCycles,allTestGroupings,allGroupingCaptions);
     
+    switch dataprocessingblock.caption
+        case 'LDA'
+            labelStr = 'DF';
+        case 'PCA'
+            labelStr = 'PC';
+        otherwise
+            labelStr = 'XYZ';
+    end
+
 %     h2.MarkerStyle = '^';
     set(h2,'Marker','^'); 
 %     set(h2,'LineWidth',2);
     c2 = c2 + string(' (testing)');
     legend(elements.hAx,[h1,h2],[c1,c2]);
-    xlabel(elements.hAx,sprintf('DF1 (%0.1f %%)',100*cumEnergy(1)));
+    xlabel(elements.hAx,sprintf([labelStr,'1 (%0.1f %%)'],100*cumEnergy(1)));
     if numel(dims) == 2
         set(h1,'MarkerFaceAlpha',0.7);
-        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
+        ylabel(elements.hAx,sprintf([labelStr,'2 (%0.1f %%)'],100*cumEnergy(2)));
     end
     if numel(dims) == 3
-        ylabel(elements.hAx,sprintf('DF2 (%0.1f %%)',100*cumEnergy(2)));
-        zlabel(elements.hAx,sprintf('DF3 (%0.1f %%)',100*cumEnergy(3)));
+        ylabel(elements.hAx,sprintf([labelStr,'2 (%0.1f %%)'],100*cumEnergy(2)));
+        zlabel(elements.hAx,sprintf([labelStr,'3 (%0.1f %%)'],100*cumEnergy(3)));
         set(elements.hAx,'View',[37.5,30]);
         grid(elements.hAx,'on');
     end
