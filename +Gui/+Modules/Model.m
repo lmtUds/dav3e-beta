@@ -801,6 +801,9 @@ classdef Model < Gui.Modules.GuiModule
                                 'Options',{'Yes, compute now','No, keep existing features','Cancel'},...
                                 'DefaultOption',1,'CancelOption',3);
                 switch selection
+                    case 'No, keep existing features'
+                        allowed = true;
+                        return
                     case 'Cancel'
                         allowed = false;
                         return
