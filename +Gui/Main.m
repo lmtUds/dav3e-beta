@@ -137,12 +137,14 @@ classdef Main < handle
                 'MenuSelectedFcn',@(src,event) m1clickedCallback(obj));
             m2 = uimenu(cm,'Text','Set all sensors inactive',...
                 'MenuSelectedFcn',@(src,event) m2clickedCallback(obj));
-            m3 = uimenu(cm,'Text','Toggle current track active/inactive (all clusters and sensors)',...
+            m3 = uimenu(cm,'Text','Toggle current track active/inactive (all clusters and sensors)','Separator','on',...
                  'MenuSelectedFcn',@(src,event) m3clickedCallback(obj));
             m4 = uimenu(cm,'Text','Toggle current cluster active/inactive (all sensors)',...
                 'MenuSelectedFcn',@(src,event) m4clickedCallback(obj));
             m5 = uimenu(cm,'Text','Toggle current sensor active/inactive in all clusters (same track)',...
                  'MenuSelectedFcn',@(src,event) m5clickedCallback(obj));
+            m6 = uimenu(cm,'Text','Copy Preproc. chain and Feat.Def. set of current sensor to all clusters (same sensor name, same track)','Separator','on',...
+                 'MenuSelectedFcn',@(src,event) m6clickedCallback(obj));
             bottomTable.ContextMenu = cm;
 
             
@@ -276,6 +278,27 @@ classdef Main < handle
                 end
                 selSensor.setCurrent();
                 obj.populateSensorSetTable();
+        end
+
+        function m6clickedCallback(obj)
+            selSensor = obj.project.getCurrentSensor();
+            selTrack = selSensor.cluster.track;
+            selPPC = obj.project.currentPreprocessingChain;
+            selFDS = obj.project.currentFeatureDefinitionSet;
+            clusters = obj.project.clusters();
+            
+            for cidx=1:numel(clusters)
+                for sidx=1:numel(obj.project.clusters(cidx).sensors())
+                    if strcmp(clusters(cidx).sensors(sidx).caption, selSensor.caption) ...
+                            && strcmp(clusters(cidx).track, selTrack)
+                        newSensor = obj.project.clusters(cidx).sensors(sidx);
+                        newSensor.preprocessingChain = selPPC;
+                        newSensor.featureDefinitionSet = selFDS;
+                    end
+                end
+            end
+            selSensor.setCurrent();
+            obj.populateSensorSetTable();
         end
 
         function importGasmixerFile(obj,varargin)
