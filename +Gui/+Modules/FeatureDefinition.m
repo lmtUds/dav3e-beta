@@ -165,11 +165,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 'RowSpacing',7);
             
             moduleMenu = uimenu(mainFigure,'Label','FeatureDefinition');
-            uimenu(moduleMenu,'Label','plot features over time', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
-            uimenu(moduleMenu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
-            uimenu(moduleMenu,'Label','compute features', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
             uimenu(moduleMenu,'Label','copy all ranges',getMenuCallbackName(),@(varargin)obj.copyRangesCallback);
             uimenu(moduleMenu,'Label','paste all ranges',getMenuCallbackName(),@(varargin)obj.pasteRangesCallback);
+            uimenu(moduleMenu,'Label','compute features','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
+            uimenu(moduleMenu,'Label','plot features over time','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
+            uimenu(moduleMenu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
                         
             defsGrid = uigridlayout(moduleLayout, [4 4],...
                 'ColumnWidth',{'2x','2x','1x','1x'},...
