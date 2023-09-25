@@ -24,7 +24,7 @@ function updateFun = scatter(parent,project,dataprocessingblock)
         daveHandle = parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent;
         modelMenuHandle = daveHandle.Children(3);
         addDataTipCheckBox = modelMenuHandle.Children(1);
-        if strcmp(addDataTipCheckBox.Text,'scatter plots: add offset, cycle and grouping info to data tips (time-consuming!)')
+        if strcmp(addDataTipCheckBox.Text,'scatter plots: add offset, cycle, and grouping info to data tips (time-consuming!)')
             addDataTipRows = addDataTipCheckBox.Checked;
         else
             warning('Index or text of data tip checkbox in model menu bar seems to have changed.');
