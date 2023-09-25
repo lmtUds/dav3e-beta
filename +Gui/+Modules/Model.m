@@ -582,26 +582,30 @@ classdef Model < Gui.Modules.GuiModule
             fullModelTestErrorCap.Layout.Row = 6;
             fullModelTestErrorCap.Layout.Column = 1;
 
-            caps = {}; inds = [];
-            for i = 1:numel(obj.parameterPopups)
-                caps{i} = obj.parameterPopups(i).UserData;
-                logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
-                proxArray = 1:size(obj.parameterPopups(i).Items,2);
-                inds(i) = proxArray(logInd);
-            end
-            if isempty(inds)
-                inds = 1;
-            end
+%             caps = {}; inds = [];
+%             for i = 1:numel(obj.parameterPopups)
+%                 caps{i} = obj.parameterPopups(i).UserData;
+%                 logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+%                 proxArray = 1:size(obj.parameterPopups(i).Items,2);
+%                 inds(i) = proxArray(logInd);
+%             end
+%             if isempty(inds)
+%                 inds = 1;
+%             end
 
-            trainErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.trainingErrors(end-(inds-1))*factor,nSig,tSig)));
+            trainIdxSet = obj.main.project.currentModel.trainedIndexSet;
+            hyperParaIdx = obj.main.project.currentModel.hyperParameterIndices;
+            inds = sum(trainIdxSet~=hyperParaIdx,1) == 0;
+
+            trainErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.trainingErrors(inds)*factor,nSig,tSig)));
             trainErrorVal.Layout.Row = 1;
             trainErrorVal.Layout.Column = 2;
 
-            valErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.validationErrors(end-(inds-1))*factor,nSig,tSig)));
+            valErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.validationErrors(inds)*factor,nSig,tSig)));
             valErrorVal.Layout.Row = 2;
             valErrorVal.Layout.Column = 2;
 
-            testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.testingErrors(end-(inds-1))*factor,nSig,tSig)));
+            testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.testingErrors(inds)*factor,nSig,tSig)));
             testErrorVal.Layout.Row = 3;
             testErrorVal.Layout.Column = 2;
 
