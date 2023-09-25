@@ -546,7 +546,7 @@ classdef Model < Gui.Modules.GuiModule
         function makeErrorPanel(obj)
             obj.errorPanel.Children.delete();
 
-            errorGrid = uigridlayout(obj.errorPanel,[6 2],...
+            errorGrid = uigridlayout(obj.errorPanel,[5 2],...
                 'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,6,1),...
                 'Padding',[0 0 0 0],'RowSpacing',5);
             
@@ -562,24 +562,26 @@ classdef Model < Gui.Modules.GuiModule
                 factor = 1;
             end
 
-            trainErrorCap = uilabel(errorGrid,'Text',['trainingError',label],'WordWrap','on');
+            obj.errorPanel.Title = ['Errors',label];
+
+            trainErrorCap = uilabel(errorGrid,'Text','training','WordWrap','on');
             trainErrorCap.Layout.Row = 1;
             trainErrorCap.Layout.Column = 1;
 
-            valErrorCap = uilabel(errorGrid,'Text',['validationError',label],'WordWrap','on');
+            valErrorCap = uilabel(errorGrid,'Text','validation','WordWrap','on');
             valErrorCap.Layout.Row = 2;
             valErrorCap.Layout.Column = 1;
 
-            testErrorCap = uilabel(errorGrid,'Text',['(testingError)',label],'WordWrap','on');
+            testErrorCap = uilabel(errorGrid,'Text','(testing)','WordWrap','on');
             testErrorCap.Layout.Row = 3;
             testErrorCap.Layout.Column = 1;
               
-            fullModelTrainErrorCap = uilabel(errorGrid,'Text',['fullModel trainingError',label],'WordWrap','on');
-            fullModelTrainErrorCap.Layout.Row = 5;
+            fullModelTrainErrorCap = uilabel(errorGrid,'Text','fullModel training','WordWrap','on');
+            fullModelTrainErrorCap.Layout.Row = 4;
             fullModelTrainErrorCap.Layout.Column = 1;
 
-            fullModelTestErrorCap = uilabel(errorGrid,'Text',['fullModel testingError',label],'WordWrap','on');
-            fullModelTestErrorCap.Layout.Row = 6;
+            fullModelTestErrorCap = uilabel(errorGrid,'Text','fullModel testing','WordWrap','on');
+            fullModelTestErrorCap.Layout.Row = 5;
             fullModelTestErrorCap.Layout.Column = 1;
 
 %             caps = {}; inds = [];
@@ -610,11 +612,11 @@ classdef Model < Gui.Modules.GuiModule
             testErrorVal.Layout.Column = 2;
 
             testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.fullModelTrainingError*factor,nSig,tSig)));
-            testErrorVal.Layout.Row = 5;
+            testErrorVal.Layout.Row = 4;
             testErrorVal.Layout.Column = 2;
 
             testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.fullModelTestingError*factor,nSig,tSig)));
-            testErrorVal.Layout.Row = 6;
+            testErrorVal.Layout.Row = 5;
             testErrorVal.Layout.Column = 2;
 
             obj.errorPanel.Parent.Parent.ColumnWidth{3} = '1x';
