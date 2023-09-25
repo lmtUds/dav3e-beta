@@ -120,10 +120,11 @@ function populateGui(parent,project,dataprocessingblock)
 %         surf(ax,ux,uy,Z1,'FaceColor','k','FaceAlpha',0.5); hold(ax,'on');
 % %         surf(ax,ux,uy,Z2,'FaceColor',red);
 %         surf(ax,ux,uy,Z3,'FaceColor',blue,'FaceAlpha',0.5);
-%         c = strsplit(cap{1},'_'); xlabel(c{2});
-%         c = strsplit(cap{2},'_'); ylabel(c{2});
+%         c = strsplit(cap{1},'_'); xlabel(ax,c{2});
+%         c = strsplit(cap{2},'_'); ylabel(ax,c{2});
 %         zlabel(ax,label);
 %         legend(ax,{'training','testing'}); %,'validation'
+%         set(ax,'View',[37.5,30]);
 % 
 % %         half = linspace(.5,1,32)';
 % %         full = linspace(1,1,32)';
