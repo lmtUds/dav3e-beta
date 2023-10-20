@@ -23,10 +23,14 @@ classdef GroupingColorGradient < handle
         main
         module
         f
+        heading
         hColorChooser
         jColorChooser
-        hGroupList
+        heading2
+        hColorChooser2
+        jColorChooser2
         infosection
+        hGroupList
         applyButton
     end
     
@@ -38,23 +42,34 @@ classdef GroupingColorGradient < handle
                 'Visible','off',...
                 'menubar','none','toolbar','none',...
                 'CloseRequestFcn',@(varargin)obj.onDialogClose);
+            obj.f.Position(1,4) = 600;%adapt size for two colors
+            obj.f.Position(1,2) = 50;%adapt position for two colors
             layout = uiextras.VBox('Parent',obj.f);
+            
+            obj.heading = uicontrol(layout,...
+                'Style','text','BackgroundColor','y','String','Choose start color:');
             
             cc = javax.swing.JColorChooser(); %com.mathworks.mlwidgets.graphics.ColorPicker(0,0,'');
             [obj.jColorChooser,obj.hColorChooser] = javacomponent(cc,[0,0,1,1],layout);
             
-            obj.hGroupList = uicontrol(layout,...
-                'Style','listbox', 'String',{'a','b','c'},...
-                'min',0,'max',100);
+            obj.heading2 = uicontrol(layout,...
+                'Style','text','BackgroundColor','y','String','Choose end color:');
+            
+            cc2 = javax.swing.JColorChooser(); %com.mathworks.mlwidgets.graphics.ColorPicker(0,0,'');
+            [obj.jColorChooser2,obj.hColorChooser2] = javacomponent(cc2,[0,0,1,1],layout);
             
             obj.infosection = uicontrol(layout,...
-                'Style','text','String','The selected groups will be ignored for color gradient');
+                'Style','text','BackgroundColor','y','String','Select the groups that are to be ignored for color gradient');
+            
+            obj.hGroupList = uicontrol(layout,...
+                'Style','listbox', 'String',{'a','b','c'},...
+                'min',0,'max',100, 'Value', []);
             
             obj.applyButton = uicontrol(layout,...
                 'String','apply',...
                 'Callback',@(h,e)obj.applyButtonClicked);
             
-            layout.Sizes = [-3,-1,30,30];
+            layout.Sizes = [15,-5,15,-5,15,-1,30];
         end
         
         function show(obj)
@@ -71,8 +86,9 @@ classdef GroupingColorGradient < handle
         
         function applyButtonClicked(obj)
             clr = double(obj.jColorChooser.getColor().getRGBColorComponents([]))';
+            clr2 = double(obj.jColorChooser2.getColor().getRGBColorComponents([]))';
             ignoreGroups = obj.hGroupList.String(obj.hGroupList.Value);
-            obj.module.currentGrouping.makeColorGradientHSV(clr,ignoreGroups);
+            obj.module.currentGrouping.makeColorGradientHSV(clr,clr2,ignoreGroups);
             obj.module.populateGroupsTable();
             obj.module.updateRangeColors();
         end
