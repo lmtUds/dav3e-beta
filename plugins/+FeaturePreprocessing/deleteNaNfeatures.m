@@ -25,7 +25,6 @@ function info = deleteNaNfeatures()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','a', 'value',[], 'internal',true),...
-        Parameter('shortCaption','b', 'value',[], 'internal',true),...
     ];
     info.apply = @apply;
     info.train = @train;
@@ -33,16 +32,18 @@ end
 
 function [data,paramOut] = apply(data,params)
     paramOut = struct();
-    h = data.featureCaptions(params.a);
-    params.b = [h{:}]; 
     
     data.data(:,params.a) = [];
     data.featureSelection(params.a) = [];
     data.featureCaptions(params.a) = [];
-    warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
+    warning('backtrace','off')
+    warning([num2str(length(params.a)), ' features are ignored because NaN:'])
+    warning('backtrace','on')
+    disp(data.featureCaptions(params.a)')
 end
 
 function params = train(data,params)
     d = data.getSelectedData();
-    [~,params.a] = find(isnan(d(1,:))==1);   
+%     [~,params.a] = find(isnan(d(1,:))==1); %only first row (=first cycle) is checked for nan values (=features)
+    [~,params.a] = find(sum(isnan(d))>0); %whole array is checked for nan features
 end

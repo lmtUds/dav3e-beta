@@ -25,6 +25,7 @@ function info = interpolateNaN()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','maxNaNValuesInCycle', 'value',int32(100)),... 
+        Parameter('shortCaption','deleteCycleIfExceeded', 'value',true)...
     ];
     info.apply = @apply;
 end
@@ -32,13 +33,21 @@ end
 function [data,params] = apply(data,params)
     max_values = params.maxNaNValuesInCycle;
     cycle_with_nan = find(sum(isnan(data'))>0);
-    for i=1:length(cycle_with_nan)
-        if sum(isnan(data(cycle_with_nan(i),:))) > max_values
-           warning(['nan cycle: '+ string(cycle_with_nan(i))]+' more nan cycles than desired');
+    for i=cycle_with_nan
+        if sum(isnan(data(i,:))) > max_values
+            if params.deleteCycleIfExceeded
+                data(i,:) = nan(size(data(i,:)));
+                warning('backtrace','off');
+                warning(['Preprocessing: could not interpolate nan values in cycle ', num2str(i), ' (cycle has more nan values than desired); it got replaced by a complete nan cycle.']);
+                warning('backtrace','on');
+            else
+                warning('backtrace','off');
+                warning(['Preprocessing: could not interpolate nan values in cycle ', num2str(i), ' (cycle has more nan values than desired); remains as is.']);
+                warning('backtrace','on');
+            end
+        else
+            data(i,:) = fillmissing(data(i,:),'linear');
         end
-        data(cycle_with_nan(i),:) = fillmissing(data(cycle_with_nan(i),:),'linear');
     end
-    sum(sum(isnan(data)))
-    
-
+%     sum(sum(isnan(data)))
 end

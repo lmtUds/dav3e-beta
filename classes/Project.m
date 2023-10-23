@@ -236,7 +236,12 @@ classdef Project < handle
         function createGroupingFrom(obj,baseGrouping,maskGrouping,maskCats,action)
             new = obj.addGrouping();
             new.vals = baseGrouping.vals;
-            new.colors = baseGrouping.colors;
+%             %new.colors = baseGrouping.colors;
+%             new.updateColors();
+            tempKeys = baseGrouping.colors.keys;
+            tempColors = baseGrouping.colors.values;
+            new.colors = containers.Map(tempKeys,tempColors);
+
             new.setCaption(baseGrouping.getCaption());
             obj.makeCaptionsUnique(new,obj.groupings);
             
@@ -254,6 +259,7 @@ classdef Project < handle
                 otherwise
                     error('Unknown action argument.');
             end
+            new.updateColors();
         end
         
         function featData = computeFeatures(obj)

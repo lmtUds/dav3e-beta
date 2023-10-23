@@ -49,7 +49,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
             uimenu(menu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
             uimenu(menu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
-            uimenu(menu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
+            uimenu(menu,'Label','make cycle ranges and grouping from selected ("binary") sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
 
             layout = uiextras.VBox('Parent',panel);
             
@@ -69,8 +69,11 @@ classdef CycleRanges < Gui.Modules.GuiModule
             startVal = str2double(answer{1});
             endVal = str2double(answer{2});
             r = obj.getProject().ranges;
-            cPos = r.getCyclePosition(obj.getCurrentCluster());
-            r.setCyclePosition(cPos + [startVal -endVal],obj.getCurrentCluster());
+%             cPos = r.getCyclePosition(obj.getCurrentCluster());
+%             r.setCyclePosition(cPos + [startVal -endVal],obj.getCurrentCluster());
+            cycLen = obj.getCurrentCluster().getCycleDuration();
+            tPos = r.getTimePosition();
+            r.setTimePosition(tPos + [startVal -endVal]*cycLen);
             obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
         end
         
@@ -138,34 +141,132 @@ classdef CycleRanges < Gui.Modules.GuiModule
             data = sensor.data;
             data = data';
             data = data(:);
-%             if numel(unique(data))>2
-%                 warning('This function is limited to a sensor that only has the values 0 and 1.')
-%                 return;
-%             end
-            
-%             lastOff = find(diff(data) == 1);
-%             lastOn = find(diff(data) == -1);
-%             changes = sort([[lastOff,lastOn],[lastOff,lastOn]+1]);
+
             change = find(diff(data) ~= 0)';
             changes = sort([change,change+1]);
             changes = [1,changes,size(data,1)];
+%             nRanges = numel(changes)/2;
+            
+            times = offset+changes*samplingPeriod; %v1
+%             times = offset+([0,sort([change,change]),size(data,1)])*samplingPeriod; %v2
+            caps = data(changes);
+
+            ncaps = numel(unique(caps));
+            if isempty(change) || ncaps < 2 %should mean the same, but to be sure...
+                errordlg('There are no changes in the sensor data, so no ranges detected.','No cycle ranges made')
+                return
+            end
+            
+            if (ncaps > 2 || (~any(ismember(caps,1)) || ~any(ismember(caps,0)))) %&& isempty(binSelIn)...
+                msg = sprintf([ 'The sensor data seem to be non-binary\n', ...
+                                '(%d different values detected).\n',...
+                                'This might also be a result of data aquisition/processing.\n',...
+                                'Do you actually expect binary data (only 0 and 1)?'],...
+                                ncaps); 
+                binSel = uiconfirm(obj.main.hFigure,...
+                    msg,'Non-binary data detected',...
+                    'Options',{'Yes, should be binary','No, clearly non-binary','I dont know, cancel'},...
+                    'DefaultOption', 1,...
+                    'CancelOption', 3,...
+                    'Icon','question');
+                if strcmp(binSel,'I dont know, cancel')
+                    return
+                end
+                isbinary = strcmp(binSel,'Yes, should be binary');
+            else %...
+                isbinary = 1; %...
+            end
+            if isbinary  %&& isempty(onSelIn)...
+                msg = sprintf([ 'Do you want to make cycle ranges \n',...
+                                'only for the value 1 ("ON")\n',...
+                                'or also for data parts with the value 0 ("OFF")?']...
+                                ); 
+                onSel = uiconfirm(obj.main.hFigure,...
+                    msg,'Binary choice',...
+                    'Options',{'Yes, only 1','No, both 0 and 1','I dont know, cancel'},...
+                    'DefaultOption', 1,...
+                    'CancelOption', 3,...
+                    'Icon','question');
+                if strcmp(onSel,'I dont know, cancel')
+                    return
+                end
+                onlyOn = strcmp(onSel,'Yes, only 1');
+            end %...
+            
+%             isbinary = 1; onlyOn = 1;
+% With isbinary = 1, only data with the values 0 and 1 are used to make cycle 
+% ranges ("binary" approach); with onlyOn = 1, only the 1 is used to make 
+% ranges; set to 0 to also use 0; set isbinary = 0 to create cycle ranges of
+% non-binary data; however, note that these should contain a very limited
+% number of (stable) values (best: integers), as every change/new value is 
+% assigned to a new cycle range (i.e., takes long if there are, e.g., a lot 
+% of different floats)
+            if isbinary
+                changes = changes(caps==1 | caps==0);
+                times = times(caps==1 | caps==0);
+                caps = caps(caps==1 | caps==0);
+            end
+            
             nRanges = numel(changes)/2;
+            
+            rLimit = 1000;
+            if nRanges > rLimit %&& isempty(limSelIn)...
+                msg = sprintf([ 'Detected %d ranges to create.\n',...
+                                'This exceedes the limit of %d.\n',...
+                                'Processing this many ranges may lock up DAVE.'],...
+                                nRanges,rLimit); 
+                sel = uiconfirm(obj.main.hFigure,...
+                    msg,'Large range count',...
+                    'Options',{'Compute Anyway','Cancel'},...
+                    'Icon','warning');
+                if strcmp(sel,'Cancel')
+                    return
+                end
+            end %...
             
             cr = Range.empty;
             groupColors=[];
-            for ridx = 1:1:nRanges
-                beginTime(ridx) = offset+changes(1+2*(ridx-1))*samplingPeriod;
-                endTime(ridx) = offset+changes(2+2*(ridx-1))*samplingPeriod;
-                cr(ridx) = Range([beginTime(ridx), endTime(ridx)]);
-                cr(ridx).setCaption(data(round((changes(1+2*(ridx-1))+changes(2+2*(ridx-1)))/2)))
-                groupCaptions=strsplit(sensor.getCaption, ' ');
-                groupCaptions=groupCaptions(1,1);
-%                 rng(str2num(cr(ridx).getCaption())); %sets seed for random
-%                 color; works only as expected for integer data; not
-%                 absolutely necessary anyway
-                groupColors{ridx,1}=rand(1,3);
+
+            progDlg = uiprogressdlg(obj.main.hFigure,...
+                'Title','Ranges are being created...',...
+                'Message',sprintf('Creating range 1 of %d',nRanges));
+            try
+            
+                for ridx = 1:1:nRanges
+                    if (caps(1+2*(ridx-1))==1 && caps(2+2*(ridx-1))==1) || ~onlyOn || ~isbinary
+                        cr(ridx) = Range([times(1+2*(ridx-1)), times(2+2*(ridx-1))]);
+                        cr(ridx).setCaption(caps(1+2*(ridx-1)));
+                        
+                        groupCaptions=strsplit(sensor.getCaption, ' ');
+                        groupCaptions=groupCaptions(1,1);
+        
+                        groupColors{ridx,1}=rand(1,3);
+                    end
+%                 end
+                    
+                    progDlg.Value = ridx / nRanges;
+                    progDlg.Message = sprintf('Creating range %d of %d',ridx,nRanges);
+                end
+                close(progDlg)
+            catch %make sure progDlg is closed
+                close(progDlg)
             end
-           
+            
+            if numel(obj.main.project.groupings)==1
+                if strcmp(obj.main.project.groupings.caption,'grouping')
+                    if isempty(obj.main.project.groupings.ranges)
+                        obj.main.project.removeGrouping(obj.main.project.groupings)
+                    end
+                end
+            end
+            
+            for cridx=numel(cr):-1:1
+                if sum(cr(1,cridx).timePosition)==0
+                    cr(cridx)=[];
+                    groupColors(cridx)=[];
+                end
+            end
+            
             obj.addRange([],cr);
             
              for i = 1:numel(groupCaptions)

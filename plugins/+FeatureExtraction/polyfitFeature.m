@@ -46,7 +46,7 @@ function f = computeFeature(y,x,prm)
     else
         f = zeros(size(y,1),prm.order+1);
         for i = 1:size(y,1)
-            f(i,:) = polyfit(y(i,:),x,prm.order);
+            f(i,:) = polyfit(x,y(i,:),prm.order);
         end
         if ~(prm.includeOffset)
             f(:,1) = [];

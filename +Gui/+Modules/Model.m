@@ -273,13 +273,19 @@ classdef Model < Gui.Modules.GuiModule
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
+                errordlg(sprintf('Could not compute features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n %s', ME.message),'I''m afraid I can''t do that.','modal');
+                errordlg(sprintf('Could not merge features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
+                disp('''Could not merge features'' help (most obvious cases):');
+                disp('''Cluster collision'' means that you have to check the timing (offset and length) of your clusters, as there are unexpected overlaps of clusters in one track.');
+                disp('''Index in position 1 exceeds array bounds'' might either originate from a mislabeled track, which leads to unintended parallel tracks and deletion of clusters during merging process (no clusters in both tracks at the same time).');
+                disp('Or ''Index in position 1 exceeds array bounds'' might originate from inconsistently used feature sets for at least one sensor (a sensor has to use the same feature set in every (used) cluster).');
+                disp('''Dimensions of arrays being concatenated are not consistent'' might originate from a non-checked sensor (table column ''use'') in one cluster, while in other clusters in the same track that sensor is checked.');
+                disp('However, ''Dimensions of arrays being concatenated are not consistent'' can also mean that the cluster merging function (mergeAll combined with averageCyclesByIndex in classes\Data.m) did not work as expected; use breakpoints there to check.');
                 success = false;
             end
 %             features.featureCaptions'
@@ -300,7 +306,7 @@ classdef Model < Gui.Modules.GuiModule
                 obj.getModel().train(data);
             catch ME
                 f = gcf;
-                errordlg(sprintf('Error during model training.\n %s', ME.message),'I''m afraid I can''t do that.');
+                errordlg(sprintf('Error during model training.\n%s', ME.message),'I''m afraid I can''t do that.');
                 set(0, 'CurrentFigure', f)
             end
 
@@ -461,7 +467,7 @@ classdef Model < Gui.Modules.GuiModule
                         obj.currentModel.reset();
                         obj.makeModelTabs()
                     catch ME
-                        errordlg(sprintf('Error during feature computation.\n %s', ME.message),'I''m afraid I can''t do that.');
+                        errordlg(sprintf('Error during feature computation.\n%s', ME.message),'I''m afraid I can''t do that.');
                     end
                 end
             end
