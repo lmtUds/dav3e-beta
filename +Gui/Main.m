@@ -313,6 +313,9 @@ classdef Main < handle
         end
         
         function importDataFromWorkspace(obj,varargin)
+            if isempty(obj.getActiveModule().getProject())
+                obj.project = Project();
+            end
             vars = evalin('base','who');
             [sel,ok] = listdlg('ListString',vars);
             if ~ok

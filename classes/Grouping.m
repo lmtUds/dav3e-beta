@@ -99,15 +99,15 @@ classdef Grouping < RangeAnnotation
             obj.updateColors();
         end
         
-        function makeColorGradientHSV(obj,baseColor,ignore)
-            if nargin < 3
+        function makeColorGradientHSV(obj,baseColor,baseColor2,ignore)
+            if nargin < 4
                 ignore = {};
             end
             cats = obj.getDestarredCategories();
             cats(ismember(cats,ignore)) = [];
             [~,idx] = sort(cellfun(@str2double,cats));
             cats = cats(idx);
-            clrs = colorGradientHSV(baseColor,numel(cats));
+            clrs = colorGradientHSV(baseColor,baseColor2,numel(cats));
             for i = 1:numel(cats)
                 obj.setColor(cats{i},clrs(i,:));
             end

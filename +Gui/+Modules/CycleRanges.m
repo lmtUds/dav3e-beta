@@ -141,7 +141,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             data = sensor.data;
             data = data';
             data = data(:);
-            
+
             change = find(diff(data) ~= 0)';
             changes = sort([change,change+1]);
             changes = [1,changes,size(data,1)];
