@@ -35,7 +35,8 @@ classdef Model < Gui.Modules.GuiModule
         tabLayout
         dynamicGrid
         parametersDropdownPanel
-        errorPanel
+        valErrorPanel
+        testErrorPanel
         parameterPopups
         
         featurePreviewX
@@ -187,7 +188,7 @@ classdef Model < Gui.Modules.GuiModule
             %Create the panel for the parameter adjusting section after
             %training
             
-            dynamicGrid = uigridlayout(moduleLayout,[2 1],...
+            dynamicGrid = uigridlayout(moduleLayout,[3 1],...
                 'Visible','off',...
                 'Padding',[0 0 0 0]);
             dynamicGrid.Layout.Row = 1;
@@ -201,12 +202,19 @@ classdef Model < Gui.Modules.GuiModule
             parameterPanel.Layout.Row = 1;
             obj.parametersDropdownPanel = parameterPanel;
 
-            errorPanel = uipanel(dynamicGrid,...
+            valErrorPanel = uipanel(dynamicGrid,...
                 'Title','Errors',...
                 'BorderType','none',...
                 'Visible','off');
-            errorPanel.Layout.Row = 2;
-            obj.errorPanel = errorPanel;
+            valErrorPanel.Layout.Row = 2;
+            obj.valErrorPanel = valErrorPanel;
+
+            testErrorPanel = uipanel(dynamicGrid,...
+                'Title','Errors',...
+                'BorderType','none',...
+                'Visible','off');
+            testErrorPanel.Layout.Row = 3;
+            obj.testErrorPanel = testErrorPanel;
         end
         
         function addDataTipRowsMenuClicked(obj,h,varargin)
@@ -544,9 +552,10 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function makeErrorPanel(obj)
-            obj.errorPanel.Children.delete();
+            obj.valErrorPanel.Children.delete();
+            obj.testErrorPanel.Children.delete();
 
-            errorGrid = uigridlayout(obj.errorPanel,[5 2],...
+            valErrorGrid = uigridlayout(obj.valErrorPanel,[2 2],...
                 'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,6,1),...
                 'Padding',[0 0 0 0],'RowSpacing',5);
             
@@ -558,30 +567,36 @@ classdef Model < Gui.Modules.GuiModule
             else
                 label = ' (RMSE)';
                 nSig = 4;
-                tSig = 'significant';
+                 tSig = 'significant';
                 factor = 1;
             end
 
-            obj.errorPanel.Title = ['Errors',label];
+            obj.valErrorPanel.Title = 'Validation';   %['Validation',label];
 
-            trainErrorCap = uilabel(errorGrid,'Text','training','WordWrap','on');
+            trainErrorCap = uilabel(valErrorGrid,'Text',['training error',label],'WordWrap','on');
             trainErrorCap.Layout.Row = 1;
             trainErrorCap.Layout.Column = 1;
 
-            valErrorCap = uilabel(errorGrid,'Text','validation','WordWrap','on');
+            valErrorCap = uilabel(valErrorGrid,'Text',['validation error',label],'WordWrap','on');
             valErrorCap.Layout.Row = 2;
             valErrorCap.Layout.Column = 1;
 
-            testErrorCap = uilabel(errorGrid,'Text','(testing)','WordWrap','on');
-            testErrorCap.Layout.Row = 3;
-            testErrorCap.Layout.Column = 1;
+%             testErrorCap = uilabel(errorGrid,'Text','(testing)','WordWrap','on');
+%             testErrorCap.Layout.Row = 3;
+%             testErrorCap.Layout.Column = 1;
               
-            fullModelTrainErrorCap = uilabel(errorGrid,'Text','fullModel training','WordWrap','on');
-            fullModelTrainErrorCap.Layout.Row = 4;
+            testErrorGrid = uigridlayout(obj.testErrorPanel,[2 2],...
+                'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,6,1),...
+                'Padding',[0 0 0 0],'RowSpacing',5);
+
+            obj.testErrorPanel.Title = 'Testing (fullModel)';   %['Testing',label];
+
+            fullModelTrainErrorCap = uilabel(testErrorGrid,'Text',['training error',label],'WordWrap','on');
+            fullModelTrainErrorCap.Layout.Row = 1;
             fullModelTrainErrorCap.Layout.Column = 1;
 
-            fullModelTestErrorCap = uilabel(errorGrid,'Text','fullModel testing','WordWrap','on');
-            fullModelTestErrorCap.Layout.Row = 5;
+            fullModelTestErrorCap = uilabel(testErrorGrid,'Text',['testing error',label],'WordWrap','on');
+            fullModelTestErrorCap.Layout.Row = 2;
             fullModelTestErrorCap.Layout.Column = 1;
 
 %             caps = {}; inds = [];
@@ -599,29 +614,30 @@ classdef Model < Gui.Modules.GuiModule
             hyperParaIdx = obj.main.project.currentModel.hyperParameterIndices;
             inds = sum(trainIdxSet~=hyperParaIdx,1) == 0;
 
-            trainErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.trainingErrors(inds)*factor,nSig,tSig)));
+            trainErrorVal = uilabel(valErrorGrid,'Text',num2str(round(obj.currentModel.trainingErrors(inds)*factor,nSig,tSig)));
             trainErrorVal.Layout.Row = 1;
             trainErrorVal.Layout.Column = 2;
 
-            valErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.validationErrors(inds)*factor,nSig,tSig)));
+            valErrorVal = uilabel(valErrorGrid,'Text',num2str(round(obj.currentModel.validationErrors(inds)*factor,nSig,tSig)));
             valErrorVal.Layout.Row = 2;
             valErrorVal.Layout.Column = 2;
 
-            testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.testingErrors(inds)*factor,nSig,tSig)));
-            testErrorVal.Layout.Row = 3;
+%             testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.testingErrors(inds)*factor,nSig,tSig)));
+%             testErrorVal.Layout.Row = 3;
+%             testErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(testErrorGrid,'Text',num2str(round(obj.currentModel.fullModelTrainingError*factor,nSig,tSig)));
+            testErrorVal.Layout.Row = 1;
             testErrorVal.Layout.Column = 2;
 
-            testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.fullModelTrainingError*factor,nSig,tSig)));
-            testErrorVal.Layout.Row = 4;
+            testErrorVal = uilabel(testErrorGrid,'Text',num2str(round(obj.currentModel.fullModelTestingError*factor,nSig,tSig)));
+            testErrorVal.Layout.Row = 2;
             testErrorVal.Layout.Column = 2;
 
-            testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.fullModelTestingError*factor,nSig,tSig)));
-            testErrorVal.Layout.Row = 5;
-            testErrorVal.Layout.Column = 2;
-
-            obj.errorPanel.Parent.Parent.ColumnWidth{3} = '1x';
+            obj.valErrorPanel.Parent.Parent.ColumnWidth{3} = '1x';
             obj.dynamicGrid.Visible = 'on';
-            obj.errorPanel.Visible = 'on';
+            obj.valErrorPanel.Visible = 'on';
+            obj.testErrorPanel.Visible = 'on';
         end
 
 
@@ -684,8 +700,8 @@ classdef Model < Gui.Modules.GuiModule
 %                 delete(obj.parametersDropdownGrid.Children);
                 obj.parametersDropdownPanel.Children.delete();
                 obj.parametersDropdownPanel.Visible = 'off';
-                obj.errorPanel.Children.delete();
-                obj.errorPanel.Visible = 'off';
+                obj.valErrorPanel.Children.delete();
+                obj.valErrorPanel.Visible = 'off';
             end
             
             % if model not trained, no ouput tabs -> return
