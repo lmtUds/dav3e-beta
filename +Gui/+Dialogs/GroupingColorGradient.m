@@ -18,87 +18,78 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef GroupingColorGradient < handle
-    properties
-        main
-        module
-        f
-        heading
-        hColorChooser
-        jColorChooser
-        heading2
-        hColorChooser2
-        jColorChooser2
-        infosection
-        hGroupList
-        applyButton
+function GroupingColorGradient(main,module)
+    if isempty(main.project)
+        uialert(main.hFigure,...
+            {'Setting a grouping color requires a project and grouping to be created first.',...
+            'Load some data, define a grouping and try again.'},...
+            'No project found')
+        return
+    end                
+    if isempty(deStar(module.currentGrouping.getDestarredCategories()))
+        uialert(main.hFigure,...
+            {'Setting a grouping color requires a grouping with categories to be created first.',...
+            'Define some grouping categories and try again.'},...
+            'No valid grouping found')
+        return
     end
-    
-    methods
-        function obj = GroupingColorGradient(main,module)
-            obj.main = main;
-            obj.module = module;
-            obj.f = figure('Name','Grouping color gradient',...
-                'Visible','off',...
-                'menubar','none','toolbar','none',...
-                'CloseRequestFcn',@(varargin)obj.onDialogClose);
-            obj.f.Position(1,4) = 600;%adapt size for two colors
-            obj.f.Position(1,2) = 50;%adapt position for two colors
-            layout = uiextras.VBox('Parent',obj.f);
-            
-            obj.heading = uicontrol(layout,...
-                'Style','text','BackgroundColor','y','String','Choose start color:');
-            
-            cc = javax.swing.JColorChooser(); %com.mathworks.mlwidgets.graphics.ColorPicker(0,0,'');
-            [obj.jColorChooser,obj.hColorChooser] = javacomponent(cc,[0,0,1,1],layout);
-            
-            obj.heading2 = uicontrol(layout,...
-                'Style','text','BackgroundColor','y','String','Choose end color:');
-            
-            cc2 = javax.swing.JColorChooser(); %com.mathworks.mlwidgets.graphics.ColorPicker(0,0,'');
-            [obj.jColorChooser2,obj.hColorChooser2] = javacomponent(cc2,[0,0,1,1],layout);
-            
-            obj.infosection = uicontrol(layout,...
-                'Style','text','BackgroundColor','y','String','Select the groups that are to be ignored for color gradient');
-            
-            obj.hGroupList = uicontrol(layout,...
-                'Style','listbox', 'String',{'a','b','c'},...
-                'min',0,'max',100, 'Value', []);
-            
-            obj.applyButton = uicontrol(layout,...
-                'String','apply',...
-                'Callback',@(h,e)obj.applyButtonClicked);
-            
-            layout.Sizes = [15,-5,15,-5,15,-1,30];
-        end
-        
-        function show(obj)
-            obj.f.Visible = 'on';
-        end
-        
-        function hide(obj)
-            obj.f.Visible = 'off';
-        end
-        
-        function update(obj,groups)
-            obj.hGroupList.String = groups;
-        end
-        
-        function applyButtonClicked(obj)
-            clr = double(obj.jColorChooser.getColor().getRGBColorComponents([]))';
-            clr2 = double(obj.jColorChooser2.getColor().getRGBColorComponents([]))';
-            ignoreGroups = obj.hGroupList.String(obj.hGroupList.Value);
-            obj.module.currentGrouping.makeColorGradientHSV(clr,clr2,ignoreGroups);
-            obj.module.populateGroupsTable();
-            obj.module.updateRangeColors();
-        end
+    fig = uifigure('Name','Grouping color gradient',...
+        'Visible','off','WindowStyle','modal');
+    centerFigure(fig);
+    grid = uigridlayout(fig,[4 2],'RowHeight',{100,22,'1x',22});
 
-        function onDialogClose(obj)
-            if ishandle(obj.main.hFigure)
-                obj.hide();
-            else
-                delete(obj.f) 
-            end
-        end
+    clrPicker1 = uibutton(grid,'BackgroundColor',[0.0820 0.8359 0.4961],...
+        'ButtonPushedFcn',@(src,event) PickColor(src, event,main,fig),...
+        'Text','Click to set base color 1',...
+        'FontWeight','bold','FontSize',24,'WordWrap','on');
+    clrPicker1.Layout.Column = 1;
+    clrPicker1.Layout.Row = 1;
+    
+    clrPicker2 = uibutton(grid,'BackgroundColor',[0.9258 0.2773 0.2773],...
+        'ButtonPushedFcn',@(src,event) PickColor(src, event,main,fig),...
+        'Text','Click to set base color 2',...
+        'FontWeight','bold','FontSize',24,'WordWrap','on');
+    clrPicker2.Layout.Column = 2;
+    clrPicker1.Layout.Row = 1;
+    
+    infoLabel = uilabel(grid,...
+        'Text','The selected groups will be ignored for color gradient',...
+        'HorizontalAlignment','center');
+    infoLabel.Layout.Column = [1 2];
+    infoLabel.Layout.Row = 2;
+    
+    grouping = module.currentGrouping;
+    groupList = uilistbox(grid,...
+        'Items',deStar(grouping.getDestarredCategories()),...
+        'Value',{},'MultiSelect','on');
+    groupList.Layout.Column = [1 2];
+    groupList.Layout.Row = 3;
+    
+    applyButton = uibutton(grid,'Text','Create gradient from base colors',...
+        'ButtonPushedFcn',@(src,event) ApplyClr(src,event,groupList,module,clrPicker1,clrPicker2));
+    applyButton.Layout.Column = [1 2];
+    applyButton.Layout.Row = 4;
+    
+    fig.Visible = 'on';
+    
+    function ApplyClr(src,event,groupList,module,clrPicker1,clrPicker2)
+        clr1 = clrPicker1.BackgroundColor();
+        clr2 = clrPicker2.BackgroundColor();
+        ignoreGroups = groupList.Value;
+        module.currentGrouping.makeColorGradientHSV(clr1,clr2,ignoreGroups);
+        module.populateGroupsTable();
+        module.updateRangeColors();
+    end
+    function PickColor(src,event,main,fig)
+        fig.Visible = 'off';
+        %avoid focus loss
+        main.hFigure.Visible = 'off';
+        main.hFigure.Visible = 'on';
+        c = uisetcolor(src.BackgroundColor,'Set gradient base color');
+        src.BackgroundColor = c;
+        %avoid focus loss
+        main.hFigure.Visible = 'off';
+        main.hFigure.Visible = 'on';
+        fig.Visible = 'on';
     end
 end

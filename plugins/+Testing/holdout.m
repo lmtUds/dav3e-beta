@@ -31,6 +31,7 @@ function info = holdout()
         ];
     info.apply = @apply;
     info.updateParameters = @updateParameters;
+    info.detailsPages = {'performance','correlationCoefficient'};
 end
 
 function [data,params] = apply(data,params)
@@ -54,7 +55,6 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = ~groupbased;
-            params(i).updatePropGridField();
         end
     end
 end

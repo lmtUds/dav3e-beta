@@ -86,14 +86,6 @@ classdef PreprocessingChain < Descriptions
             obj.modified();
         end
         
-        function pgf = makePropGridFields(obj)
-            pp = obj.preprocessings;
-            pgf = PropGridField.empty;
-            for i = 1:numel(pp)
-                pgf(end+1) = pp(i).makePropGridField();
-            end
-        end
-        
         function train(obj,data)
             obj.chainBlock.getFirstBlock().trainChain(data);
         end

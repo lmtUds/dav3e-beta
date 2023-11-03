@@ -106,7 +106,6 @@ function updateParameters(params,project)
             params(i).onChangedCallback = @()updateParameters(params,project);
             params(i).value = params(i).value;
             params(i).hidden = autoTh;
-            params(i).updatePropGridField();
 %         elseif params(i).shortCaption == string('grouping')
 %             params(i).enum = cellstr(project.groupings.getCaption());
 %             if isempty(params(i).value)
@@ -119,13 +118,11 @@ function updateParameters(params,project)
 %             if isempty(params(i).enum) || ~all(ismember(params(i).enum,cellstr(grouping.getCategories())))
 %                 params(i).enum = ['find by majority';cellstr(grouping.getCategories())];
 % %                 params(i).value = params(i).enum;
-%                 params(i).updatePropGridField();
 %             end
 %         elseif params(i).shortCaption == string('novelTag')
 %             if isempty(params(i).enum) || ~all(ismember(params(i).enum,cellstr(grouping.getCategories())))
 %                 params(i).enum = ['find by majority';cellstr(grouping.getCategories())];
 % %                 params(i).value = params(i).enum;
-%                 params(i).updatePropGridField();
 %             end
         end    
     end

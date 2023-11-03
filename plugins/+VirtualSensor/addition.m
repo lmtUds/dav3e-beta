@@ -24,13 +24,13 @@ function info = addition()
     info.shortCaption = mfilename;
     info.description = '';
     info.parameters = [...
-        Parameter('shortCaption','caption','value',''),
-        Parameter('shortCaption','description','value','= sensor 1 + sensor 2','editable', false),
-        Parameter('shortCaption','virtual_sensor','value','','internal',true),
-        Parameter('shortCaption','sensor1_caption', 'value','', 'enum',{''}, 'caption', 'sensor 1'),
-        Parameter('shortCaption','sensor1', 'value',[], 'internal', true),
-        Parameter('shortCaption','sensor2_caption', 'value','', 'enum',{''}, 'caption', 'sensor 2'),
-        Parameter('shortCaption','sensor2', 'value',[], 'internal', true),
+        Parameter('shortCaption','caption','value','','editable', false),...
+        Parameter('shortCaption','description','value','= sensor 1 + sensor 2','editable', false),...
+        Parameter('shortCaption','virtual_sensor','value','','internal',true),...
+        Parameter('shortCaption','sensor1_caption', 'value','', 'enum',{''}, 'caption', 'sensor 1'),...
+        Parameter('shortCaption','sensor1', 'value',[], 'internal', true),...
+        Parameter('shortCaption','sensor2_caption', 'value','', 'enum',{''}, 'caption', 'sensor 2'),...
+        Parameter('shortCaption','sensor2', 'value',[], 'internal', true)
         ];
     info.apply = @apply;
     info.updateParameters = @updateParameters;
@@ -48,21 +48,18 @@ function updateParameters(params,project)
             % caption of the virtual sensor
         if strcmp(params(i).shortCaption, 'caption')
             params(i).value = virtual_sensor.caption;
-            params(i).updatePropGridField();
             params(i).onChangedCallback = @()changeCaption(params,project);
         elseif strcmp(params(i).shortCaption, 'sensor1_caption')
             params(i).enum = cellstr(sensors.getCaption('cluster'));
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
-            params(i).updatePropGridField();
             params(i).onChangedCallback = @()updateParameters(params,project);
        elseif strcmp(params(i).shortCaption, 'sensor2_caption')
             params(i).enum = cellstr(sensors.getCaption('cluster'));
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
-            params(i).updatePropGridField();
             params(i).onChangedCallback = @()updateParameters(params,project);
        elseif strcmp(params(i).shortCaption, 'sensor1')
             idSensorCaption = strcmp([params.shortCaption], 'sensor1_caption');
@@ -72,13 +69,11 @@ function updateParameters(params,project)
                 if numel(sensor)==0
                     
                 else
-                   params(idSensorCaption).value = sensor.getCaption('cluster'); 
-                   params(idSensorCaption).updatePropGridField();
+                   params(idSensorCaption).value = sensor.getCaption('cluster');
                 end
             else
                 params(i).value = sensor;
             end
-            params(i).updatePropGridField();
         elseif strcmp(params(i).shortCaption, 'sensor2')
             idSensorCaption = strcmp([params.shortCaption], 'sensor2_caption');
             sensor = project.getSensorByCaption(params(idSensorCaption).value,'cluster');
@@ -87,13 +82,11 @@ function updateParameters(params,project)
                 if numel(sensor)==0
                     
                 else
-                   params(idSensorCaption).value = sensor.getCaption('cluster'); 
-                   params(idSensorCaption).updatePropGridField();
+                   params(idSensorCaption).value = sensor.getCaption('cluster');
                 end
             else
                 params(i).value = sensor;
             end
-            params(i).updatePropGridField();
         end
     end
 end

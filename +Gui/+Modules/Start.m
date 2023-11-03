@@ -21,6 +21,7 @@
 classdef Start < Gui.Modules.GuiModule
     properties
         caption = 'Start'
+        mainFigure
     end
     
     methods
@@ -29,35 +30,46 @@ classdef Start < Gui.Modules.GuiModule
             obj@Gui.Modules.GuiModule(main);
         end
         
-        function [panel,menu] = makeLayout(obj)
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
-            panel = Gui.Modules.Panel();
-            menu = [];
+            % we use a grid layout with 3 rows of decreasing height
+            moduleLayout = uigridlayout(uiParent,[3 1],...
+                'Visible','off',...
+                'RowHeight',{'3x','2x','1x'},...
+                'RowSpacing',7);
+            moduleMenu = [];
+                        
+            img = uiimage(moduleLayout);
+            img.Layout.Row = 1;
+            img.ImageSource = '+Gui/+Modules/logo.png';
             
-            layout = uiextras.VBox('Parent',panel, 'Padding',20, 'Spacing',10);
-
-            axes(layout)
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            [img,~,alpha] = imread('+Gui/+Modules/logo.png');
-            image(img,'AlphaData',alpha)
-            axis off
-            axis image
+            buttonLayout = uigridlayout(moduleLayout,[1 2]);
+            buttonLayout.Layout.Row = 2;
             
-            buttonLayout = uiextras.HBox('Parent',layout, 'Spacing',10);
-            uicontrol('Parent',buttonLayout, 'String','Load project', ...
-                    'FontSize',30,...
-                    'Callback', @(varargin)obj.main.loadProject());
-            uicontrol('Parent',buttonLayout, 'String','Import data', ...
-                    'FontSize',30,...
-                    'Callback', @(varargin)obj.importData());
+            loadButton = uibutton(buttonLayout,...
+                'Text','Load project',...
+                'FontSize',30,...
+                'ButtonPushedFcn',@(varargin)obj.main.loadProject());
+            loadButton.Layout.Column = 1;
+            
+            importButton = uibutton(buttonLayout,...
+                'Text','Import Data',...
+                'FontSize',30,...
+                'ButtonPushedFcn',@(varargin)obj.importData());
+            importButton.Layout.Column = 2;
                 
-            uicontrol(layout, 'Style','text', ...
-                'String',sprintf(['\n\n\nIf you publish results obtained '...
-                'with DAV³E, please cite: Manuel Bastuck, Tobias Baur,' ...
-                'and Andreas Schütze: DAV3E – a MATLAB toolbox for multivariate '...
-                'sensor data evaluation, J. Sens. Sens. Syst. (2018), 7, '...
-                '489-506 (open access), doi: 10.5194/jsss-7-489-2018']),...
-                'FontSize',12);
+            citeLabel = uilabel(moduleLayout);
+            citeLabel.Layout.Row = 3;
+            citeLabel.Text = ['If you publish results obtained ',...
+                'with DAV³E, please cite: Manuel Bastuck, Tobias Baur ', ...
+                'and Andreas Schütze: DAV3E – a MATLAB toolbox for multivariate ',...
+                'sensor data evaluation, J. Sens. Sens. Syst. (2018), 7, ',...
+                '489-506 (open access), doi: 10.5194/jsss-7-489-2018'];
+            citeLabel.FontSize = 12;
+            citeLabel.WordWrap = 'on';
+            citeLabel.HorizontalAlignment = 'center';
+            
+            obj.mainFigure = mainFigure;
         end
 
         function importData(obj)
@@ -79,38 +91,67 @@ classdef Start < Gui.Modules.GuiModule
                 filterCell{i,1} = strjoin(extParam.getValue(),';');
                 filterCell{i,2} = char(blocks(i).getCaption());
             end
-%             mainPos = obj.main.hFigure.Position;
-%             chosenOne = choosedialog(mainPos);
-            chosenOne = 'simple';
-            if strcmp(chosenOne,'simple')
-                [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
-                if path == 0
-                    return
-                end
-                oldPath = path;
-                if ~iscell(file)
-                    file = {file};
-                end
+            [file,path,filterId] = uigetfile(filterCell,'Choose files to import',oldPath,'MultiSelect','on');
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.mainFigure.Visible = 'off';
+            obj.mainFigure.Visible = 'on';
 
-                % statusbar (Working)
-                sb = statusbar(obj.main.hFigure,'Loading files...');
-                set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);
-
-                obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
-                obj.getProject().clusters.getCaption()
-                obj.main.populateSensorSetTable();
-
-                % statusbar (Ready)
-                sb = statusbar(obj.main.hFigure,'Ready.');
-                set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
-            % !!BETA!!: Automated multi file import is not implemented yet
-            % and therefore the selection dialog is currently also disabled.
-            elseif strcmp(chosenOne,'complex')
-                importPaths = pathsdialog(mainPos);
-                warning('No automated method available yet');
-            else
-                error('Unexpected return value for choosedialog()');
+            if path == 0
+                return
             end
+            oldPath = path;
+            if ~iscell(file)
+                file = {file};
+            end
+
+            % statusbar (Working)
+            prog = uiprogressdlg(obj.main.hFigure,...
+                'Title','Loading Files','Indeterminate','on');
+            drawnow
+
+            %perform the actual data import
+            obj.getProject().importFile(fullfile(path,file),blocks(filterId).getCaption());
+            obj.getProject().clusters.getCaption();
+            %check for track clashes and put all sensors on separate tracks
+            %clashes are likely as all data is
+            %put on the same "default" track on import
+            obj.resolveTracks();
+
+            %fill the sensor data table
+            obj.main.populateSensorSetTable();
+
+            % statusbar (Ready)
+            close(prog)
+        end
+        
+        function resolveTracks(obj)
+            %rename duplicate tracks by enumerating all duplicates with the
+            %same base track name
+            
+            %extract track names
+            tracks = arrayfun(@(x) x.track, obj.getProject().clusters);
+            if ~iscolumn(tracks)
+                tracks = tracks';
+            end
+            %as long as duplicates remain we need to alter names
+            while numel(unique(tracks)) ~= numel(tracks)
+                %loop through unique track names to find duplicate groups
+                uTracks = unique(tracks);
+                for i = 1:numel(uTracks)
+%                    occ = contains(tracks,uTracks(i));
+                   occ = matches(tracks,uTracks(i));
+                   if sum(occ) > 1 %if really a duplicate
+                       %enumerate all duplicates in the group by appending an
+                       %increasing number
+                       tracks(occ) = strcat(tracks(occ),string(1:sum(occ))');
+                   end
+                end
+            end
+            %set the new track names in the data structure
+            for i = 1:length(tracks)
+               obj.getProject().clusters(i).track = tracks(i); 
+            end            
         end
     end
 end

@@ -18,31 +18,22 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef About < handle
-    properties
-        f
-        jScrollPane
-        hScrollPane
-        jTextArea
-        hTextArea
+function About(version)
+    fig = uifigure('Name','About',...
+        'WindowStyle','modal','Visible','off',...
+        'Units', 'normalized', ...
+        'Position', [.35 .25 .3 .5]);
+    centerFigure(fig);
+    grid = uigridlayout(fig,[1 1],'Scrollable','on',...
+        'RowHeight',{'fit'});
+    if isdeployed
+        copyrightNotice = fileread([ctfroot '/DAVE/+Gui/+Dialogs/copyrightNotice.txt']);
+    else
+        copyrightNotice = fileread('./+Gui/+Dialogs/copyrightNotice.txt');
     end
-    
-    methods
-        function obj = About(version)
-            obj.f = figure('Name','About','Units','pixel',...
-                'menubar','none','toolbar','none');
-            layout = uiextras.VBox('Parent',obj.f);
-            if isdeployed
-                copyrightNotice = fileread([ctfroot '/DAVE/+Gui/+Dialogs/copyrightNotice.txt']);
-            else
-                copyrightNotice = fileread('./+Gui/+Dialogs/copyrightNotice.txt');
-            end
-            licenseText = fileread('LICENSE');
-            obj.jTextArea = javax.swing.JTextArea(sprintf('DAV³E v%s\n\n%s\n\n%s',version,copyrightNotice,licenseText));
-            sp = javax.swing.JScrollPane(obj.jTextArea);
-            [obj.jScrollPane,obj.hScrollPane] = javacomponent(sp,[0,0,1,1],layout);
-
-            obj.f.Position = obj.f.Position + [0 0 1 1];
-        end
-    end
+    licenseText = fileread('LICENSE');
+    labelText = sprintf('DAV³E v%s\n\n%s\n\n%s',...
+        version,copyrightNotice,licenseText);
+    lbl = uilabel(grid,'Text',labelText,'WordWrap','on');
+    fig.Visible = 'on';
 end

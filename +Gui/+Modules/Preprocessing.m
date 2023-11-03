@@ -82,124 +82,305 @@ classdef Preprocessing < Gui.Modules.GuiModule
             delete(obj.indexPointTable);
         end        
         
-        function [panel,menu] = makeLayout(obj)
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
-            panel = Gui.Modules.Panel();%Replaced from the uiextras package
+            % create a grid layout for the preprocessing panel
+            moduleLayout = uigridlayout(uiParent,[1 2],...
+                'Visible','off',...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'3x','8x'},...
+                'RowHeight',{'1x'},...
+                'RowSpacing',7);
             
-            menu = uimenu('Label','Preprocessing');
-            obj.globalYLimitsMenu = uimenu(menu,'Label','global y-limits', 'Checked','off', getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
+            % create the menu bar dropdown
+            moduleMenu = uimenu(mainFigure,'Label','Preprocessing');
+            obj.globalYLimitsMenu = uimenu(moduleMenu,...
+                'Label','global y-limits',...
+                'Checked','off',...
+                getMenuCallbackName(),@obj.globalYLimitsMenuClicked);
             
-            layout = uiextras.HBox('Parent',panel);
-            leftLayout = uiextras.VBox('Parent',layout);
-%             leftInnerLayout1 = uiextras.VBox('Parent',leftLayout);
-%             leftInnerLayout2 = uiextras.VBox('Parent',leftLayout);
-            axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
+            ctrlGrid = uigridlayout(moduleLayout,[2 1],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x'},...
+                'RowHeight',{180,'1x'},'RowSpacing',7);
+            ctrlGrid.Layout.Column = 1;
             
-            comparePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','compare with', 'Padding',5);
-            clusterPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cluster', 'Padding',5);
-            cTablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','cycle points', 'Padding',5);
-            cTablePanelLayout = uiextras.VBox('Parent',cTablePanel);
-            qsTablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','quasistatic points', 'Padding',5);
-            qsTablePanelLayout = uiextras.VBox('Parent',qsTablePanel);
-            chainPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','preprocessing chain', 'Padding',5);
+            axGrid = uigridlayout(moduleLayout,[2 1],...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x'},...
+                'RowHeight',{'1x'}, 'RowSpacing',7);
+            axGrid.Layout.Column = 2;
             
-            l = uiextras.HBox('Parent',comparePanel);
-            hCompareWithCheckbox = uicontrol('Parent',l, 'Style','checkbox',...
-                'Callback',@obj.compareWithCheckboxCallback);
-            hSensorPopup = uicontrol('Parent',l, 'Style','popup', 'String',{'1','2'},...
-                'Callback',@obj.compareWithSensorPopup);
-            l.Sizes = [30,-1];
+            % create and fill the grid layout of the 'compare with' section
+            mainTabGp = uitabgroup(ctrlGrid);
+            mainTabGp.Layout.Row = 1;
+            %mainTabGp.Layout.Column = 1;
             
-            l = uiextras.Grid('Parent',clusterPanel, 'Spacing',2);
-%             l = uiextras.VBox('Parent',clusterPanel);
-%             uicontrol('Parent',l, 'Style','checkbox');
-            uicontrol('Parent',l, 'Style','text', 'String','sampling period / s', 'HorizontalAlignment','left');
-            uicontrol('Parent',l, 'Style','text', 'String','offset / s', 'HorizontalAlignment','left');
-            uicontrol('Parent',l, 'Style','text', 'String','virtual offset / s', 'HorizontalAlignment','left');
-%             uicontrol('Parent',l, 'Style','popup', 'String',{'1','2'});
-            hSamplingPeriodEdit = uicontrol('Parent',l, 'Style','edit', 'String','0.1','Callback',@obj.samplingPeriodEditCallback);
-            hOffsetEdit = uicontrol('Parent',l, 'Style','edit', 'String','100','Callback',@obj.offsetEditCallback);
-            hVirtualOffsetEdit = uicontrol('Parent',l, 'Style','edit', 'String','0','Callback',@obj.virtualOffsetEditCallback);
-
-            set(l,'ColumnSizes',[100,-1], 'RowSizes',[-1,-1,-1],...
-                'MinimumRowSizes',[20,20,20]);
-%             uicontrol('Parent',l, 'Style','text', 'String','sampling period / s', 'HorizontalAlignment','left');
-%             hSamplingPeriodEdit = uicontrol('Parent',l, 'Style','edit', 'String','0.1', ...
-%                 'Callback',@obj.samplingPeriodEditCallback);
-%             uicontrol('Parent',l, 'Style','text', 'String','offset / s', 'HorizontalAlignment','left');
-%             hOffsetEdit = uicontrol('Parent',l, 'Style','edit', 'String','100', ...
-%                 'Callback',@obj.offsetEditCallback);
-%             uicontrol('Parent',l, 'Style','text', 'String','virtual offset / s', 'HorizontalAlignment','left');
-%             hVirtualOffsetEdit = uicontrol('Parent',l, 'Style','edit', 'String','0', ...
-%                 'Callback',@obj.virtualOffsetEditCallback);
-
-            obj.hCompareWith.hCompareWithCheckbox = hCompareWithCheckbox;
-            obj.hCompareWith.hSensorPopup = hSensorPopup;
-            obj.hCompareWith.hSamplingPeriodEdit = hSamplingPeriodEdit;
-            obj.hCompareWith.hOffsetEdit = hOffsetEdit;
-            obj.hCompareWith.hVirtualOffsetEdit = hVirtualOffsetEdit;
+            cmpTab = uitab(mainTabGp,'Title','Cluster Timing / Compare');
+            cmpTabGrid = uigridlayout(cmpTab,[2 1],...
+                'Padding',[0 0 0 0],'RowHeight',{'1x','2x'});
             
-            propGridLayout = uiextras.VBox('Parent',chainPanel);
+            compareGrid = uigridlayout(cmpTabGrid,...moduleLayout,...
+                'ColumnWidth',{'1x','4x'},...
+                'RowHeight',{'fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            compareGrid.Layout.Row = 1;
+            compareGrid.Layout.Column = 1;
             
+            compareLabel = uilabel(compareGrid,...
+                'Text','Compare with',...
+                'FontWeight','bold');
+            compareLabel.Layout.Row = 1;
+            compareLabel.Layout.Column = [1 2];
+            
+            compareCheckbox = uicheckbox(compareGrid,...
+                'Text','',...
+                'ValueChangedFcn',@obj.compareWithCheckboxCallback);
+            compareCheckbox.Layout.Column = 1;
+            
+            compareDropdown = uidropdown(compareGrid,...
+                'Items',{'1','2'},...
+                'ValueChangedFcn',@(src,event)obj.compareWithSensorPopup(src,event));
+            compareDropdown.Layout.Column = 2;
+            
+            obj.hCompareWith.hCompareWithCheckbox = compareCheckbox;
+            obj.hCompareWith.hSensorPopup = compareDropdown;
+            
+            % create and fill the grid layout of the 'cluster' section
+            clusterGrid = uigridlayout(cmpTabGrid, [4 2],...
+                'ColumnWidth',{'1x','1x'},...
+                'RowHeight',{'fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            clusterGrid.Layout.Row = 2;
+            clusterGrid.Layout.Column = 1;
+            
+            clusterLabel = uilabel(clusterGrid,...
+                'Text','Cluster',...
+                'FontWeight','bold');
+            clusterLabel.Layout.Row = 1;
+            clusterLabel.Layout.Column = [1 2];
+            
+            periodLabel = uilabel(clusterGrid,'Text','sampling period / s');
+            periodLabel.Layout.Row = 2;
+            periodLabel.Layout.Column = 1;
+            
+            offsetLabel = uilabel(clusterGrid,'Text','offset / s');
+            offsetLabel.Layout.Row = 3;
+            offsetLabel.Layout.Column = 1;
+            
+            virtOffsetLabel = uilabel(clusterGrid,'Text','virtual offset / s');
+            virtOffsetLabel.Layout.Row = 4;
+            virtOffsetLabel.Layout.Column = 1;
+            
+            periodEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',0.1,...
+                'ValueChangedFcn',@(src,event)obj.samplingPeriodEditCallback(src,event));
+            periodEdit.Layout.Row = 2;
+            periodEdit.Layout.Column = 2;
+            
+            offsetEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',100,...
+                'ValueChangedFcn',@(src,event)obj.offsetEditCallback(src,event));
+            offsetEdit.Layout.Row = 3;
+            offsetEdit.Layout.Column = 2;
+            
+            virtOffsetEdit = uieditfield(clusterGrid,'numeric',...
+                'Value',0,...
+                'ValueChangedFcn',@(src,event)obj.virtualOffsetEditCallback(src,event));
+            virtOffsetEdit.Layout.Row = 4;
+            virtOffsetEdit.Layout.Column = 2;
+                        
+            obj.hCompareWith.hSamplingPeriodEdit = periodEdit;
+            obj.hCompareWith.hOffsetEdit = offsetEdit;
+            obj.hCompareWith.hVirtualOffsetEdit = virtOffsetEdit;
+            
+           % pointsTabGp = uitabgroup(main);
+            cycleTab = uitab(mainTabGp,'Title','Cycles');
+            % create and fill the grid layout of the 'cycle points' section
+            cyclePointsGrid = uigridlayout(cycleTab, [2 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'fit','6x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+%             cyclePointsGrid.Layout.Row = [7 14];
+%             cyclePointsGrid.Layout.Column = 1;
+            
+%             cyclePointsLabel = uilabel(cyclePointsGrid,...
+%                 'Text','Cycle points',...
+%                 'FontWeight','bold');
+%             cyclePointsLabel.Layout.Row = 1;
+%             cyclePointsLabel.Layout.Column = [1 4];
+            
+            % cycle point set dropdown and buttons
+            cyclePointsDropdown = uidropdown(cyclePointsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@(src,event)obj.dropdownCyclePointSetCallback(src,event));
+            cyclePointsDropdown.Layout.Row = 1;
+            cyclePointsDropdown.Layout.Column = [1 2];
+            
+            cPointSetAdd = uibutton(cyclePointsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewCyclePointSet(src,event,cyclePointsDropdown));
+            cPointSetAdd.Layout.Row = 1;
+            cPointSetAdd.Layout.Column = 3;
+                       
+            cPointSetRem = uibutton(cyclePointsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemoveCyclePointSet(src,event,cyclePointsDropdown));
+            cPointSetRem.Layout.Row = 1;
+            cPointSetRem.Layout.Column = 4;
+            
+            cyclePointsTable = uitable(cyclePointsGrid);
+            cyclePointsTable.Layout.Row = 2;
+            cyclePointsTable.Layout.Column = [1 4];
+                       
+            obj.cyclePointSetDropdown = cyclePointsDropdown;
+            obj.cyclePointTable = cyclePointsTable;
+            
+            qsTab = uitab(mainTabGp,'Title','Quasistatic Points');
+            % create and fill the grid layout of the 'quasistatic points' section
+            qsPointsGrid = uigridlayout(qsTab, [2 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'fit','6x'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+%             qsPointsGrid.Layout.Row = [15 22];
+%             qsPointsGrid.Layout.Column = 1;
+            
+%             qsPointsLabel = uilabel(qsPointsGrid,...
+%                 'Text','Quasistatic points',...
+%                 'FontWeight','bold');
+%             qsPointsLabel.Layout.Row = 1;
+%             qsPointsLabel.Layout.Column = [1 4];
+            
+            % cycle point set dropdown and buttons
+            qsPointsDropdown = uidropdown(qsPointsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@(src,event)obj.dropdownIndexPointSetCallback(src,event));
+            qsPointsDropdown.Layout.Row = 1;
+            qsPointsDropdown.Layout.Column = [1 2];
+            
+            qsPointSetAdd = uibutton(qsPointsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewIndexPointSet(src,event,qsPointsDropdown));
+            qsPointSetAdd.Layout.Row = 1;
+            qsPointSetAdd.Layout.Column = 3;
+                       
+            qsPointSetRem = uibutton(qsPointsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemoveIndexPointSet(src,event,qsPointsDropdown));
+            qsPointSetRem.Layout.Row = 1;
+            qsPointSetRem.Layout.Column = 4;
+            
+            qsPointsTable = uitable(qsPointsGrid);
+            qsPointsTable.Layout.Row = 2;
+            qsPointsTable.Layout.Column = [1 4];
+                        
+            % index point set dropdown
+            obj.indexPointSetDropdown = qsPointsDropdown;
+            obj.indexPointTable = qsPointsTable;
+            
+            chainTabGP = uitabgroup(ctrlGrid,'AutoResizeChildren','off');
+            chainTabGP.Layout.Row = 2;
+            %chainTabGP.Layout.Column = 1;
+            % create and fill the grid layout of the 'preprocessing chain' section
+            chainTab = uitab(chainTabGP,'Title','Preprocessing Chain','AutoResizeChildren','off');
+            chainGrid = uigridlayout(chainTab, [3 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'fit','6x','fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+%             chainGrid.Layout.Row = [1 22];
+%             chainGrid.Layout.Column = 2;
+            
+%             chainLabel = uilabel(chainGrid,...
+%                 'Text','Preprocessing Chain',...
+%                 'FontWeight','bold');
+%             chainLabel.Layout.Row = 1;
+%             chainLabel.Layout.Column = [1 4];
+            
+            chainDropdown = uidropdown(chainGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@(src,event)obj.dropdownPreprocessingChainCallback(src,event));
+            chainDropdown.Layout.Row = 1;
+            chainDropdown.Layout.Column = [1 2];
+            
+            chainAdd = uibutton(chainGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownNewPreprocessingChain(src,event,chainDropdown));
+            chainAdd.Layout.Row = 1;
+            chainAdd.Layout.Column = 3;
+            
+            chainRem = uibutton(chainGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@(src,event)obj.dropdownRemovePreprocessingChain(src,event,chainDropdown));
+            chainRem.Layout.Row = 1;
+            chainRem.Layout.Column = 4;
+            
+%             propGridPanel = uipanel(chainGrid,'Scrollable','on');
+%             propGridPanel.Layout.Row = 3;
+%             propGridPanel.Layout.Column = [1 4];
             % preprocessing chain set dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewPreprocessingChain;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemovePreprocessingChain;
-            obj.setDropdown.EditCallback = @obj.dropdownPreprocessingChainRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownPreprocessingChainChange;
+            obj.setDropdown = chainDropdown;
             
             % preprocessing chain propgrid
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addPreprocessing);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removePreprocessing);
-            uicontrol(propGridControlsLayout,'String','/\', 'Callback',@(h,e)obj.movePreprocessingUp);
-            uicontrol(propGridControlsLayout,'String','\/', 'Callback',@(h,e)obj.movePreprocessingDown);
-            propGridLayout.Sizes = [30,-1,20];
-            
-%             propGrid.grid.setDragEnabled(true);
-%             propGrid.grid.setDropMode(javax.swing.DropMode.INSERT_ROWS);
-%             propGrid.grid.setTransferHandler(javax.swing.TransferHandler())
+%             obj.propGrid = PropGrid(propGridPanel);
+            obj.propGrid = Gui.uiParameterBlockGrid('Parent',chainGrid,...
+                'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+                'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event));%,...
+                %);
+            obj.propGrid.Layout.Row = 2;
+            obj.propGrid.Layout.Column = [1 4];
+%             obj.propGrid.onPropertyChangedCallback = @obj.onParameterChangedCallback;
 
-%             propGrid.addProperty(PropGridField('test1','test1'));
-%             propGrid.addProperty(PropGridField('test2','test2'));
+            chainElementAdd = uibutton(chainGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(src,event)obj.addPreprocessing(src,event));
+            chainElementAdd.Layout.Row = 3;
+            chainElementAdd.Layout.Column = 1;
             
-            obj.hAxQuasistatic = axes(axesLayout); title('quasistatic signal');
-            obj.hAxQuasistatic.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
-            xlabel('cycle number'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-            obj.hAxCycle = axes(axesLayout); title('selected cycles');
-            obj.hAxCycle.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
-            xlabel('time / s'); ylabel('data / a.u.');% yyaxis right, ylabel('data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
+            chainElementDel = uibutton(chainGrid,...
+                'Text','Delete...',...
+                'ButtonPushedFcn',@(src,event)obj.removePreprocessing(src,event));
+            chainElementDel.Layout.Row = 3;
+            chainElementDel.Layout.Column = 2;
             
-            % cycle point set dropdown
-            obj.cyclePointSetDropdown = Gui.EditableDropdown(cTablePanelLayout);
-            obj.cyclePointSetDropdown.AppendClickCallback = @obj.dropdownNewCyclePointSet;
-            obj.cyclePointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveCyclePointSet;
-            obj.cyclePointSetDropdown.EditCallback = @obj.dropdownCyclePointSetRename;
-            obj.cyclePointSetDropdown.SelectionChangedCallback = @obj.dropdownCyclePointSetChange;
-            obj.cyclePointTable = JavaTable(cTablePanelLayout);
-            cTablePanelLayout.Sizes = [30,-1];
+            chainElementUp = uibutton(chainGrid,...
+                'Text','/\',...
+                'ButtonPushedFcn',@(src,event)obj.movePreprocessingUp(src,event));
+            chainElementUp.Layout.Row = 3;
+            chainElementUp.Layout.Column = 3;
             
-            % index point set dropdown
-            obj.indexPointSetDropdown = Gui.EditableDropdown(qsTablePanelLayout);
-            obj.indexPointSetDropdown.AppendClickCallback = @obj.dropdownNewIndexPointSet;
-            obj.indexPointSetDropdown.RemoveClickCallback = @obj.dropdownRemoveIndexPointSet;
-            obj.indexPointSetDropdown.EditCallback = @obj.dropdownIndexPointSetRename;
-            obj.indexPointSetDropdown.SelectionChangedCallback = @obj.dropdownIndexPointSetChange;
-            obj.indexPointTable = JavaTable(qsTablePanelLayout);
-            qsTablePanelLayout.Sizes = [30,-1];
+            chainElementDwn = uibutton(chainGrid,...
+                'Text','\/',...
+                'ButtonPushedFcn',@(src,event)obj.movePreprocessingDown(src,event));
+            chainElementDwn.Layout.Row = 3;
+            chainElementDwn.Layout.Column = 4;
             
-            leftLayout.Sizes = [50,-1,-2,-2,-4];
-            leftLayout.MinimumSizes = [50,100,100,100,150];
-            layout.Sizes = [-1,-4];
-%             leftLayout.Sizes = [-1,-1,120,-2];
+            % fill out right side of PP-Module with quasistatic and cycle
+            % plots 
+            qsAx = uiaxes(axGrid);
+            qsAx.Layout.Row = 1;
+            qsAx.Layout.Column = 1;
+            qsAx.Title.String = 'Quasistatic signal';
+            qsAx.XLabel.String = 'Cycle number';
+            qsAx.YLabel.String = 'Data / a.u.';
+            qsAx.ButtonDownFcn = @obj.quasistaticAxesButtonDownCallback;
             
+            obj.hAxQuasistatic = qsAx;
+            
+            cyAx = uiaxes(axGrid);
+            cyAx.Layout.Row = 2;
+            cyAx.Layout.Column = 1;
+            cyAx.Title.String = 'Selected cycles';
+            cyAx.XLabel.String = 'Time /s';
+            cyAx.YLabel.String = 'Data / a.u.';
+            cyAx.ButtonDownFcn = @obj.cycleAxesButtonDownCallback;
+            
+            obj.hAxCycle = cyAx;
         end
         
         function globalYLimitsMenuClicked(obj,h,varargin)
@@ -234,27 +415,42 @@ classdef Preprocessing < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             else
                 allowed = true;
             end
         end
         
         function onOpen(obj)
-            obj.setDropdown.setCallbacksActive(false);
-            obj.setDropdown.setItems(obj.getProject().poolPreprocessingChains.getCaption());
-            obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
-            obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setItems(obj.getProject().poolPreprocessingChains.getCaption());
+%             obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(false);
             
-            obj.cyclePointSetDropdown.setCallbacksActive(false);
-            obj.cyclePointSetDropdown.setItems(obj.getProject().poolCyclePointSets.getCaption());
-            obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
-            obj.cyclePointSetDropdown.setCallbacksActive(true);
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolPreprocessingChains.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentPreprocessingChain.getCaption();
             
-            obj.indexPointSetDropdown.setCallbacksActive(false);
-            obj.indexPointSetDropdown.setItems(obj.getProject().poolIndexPointSets.getCaption());
-            obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
-            obj.indexPointSetDropdown.setCallbacksActive(true);
+%             obj.cyclePointSetDropdown.setCallbacksActive(false);
+%             obj.cyclePointSetDropdown.setItems(obj.getProject().poolCyclePointSets.getCaption());
+%             obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
+%             obj.cyclePointSetDropdown.setCallbacksActive(true);
+            
+            obj.cyclePointSetDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolCyclePointSets.getCaption(),...
+                'UniformOutput',false);
+            obj.cyclePointSetDropdown.Value = obj.currentCyclePointSet.getCaption();
+            
+%             obj.indexPointSetDropdown.setCallbacksActive(false);
+%             obj.indexPointSetDropdown.setItems(obj.getProject().poolIndexPointSets.getCaption());
+%             obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
+%             obj.indexPointSetDropdown.setCallbacksActive(true);
+            
+            obj.indexPointSetDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolIndexPointSets.getCaption(),...
+                'UniformOutput',false);
+            obj.indexPointSetDropdown.Value = obj.currentIndexPointSet.getCaption();
             
             if obj.clusterHasChanged()
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
@@ -269,7 +465,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.handleIndexPointSetChange();
             end
             
-            obj.hCompareWith.hSensorPopup.String = obj.getProject().getSensors().getCaption('cluster');
+%             cSensors = obj.getProject().getSensors().getCaption('cluster');
+%             cSensors = cellfun(@(x) char(x), cSensors, 'UniformOutput', false);
+%             obj.hCompareWith.hSensorPopup.Items = cSensors;
+%             obj.hCompareWith.hSensorPopup.Value = cSensors{1};
+            obj.hCompareWith.hSensorPopup.Items = obj.getProject().getSensors().getCaption('cluster');
 
             if isempty(obj.compareSensor)
                 sensors = obj.getProject().getSensors();
@@ -322,13 +522,17 @@ classdef Preprocessing < Gui.Modules.GuiModule
         
         function handleClusterChange(obj,newCluster,oldCluster)
             obj.deleteAllPlots();
-            obj.hCompareWith.hSamplingPeriodEdit.String = num2str(newCluster.samplingPeriod);
-            obj.hCompareWith.hOffsetEdit.String = num2str(newCluster.offset);
-            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);  
+%             obj.hCompareWith.hSamplingPeriodEdit.String = num2str(newCluster.samplingPeriod);
+%             obj.hCompareWith.hOffsetEdit.String = num2str(newCluster.offset);
+%             obj.hCompareWith.hVirtualOffsetEdit.String = num2str(newCluster.indexOffset);
+            
+            obj.hCompareWith.hSamplingPeriodEdit.Value = newCluster.samplingPeriod;
+            obj.hCompareWith.hOffsetEdit.Value = newCluster.offset;
+            obj.hCompareWith.hVirtualOffsetEdit.Value = newCluster.indexOffset;   
         end
         
         function handleSensorChange(obj,newSensor,oldSensor)
-            newSensor.getCaption()
+            newSensor.getCaption();
             newSensor.preComputePreprocessedData();
             
 %             obj.plotSensor('current','raw');
@@ -341,9 +545,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.cyclePoints.updatePosition(newSensor);
                 obj.cyclePoints.setYLimits(ylimits);
             else
-                obj.cyclePointSetDropdown.setCallbacksActive(false);
-                obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
-                obj.cyclePointSetDropdown.setCallbacksActive(true);
+%                 obj.cyclePointSetDropdown.setCallbacksActive(false);
+%                 obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
+%                 obj.cyclePointSetDropdown.setCallbacksActive(true);
+                
+                obj.cyclePointSetDropdown.Value = obj.currentCyclePointSet.getCaption();
                 obj.handleCyclePointSetChange(ylimits);
             end
             
@@ -351,16 +557,21 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.indexPoints.updatePosition(newSensor);
                 obj.indexPoints.setYLimits(ylimits);
             else
-                obj.indexPointSetDropdown.setCallbacksActive(false);
-                obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
-                obj.indexPointSetDropdown.setCallbacksActive(true);
+%                 obj.indexPointSetDropdown.setCallbacksActive(false);
+%                 obj.indexPointSetDropdown.setSelectedItem(obj.currentIndexPointSet.getCaption());
+%                 obj.indexPointSetDropdown.setCallbacksActive(true);
+                
+                obj.indexPointSetDropdown.Value = obj.currentIndexPointSet.getCaption();
                 obj.handleIndexPointSetChange(ylimits);
             end
             
-            obj.setDropdown.setCallbacksActive(false);
-            obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(false);
+%             obj.setDropdown.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+%             obj.setDropdown.setCallbacksActive(true);
+            
+            obj.setDropdown.Value = obj.currentPreprocessingChain.getCaption();
+            
             obj.refreshPropGrid();
-            obj.setDropdown.setCallbacksActive(true);
             
 %             obj.cyclePointSetDropdown.setCallbacksActive(false);
 %             obj.cyclePointSetDropdown.setSelectedItem(obj.currentCyclePointSet.getCaption());
@@ -386,15 +597,15 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
         
         function onCurrentCyclePointSetChanged(obj,cps)
-            obj.cyclePointSetDropdown.setSelectedItem(cps.getCaption());
+            obj.cyclePointSetDropdown.Valus = char(cps.getCaption());
         end
         
         function onCurrentIndexPointSetChanged(obj,ips)
-            obj.indexPointSetDropdown.setSelectedItem(ips.getCaption());
+            obj.indexPointSetDropdown.Value = char(ips.getCaption());
         end
         
         function onCurrentPreprocessingChainChanged(obj,ppc)
-            obj.setDropdown.setSelectedItem(ppc.getCaption());
+            obj.setDropdown.Value = char(ppc.getCaption());
         end
         
         function val = get.currentPreprocessingChain(obj)
@@ -406,42 +617,54 @@ classdef Preprocessing < Gui.Modules.GuiModule
         end
 
         %% dropdown callbacks for preprocessing chains
-        function dropdownNewPreprocessingChain(obj,h)
+        function dropdownNewPreprocessingChain(obj,src,event,dropdown)
             ppc = obj.getProject().addPreprocessingChain();
             obj.currentPreprocessingChain = ppc;
-            h.appendItem(ppc.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(ppc.getCaption());
+            dropdown.Value = char(ppc.getCaption());
+            
             obj.main.populateSensorSetTable();
+            obj.refreshPropGrid();
+            obj.getCurrentSensor().preComputePreprocessedData();
+            obj.updatePlotsInPlace();
         end
         
-        function dropdownRemovePreprocessingChain(obj,h)
-            idx = h.getSelectedIndex();
-            ppcs = obj.getProject().poolPreprocessingChains;
-            ppc = ppcs(idx);
+        function dropdownRemovePreprocessingChain(obj,src,event,dropdown)
+            prepChains = obj.getProject().poolPreprocessingChains;
+            idx = arrayfun(@(chain) strcmp(chain.caption,dropdown.Value),prepChains);
+            ppc = prepChains(idx);
             sensorsWithPPC = obj.getProject().checkForSensorsWithPreprocessingChain(ppc);
             
             if numel(sensorsWithPPC) > 1  % the current sensor always has the PPC to delete
                 choices = {};
-                if numel(ppcs) > 1
+                if numel(prepChains) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The preprocessing chain is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The preprocessing chain "' char(ppc.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Preprocessing chain usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        ppcs(idx) = [];
-                        [sel,ok] = listdlg('ListString',ppcs.getCaption(), 'SelectionMode','single');
+                        prepChains(idx) = [];
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',prepChains.getCaption(),...
+                            'Message','Please select a replacement preprocessing chain.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replacePreprocessingChainInSensors(ppc,ppcs(sel));
-                        newPPC = ppcs(sel);
+                        selInd = ismember(prepChains.getCaption(),sel);
+                        obj.getProject().replacePreprocessingChainInSensors(ppc,prepChains(selInd));
+                        newPPC = prepChains(selInd);
                     case 'Replace with new'
                         newPPC = obj.getProject().addPreprocessingChain();
-                        h.appendItem(newPPC.getCaption());
+                        dropdown.Items = [dropdown.Items char(newPPC.getCaption())];
                         obj.getProject().replacePreprocessingChainInSensors(ppc,newPPC);
                     case 'Cancel'
                         return
@@ -451,12 +674,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolPreprocessingChains) == 1
                     newPPC = obj.getProject().addPreprocessingChain();
-                    h.appendItem(newPPC.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newPPC.getCaption())];
+                else    %select a PPC we already have
+                    if idx(1)     %the first logical index had the true
                         newPPC = obj.getProject().poolPreprocessingChains(2);
                     else
-                        newPPC = obj.getProject().poolPreprocessingChains(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newPPC = obj.getProject().poolPreprocessingChains(circshift(idx,-1));
                     end
                 end
             end
@@ -464,70 +688,85 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentPreprocessingChain = newPPC;
             obj.getProject().removePreprocessingChain(ppc);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentPreprocessingChain.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newPPC.caption);  %set the new one
+            
             obj.main.populateSensorSetTable();
-%             obj.refreshPropGrid();
-%             obj.getCurrentSensor().preComputePreprocessedData();
-%             obj.updatePlotsInPlace();
-        end
-        
-        function dropdownPreprocessingChainRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolPreprocessingChains.getCaption()));
-            obj.getProject().poolPreprocessingChains(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.main.populateSensorSetTable();
-        end
-        
-        function dropdownPreprocessingChainChange(obj,h,newItem,newIndex)
-            obj.currentPreprocessingChain = ...
-                obj.getProject().poolPreprocessingChains(newIndex);
-            disp('callback')
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
-            obj.main.populateSensorSetTable();
         end
         
+        function dropdownPreprocessingChainCallback(obj, src, event)
+            if event.Edited                
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolCyclePointSets.getCaption()));
+                obj.getProject().poolPreprocessingChains(index).setCaption(newName);
+                src.Items{index} = newName;
+                obj.main.populateSensorSetTable();
+            else
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentPreprocessingChain = ...
+                    obj.getProject().poolPreprocessingChains(index);
+                obj.refreshPropGrid();
+                obj.getCurrentSensor().preComputePreprocessedData();
+                obj.updatePlotsInPlace();
+                obj.main.populateSensorSetTable();
+            end
+        end        
+        %% sizeChanged Callback
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,25,9,12]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                      % depending on screen resolution?
+            %disp('Resized')
+        end
         %% dropdown callbacks for cycle point sets
-        function dropdownNewCyclePointSet(obj,h)
+        function dropdownNewCyclePointSet(obj,src,event,dropdown)
             cps = obj.getProject().addCyclePointSet();
             obj.currentCyclePointSet = cps;
-%             obj.addCyclePoint(0);
-            h.appendItem(cps.getCaption());
-            h.selectLastItem();
-%             obj.handleCyclePointSetChange();
-%             obj.main.populateSensorSetTable();
+            dropdown.Items{end+1} = char(cps.getCaption());
+            dropdown.Value = char(cps.getCaption());
         end
         
-        function dropdownRemoveCyclePointSet(obj,h)
-            idx = h.getSelectedIndex();
-            cpss = obj.getProject().poolCyclePointSets;
-            cps = cpss(idx);
-            sensorsWithFds = obj.getProject().checkForSensorsWithCyclePointSet(cps);
+        function dropdownRemoveCyclePointSet(obj,src,event,dropdown)
+            cPointSets = obj.getProject().poolCyclePointSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),cPointSets);
+            cps = cPointSets(idx);
+            sensorsWithCps = obj.getProject().checkForSensorsWithCyclePointSet(cps);
             
-            if numel(sensorsWithFds) > 1  % the current sensor always has the FDS to delete
+            if numel(sensorsWithCps) > 1  % the current sensor always has the Cps to delete
                 choices = {};
-                if numel(cpss) > 1
+                if numel(cPointSets) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The cycle point set "' char(cps.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Cycle point set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        cpss(idx) = [];
-                        [sel,ok] = listdlg('ListString',cpss.getCaption(), 'SelectionMode','single');
+                        cPointSets(idx) = [];
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',cPointSets.getCaption(),...
+                            'Message','Please select a replacement cycle point set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceCyclePointSetInSensors(cps,cpss(sel));
-                        newCps = cpss(sel);
+                        selInd = ismember(cPointSets.getCaption(),sel);
+                        obj.getProject().replaceCyclePointSetInSensors(cps,cPointSets(selInd));
+                        newCps = cPointSets(selInd);
                     case 'Replace with new'
                         newCps = obj.getProject().addCyclePointSet();
-                        h.appendItem(newCps.getCaption());
+                        dropdown.Items = [dropdown.Items char(newCps.getCaption())];
                         obj.getProject().replaceCyclePointSetInSensors(cps,newCps);
                     case 'Cancel'
                         return
@@ -537,12 +776,13 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolCyclePointSets) == 1
                     newCps = obj.getProject().addCyclePointSet();
-                    h.appendItem(newCps.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newCps.getCaption())];
+                else    %select a CPS we already have
+                    if idx(1)   %the first logical index had the true
                         newCps = obj.getProject().poolCyclePointSets(2);
                     else
-                        newCps = obj.getProject().poolCyclePointSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newCps = obj.getProject().poolCyclePointSets(circshift(idx,-1));
                     end
                 end
             end
@@ -550,81 +790,89 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentCyclePointSet = newCps;
             obj.getProject().removeCyclePointSet(cps);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentCyclePointSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newCps.caption);  %set the new one
             obj.handleCyclePointSetChange();
             obj.main.populateSensorSetTable();
         end
-        
-        function dropdownCyclePointSetRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolCyclePointSets.getCaption()));
-            obj.getProject().poolCyclePointSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.handleCyclePointSetChange();
-            obj.main.populateSensorSetTable();
-        end
-        
-        function dropdownCyclePointSetChange(obj,h,newItem,newIndex)
-            obj.currentCyclePointSet = ...
-                obj.getProject().poolCyclePointSets(newIndex);
-            obj.handleCyclePointSetChange();
-            obj.main.populateSensorSetTable();
-        end        
+        function dropdownCyclePointSetCallback(obj, src, event)
+           if event.Edited
+               index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+               newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolCyclePointSets.getCaption()));
+               obj.getProject().poolCyclePointSets(index).setCaption(newName);
+               src.Items{index} = newName;
+               obj.handleCyclePointSetChange();
+               obj.main.populateSensorSetTable();
+           else 
+               index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+               obj.currentCyclePointSet = ...
+                   obj.getProject().poolCyclePointSets(index);
+               obj.handleCyclePointSetChange();
+               obj.main.populateSensorSetTable();
+           end
+        end       
         
         %% dropdown callbacks for index point sets
-        function dropdownNewIndexPointSet(obj,h)
+        function dropdownNewIndexPointSet(obj,src,event,dropdown)
             ips = obj.getProject().addIndexPointSet();
             obj.currentIndexPointSet = ips;
-%             obj.addIndexPoint(0);
-            h.appendItem(ips.getCaption());
-            h.selectLastItem();
-%             obj.handleIndexPointSetChange();
-%             obj.main.populateSensorSetTable();
+            dropdown.Items{end+1} = char(ips.getCaption());
+            dropdown.Value = char(ips.getCaption());
         end
         
-        function dropdownRemoveIndexPointSet(obj,h)
-            idx = h.getSelectedIndex();
-            ipss = obj.getProject().poolIndexPointSets;
-            ips = ipss(idx);
-            sensorsWithFds = obj.getProject().checkForSensorsWithIndexPointSet(ips);
+        function dropdownRemoveIndexPointSet(obj,src,event,dropdown)
+            iPointSets = obj.getProject().poolIndexPointSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),iPointSets);
+            ips = iPointSets(idx);
+            sensorsWithIps = obj.getProject().checkForSensorsWithIndexPointSet(ips);
             
-            if numel(sensorsWithFds) > 1  % the current sensor always has the IPS to delete
+            if numel(sensorsWithIps) > 1  % the current sensor always has the IPS to delete
                 choices = {};
-                if numel(ipss) > 1
+                if numel(iPointSets) > 1
                     choices{1} = 'Choose a replacement';
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The index point set "' char(ips.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Index point set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
-                        ipss(idx) = [];
-                        [sel,ok] = listdlg('ListString',ipss.getCaption(), 'SelectionMode','single');
+                        iPointSets(idx) = [];
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',iPointSets.getCaption(),...
+                            'Message','Please select a replacement index point set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceIndexPointSetInSensors(ips,ipss(sel));
-                        newIps = ipss(sel);
+                        selInd = ismember(iPointSets.getCaption(),sel);
+                        obj.getProject().replaceIndexPointSetInSensors(ips,iPointSets(selInd));
+                        newIps = iPointSets(selInd);
                     case 'Replace with new'
                         newIps = obj.getProject().addIndexPointSet();
-                        h.appendItem(newIps.getCaption());
+                        dropdown.Items = [dropdown.Items char(newIps.getCaption())];
                         obj.getProject().replaceIndexPointSetInSensors(ips,newIps);
                     case 'Cancel'
                         return
                 end
             else
-                % if there is only one FDS, it will now be deleted
+                % if there is only one IPS, it will now be deleted
                 % so we have to add a new one
                 if numel(obj.getProject().poolIndexPointSets) == 1
                     newIps = obj.getProject().addIndexPointSet();
-                    h.appendItem(newIps.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newIps.getCaption())];
+                else    %select an IPS we already have
+                    if idx(1)   %the first logical index had the true
                         newIps = obj.getProject().poolIndexPointSets(2);
                     else
-                        newIps = obj.getProject().poolIndexPointSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newIps = obj.getProject().poolIndexPointSets(circshift(idx,-1));
                     end
                 end
             end
@@ -632,27 +880,29 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.currentIndexPointSet = newIps;
             obj.getProject().removeIndexPointSet(ips);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentIndexPointSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newIps.caption);  %set the new one
             obj.handleIndexPointSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownIndexPointSetRename(obj,h,newName,index)
-            newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().poolIndexPointSets.getCaption()));
-            obj.getProject().poolIndexPointSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
-            obj.handleIndexPointSetChange();
-            obj.main.populateSensorSetTable();
+        function dropdownIndexPointSetCallback(obj, src, event)
+           if event.Edited
+               index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+               newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().poolIndexPointSets.getCaption()));
+               obj.getProject().poolIndexPointSets(index).setCaption(newName);
+               src.Items{index} = newName;
+               obj.handleIndexPointSetChange();
+               obj.main.populateSensorSetTable();
+           else 
+               index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+               obj.currentIndexPointSet = ...
+                   obj.getProject().poolIndexPointSets(index);
+               obj.handleIndexPointSetChange();
+               obj.main.populateSensorSetTable();
+           end
         end
-        
-        function dropdownIndexPointSetChange(obj,h,newItem,newIndex)
-            obj.currentIndexPointSet = ...
-                obj.getProject().poolIndexPointSets(newIndex);
-            obj.handleIndexPointSetChange();
-            obj.main.populateSensorSetTable();
-        end
-        
         %%
         function val = get.currentCyclePointSet(obj)
             val = obj.getProject().currentCyclePointSet;
@@ -677,21 +927,56 @@ classdef Preprocessing < Gui.Modules.GuiModule
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
             time_positions = num2cell(gPoints.getTimePosition());
-            colors = num2cell(gPoints.getPoint().getJavaColor());
+            
+            clrArray = gPoints.getObject.getColor();
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
             data = [captions, positions, time_positions, colors];
+%             data = [captions, positions, time_positions];
 
             t = obj.cyclePointTable;
-            t.setData(data,{'caption','cycle','time in s','color'});
-            t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','int','double', 'clr'});
-            t.setColumnsEditable([true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(3);
-            t.jTable.setAutoResort(false)
-            obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
-            obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
+%             t.ColumnName = {'caption','cycle','time in s'};
+            t.ColumnName = {'caption','cycle','time in s','color'};
+%             t.setRowObjects(gPoints);
+%             t.ColumnFormat = {'char' 'numeric' 'numeric'};
+            t.ColumnFormat = {'char' 'numeric' 'numeric' 'char'};
+%             t.ColumnSortable = [false false true];
+%             t.ColumnEditable = [true true true];
+            t.ColumnEditable = [true true true true];
+            t.ColumnWidth = {'auto' 'fit' 'fit' 'fit'};
+            t.Data = data;
+            t.UserData = gPoints;
+
+            ind = tableColSort(t,3,'a');
+%             obj.cyclePoints = obj.cyclePoints(ind);
+%             disabled due to unwanted behaviour involving two or more
+%             cusors
+                        
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 4])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',4)
+                end
+            end
+%             t.setSortingEnabled(false)
+%             t.setFilteringEnabled(false);
+%             t.setColumnReorderingAllowed(false);
+%             t.jTable.sortColumn(3);
+%             t.jTable.setAutoResort(false)
+            obj.cyclePointTable.CellEditCallback = ...
+                @(src, event) obj.cyclePointTableEditCallback(src, event);
+            obj.cyclePointTable.CellSelectionCallback = ...
+                @(src, event) obj.cyclePointTableClickCallback(src, event);
+%             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
+%             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
         end
         
         function populateIndexPointsTable(obj)
@@ -700,36 +985,80 @@ classdef Preprocessing < Gui.Modules.GuiModule
             gPoints = obj.indexPoints;
             captions = cellstr(gPoints.getPoint().getCaption()');
             positions = num2cell(gPoints.getPosition());
-            colors = num2cell(gPoints.getPoint().getJavaColor());
+            
+            clrArray = gPoints.getObject.getColor();
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
             data = [captions, positions, colors];
+%             data = [captions, positions];
             
             t = obj.indexPointTable;
-            t.setData(data,{'caption','point','color'});
-            t.setRowObjects(gPoints);
-            t.setColumnClasses({'str','double','clr'});
-            t.setColumnsEditable([true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(3);
             
-            obj.indexPointTable.onDataChangedCallback = @obj.indexPointTableDataChange;
-            obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
+            t.ColumnName = {'caption','cycle point','color'};
+            t.ColumnFormat = {'char' 'numeric' 'char'};
+            t.ColumnEditable = [true true true];
+            t.Data = data;
+            t.UserData = gPoints;
+            
+             ind = tableColSort(t,2,'a');
+%             obj.indexPoints = obj.indexPoints(ind);
+            
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 3])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',3)
+                end
+            end
+%             t.setData(data,{'caption','point','color'});
+%             t.setRowObjects(gPoints);
+%             t.setColumnClasses({'str','double','clr'});
+%             t.setColumnsEditable([true true true]);
+%             t.setSortingEnabled(false)
+%             t.setFilteringEnabled(false);
+%             t.setColumnReorderingAllowed(false);
+%             t.jTable.sortColumn(2);
+%             t.jTable.setAutoResort(false)
+            obj.indexPointTable.CellEditCallback = ...
+                @(src, event) obj.indexPointTableEditCallback(src, event);
+            obj.indexPointTable.CellSelectionCallback = ...
+                @(src, event) obj.indexPointTableClickCallback(src, event);
+%             obj.indexPointTable.DisplayDataChangedFcn = ...
+%                 @(src, event) obj.indexPointTableDataChange(src,event);
+%             obj.indexPointTable.onMouseClickedCallback = @obj.indexPointTableMouseClickedCallback;
         end
         
         function cyclePointDraggedCallback(obj,gPoint)
             %%
             % update the position in the table when the point is dragged
-            row = obj.cyclePointTable.getRowObjectRow(gPoint);
-            obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
-            obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
+%             row = obj.cyclePointTable.getRowObjectRow(gPoint);
+%             obj.cyclePointTable.setValue(gPoint.getPosition(),row,2);
+%             obj.cyclePointTable.setValue(gPoint.getTimePosition(),row,3);
+            idx = ismember(obj.cyclePoints,gPoint);
+            obj.cyclePointTable.Data{idx,2} = gPoint.getPosition();
+            obj.cyclePointTable.Data{idx,3} = gPoint.getTimePosition();
+%             ind = tableColSort(obj.cyclePointTable,3,'a');
+%             obj.cyclePoints = obj.cyclePoints(ind);
+            obj.populateCyclePointsTable();
         end
         
         function indexPointDraggedCallback(obj,gPoint)
             %%
             % update the position in the table when the point is dragged
-            row = obj.indexPointTable.getRowObjectRow(gPoint);
-            obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
+%             row = obj.indexPointTable.getRowObjectRow(gPoint);
+%             obj.indexPointTable.setValue(gPoint.getPosition(),row,2);
+            idx = ismember(obj.indexPoints,gPoint);
+            obj.indexPointTable.Data{idx,2} = gPoint.getPosition();
+%             ind = tableColSort(obj.indexPointTable,2,'a');
+%             obj.indexPoints = obj.indexPoints(ind);
+            obj.populateIndexPointsTable();
         end
 
         function cyclePointDragStartCallback(obj,gObj)
@@ -737,9 +1066,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
-            obj.cyclePointTable.setCallbacksActive(false);
-            objRow = obj.cyclePointTable.getRowObjectRow(gObj);
-            obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.cyclePointTable.setCallbacksActive(false);
+%             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
+            obj.cyclePointTable.Enable = 'off';
             idx = ismember(obj.cyclePoints,gObj);
             obj.hLines.current.raw.cycle(idx).LineWidth = 2;
             obj.hLines.current.pp.cycle(idx).LineWidth = 2;
@@ -762,10 +1091,11 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.cycle(idx).LineWidth = 1;
                 obj.hLines.compare.pp.cycle(idx).LineWidth = 1;
             end
-            objRow = obj.cyclePointTable.getRowObjectRow(gObj);
-            obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-%             obj.cyclePointTable.setRowHeader();
-            obj.cyclePointTable.setCallbacksActive(true);
+            obj.cyclePointTable.Enable = 'on';
+%             objRow = obj.cyclePointTable.getRowObjectRow(gObj);
+%             obj.cyclePointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+% %             obj.cyclePointTable.setRowHeader();
+%             obj.cyclePointTable.setCallbacksActive(true);
         end
         
         function indexPointDragStartCallback(obj,gObj)
@@ -773,9 +1103,9 @@ classdef Preprocessing < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding quasistatic line bold
-            obj.indexPointTable.setCallbacksActive(false);
-            objRow = obj.indexPointTable.getRowObjectRow(gObj);
-            obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.indexPointTable.setCallbacksActive(false);
+%             objRow = obj.indexPointTable.getRowObjectRow(gObj);
+            obj.indexPointTable.Enable = 'off';
             idx = ismember(obj.indexPoints,gObj);
             obj.hLines.current.raw.quasistatic(idx).LineWidth = 2;
             obj.hLines.current.pp.quasistatic(idx).LineWidth = 2;
@@ -798,55 +1128,72 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.hLines.compare.raw.quasistatic(idx).LineWidth = 1;
                 obj.hLines.compare.pp.quasistatic(idx).LineWidth = 1;
             end
-            objRow = obj.indexPointTable.getRowObjectRow(gObj);
-            obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-%             obj.indexPointTable.setRowHeader();
-            obj.indexPointTable.setCallbacksActive(true);
+            obj.indexPointTable.Enable = 'on';
+%             objRow = obj.indexPointTable.getRowObjectRow(gObj);
+%             obj.indexPointTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+% %             obj.indexPointTable.setRowHeader();
+%             obj.indexPointTable.setCallbacksActive(true);
         end
         
-        function cyclePointTableDataChangeCallback(obj,rc,v)
-            %%
-            % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.cyclePointTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition(v{i},obj.getProject().getCurrentSensor());
-                        obj.cyclePointTable.setValue(o.getTimePosition(),rc(i,1),3);
-                    case 3
-                        o.setTimePosition(v{i});
-                        obj.cyclePointTable.setValue(o.getPosition(),rc(i,1),2);
-                    case 4
-                        o.setColor(v{i});
-                        idx = ismember(obj.cyclePoints,o);
-                        obj.hLines.current.raw.cycle(idx).Color = changeColorShade(obj.cyclePoints(idx).getPoint().getColor(),obj.rawColorShade);
-                        obj.hLines.current.pp.cycle(idx).Color = obj.cyclePoints(idx).getPoint().getColor();
-                end
+        function cyclePointTableEditCallback(obj, src, event)
+            row = event.Indices(1);
+            col = event.Indices(2);
+            cPoint = src.UserData(row);
+            switch col
+                case 1
+                    cPoint.getObject().setCaption(event.EditData);
+                case 2
+                    cPoint.setPosition(event.NewData,...
+                        obj.getProject().getCurrentSensor());
+                    src.Data{row,3} = cPoint.getTimePosition();
+                case 3
+                    cPoint.setTimePosition(event.NewData);
+                    src.Data{row,2} = cPoint.getPosition();
+                case 4
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row col]);
+                    cPoint.setColor(rgbClr);
+                    idx = ismember(obj.cyclePoints,cPoint);
+                    obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                    obj.hLines.current.pp.cycle(idx).Color = rgbClr;
             end
-            obj.cyclePointTable.jTable.sortColumn(3);
+            ind = tableColSort(obj.cyclePointTable,3,'a');
+            obj.cyclePoints = obj.cyclePoints(ind);
         end
         
-        function indexPointTableDataChange(obj,rc,v)
-            %%
-            % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.indexPointTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition(v{i},obj.getProject().getCurrentSensor());
-                    case 3
-                        o.setColor(v{i});
-                        idx = ismember(obj.indexPoints,o);
-                        obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(obj.indexPoints(idx).getPoint().getColor(),obj.rawColorShade);
-                        obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
+        function cyclePointTableClickCallback(obj,src,event)
+            % check if a single color picker was selected
+            if size(event.Indices,1) == 1 && event.Indices(2) == 4
+                row = event.Indices(1);
+                col = event.Indices(2);
+                cPoint = src.UserData(row);
+                origClr = cPoint.getObject.getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    obj.main.hFigure.Visible = 'off';
+                    obj.main.hFigure.Visible = 'on';
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
                 end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
+                
+                cPoint.setColor(rgbClr);
+                idx = ismember(obj.cyclePoints,cPoint);
+                obj.hLines.current.raw.cycle(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                obj.hLines.current.pp.cycle(idx).Color = rgbClr;
             end
         end
-        
+                
         function cyclePointPositionChangedCallback(obj,point,~)
             %%
             % update the corresponding lines in cyclic plot when a
@@ -865,6 +1212,80 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.hLines.compare.pp.cycle(idx).YData = d;            
         end
         
+        function indexPointTableEditCallback(obj, src, event)
+            row = event.Indices(1);
+            col = event.Indices(2);
+            iPoint = src.UserData(row);
+            switch col
+                case 1
+                    iPoint.getObject().setCaption(event.EditData);
+                case 2
+                    iPoint.setPosition(event.NewData,...
+                        obj.getProject().getCurrentSensor());
+                case 3
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row col]);
+                    iPoint.setColor(rgbClr);
+                    idx = ismember(obj.indexPoints,iPoint);
+                    obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                    obj.hLines.current.pp.quasistatic(idx).Color = rgbClr;
+            end
+            ind = tableColSort(obj.indexPointTable,2,'a');
+            obj.indexPoints = obj.indexPoints(ind);
+        end
+        
+        function indexPointTableClickCallback(obj, src, event)
+            % check if a single color picker was selected
+            if size(event.Indices,1) == 1 && event.Indices(2) == 3
+                row = event.Indices(1);
+                col = event.Indices(2);
+                iPoint = src.UserData(row);
+                origClr = iPoint.getObject.getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    obj.main.hFigure.Visible = 'off';
+                    obj.main.hFigure.Visible = 'on';
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
+                iPoint.setColor(rgbClr);
+                idx = ismember(obj.indexPoints,iPoint);
+                obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(rgbClr,obj.rawColorShade);
+                obj.hLines.current.pp.quasistatic(idx).Color = rgbClr;
+            end
+        end
+        
+        function indexPointTableDataChange(obj,src,event)
+            %%
+            % write changes from the table to the point object
+            foo = 5;
+            for i = 1:size(src,1)
+                o = obj.indexPointTable.getRowObjectsAt(src(i,1));
+                switch src(i,2)
+                    case 1
+                        o.getObject().setCaption(event{i});
+                    case 2
+                        o.setPosition(event{i},obj.getProject().getCurrentSensor());
+                    case 3
+                        o.setColor(event{i});
+                        idx = ismember(obj.indexPoints,o);
+                        obj.hLines.current.raw.quasistatic(idx).Color = changeColorShade(obj.indexPoints(idx).getPoint().getColor(),obj.rawColorShade);
+                        obj.hLines.current.pp.quasistatic(idx).Color = obj.indexPoints(idx).getPoint().getColor();
+                end
+            end
+        end      
+        
         function indexPointPositionChangedCallback(obj,point,~)
             %%
             % update the corresponding lines in quasistatic plot when a
@@ -880,40 +1301,6 @@ classdef Preprocessing < Gui.Modules.GuiModule
 %             obj.hLines.compare.pp.quasistatic(idx).YData = d;            
         end
         
-        function cyclePointTableMouseClickedCallback(obj,visRC,actRC)
-            %%
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.cyclePointTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.cyclePointTable.onMouseReleasedCallback = @()obj.cyclePointTableMouseReleasedCallback(o);
-        end
-        
-        function indexPointTableMouseClickedCallback(obj,visRC,actRC)
-            %%
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.indexPointTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.indexPointTable.onMouseReleasedCallback = @()obj.indexPointTableMouseReleasedCallback(o);
-        end
-        
-        function cyclePointTableMouseReleasedCallback(obj,gObject)
-            %%
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.cyclePointTable.onMouseReleasedCallback = [];
-        end
-        
-        function indexPointTableMouseReleasedCallback(obj,gObject)
-            %%
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.indexPointTable.onMouseReleasedCallback = [];
-        end
-        
         function compareWithCheckboxCallback(obj,~,~)
             checked = obj.hCompareWith.hCompareWithCheckbox.Value;
             if checked
@@ -924,18 +1311,18 @@ classdef Preprocessing < Gui.Modules.GuiModule
                 obj.deleteSensorPlot('compare','pp');
             end
 %             obj.compareSensor.preComputePreprocessedData();
-            disp(checked)
+%             disp(checked)
         end
         
-        function compareWithSensorPopup(obj,~,~)
-            value = obj.hCompareWith.hSensorPopup.Value;
+        function compareWithSensorPopup(obj, src, event)
+            sensorInd = cellfun(@(x) strcmp(x,event.Value), src.Items);
             if obj.compareSensor ~= obj.getCurrentSensor()
                 obj.compareSensor.deletePreprocessedData();
             end
             sensors = obj.getProject().getSensors();
-            obj.compareSensor = sensors(value);
+            obj.compareSensor = sensors(sensorInd);
             obj.compareSensor.preComputePreprocessedData();
-            disp(value)
+%             disp(value)
             if obj.hCompareWith.hCompareWithCheckbox.Value
 %                 obj.deleteSensorPlot('compare','raw');
                 obj.deleteSensorPlot('compare','pp');
@@ -944,49 +1331,26 @@ classdef Preprocessing < Gui.Modules.GuiModule
             end            
         end        
         
-        function samplingPeriodEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hSamplingPeriodEdit.String);
-            if (~isnumeric(newNum)) || isnan(newNum)
-                obj.hCompareWith.hSamplingPeriodEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().samplingPeriod);
-                return
-            end
-            obj.getCurrentCluster().samplingPeriod = newNum;
+        function samplingPeriodEditCallback(obj,src,event)
+            obj.getCurrentCluster().samplingPeriod = event.Value;
             obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
             obj.updatePlotsInPlace();
             obj.populateCyclePointsTable();
             obj.populateIndexPointsTable();
         end
         
-        function offsetEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hOffsetEdit.String);
-            if ~isnumeric(newNum) || isnan(newNum)
-                obj.hCompareWith.hOffsetEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().offset);
-                return
-            end
-            obj.getProject().getCurrentCluster().offset = newNum;
+        function offsetEditCallback(obj,src,event)
+            obj.getProject().getCurrentCluster().offset = event.Value;
             iOffset = obj.getProject().getCurrentCluster().getAutoIndexOffset(obj.getProject().clusters);
             obj.getProject().getCurrentCluster().indexOffset = iOffset;
-            obj.hCompareWith.hVirtualOffsetEdit.String = num2str(iOffset);
+            obj.hCompareWith.hVirtualOffsetEdit.Value = iOffset;
             obj.updatePlotsInPlace();
             obj.cyclePoints.updatePosition(obj.getProject().getCurrentSensor());
-            for i = 1:numel(obj.cyclePoints)
-                id = obj.cyclePointTable.getRowObjectRow(obj.cyclePoints(i));
-                gPoint = obj.cyclePoints(i);
-                obj.cyclePointTable.setValue(gPoint.getTimePosition(),id,3);
-                obj.cyclePointTable.setValue(gPoint.getPosition(),id,2);
-            end
+            obj.populateCyclePointsTable();
         end
         
-        function virtualOffsetEditCallback(obj,~,~)
-            newNum = str2double(obj.hCompareWith.hVirtualOffsetEdit.String);
-            if ~isnumeric(newNum) || isnan(newNum)
-                obj.hCompareWith.hVirtualOffsetEdit.String = ...
-                    num2str(obj.getProject().getCurrentCluster().indexOffset);
-                return
-            end
-            obj.getProject().getCurrentCluster().indexOffset = newNum;
+        function virtualOffsetEditCallback(obj,src,event)
+            obj.getProject().getCurrentCluster().indexOffset = event.Value;
             obj.updatePlotsInPlace();
         end
         
@@ -1157,29 +1521,29 @@ classdef Preprocessing < Gui.Modules.GuiModule
             xlim(obj.hAxQuasistatic,'auto');            
         end
 
-        function addPreprocessing(obj)
-            pp = PreprocessingChain.getAvailableMethods(true)
-            s = keys(pp)
-            [sel,ok] = listdlg('ListString',s);
+        function addPreprocessing(obj, src, event)
+            pp = PreprocessingChain.getAvailableMethods(true);
+            s = keys(pp);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',s);
             if ~ok
                 return
             end
-            obj.currentPreprocessingChain.appendPreprocessing(s(sel));
+            obj.currentPreprocessingChain.appendPreprocessing(sel);
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
             obj.setGlobalYLimits();
         end
         
-        function removePreprocessing(obj)
+        function removePreprocessing(obj, src, event)
             pp = obj.currentPreprocessingChain.preprocessings;
             captions = pp.getCaption();
             %uniqueTags = unique(captions);
-            [sel,ok] = listdlg('ListString',captions);
+            [sel,ok] = Gui.Dialogs.Select('ListItems',captions);
             if ~ok
                 return
             end
-            rem = pp(sel);
+            rem = pp(ismember(captions,sel));
             obj.currentPreprocessingChain.removePreprocessing(rem);
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
@@ -1187,38 +1551,36 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.setGlobalYLimits();
         end
         
-        function movePreprocessingUp(obj)
+        function movePreprocessingUp(obj, src, event)
             obj.currentPreprocessing.moveUp();
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
         end
         
-        function movePreprocessingDown(obj)
+        function movePreprocessingDown(obj, src, event)
             obj.currentPreprocessing.moveDown();
             obj.refreshPropGrid();
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.updatePlotsInPlace();
         end
         
-        function changeCurrentPreprocessing(obj,prop)
-            prop.userData
-            obj.currentPreprocessing = prop.userData;
+        function changeCurrentPreprocessing(obj,src,event)
+            obj.currentPreprocessing = src.getSelectedBlock;
         end
         
         function refreshPropGrid(obj)
             obj.propGrid.clear();
-            pgf = obj.currentPreprocessingChain.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.changeCurrentPreprocessing);
+            obj.propGrid.addBlocks(obj.currentPreprocessingChain.preprocessings);
+%             pgf = obj.currentPreprocessingChain.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+%             [pgf.onMouseClickedCallback] = deal(@obj.changeCurrentPreprocessing);
         end
         
-        function quasistaticAxesButtonDownCallback(obj,varargin)
+        function quasistaticAxesButtonDownCallback(obj,src, event)
             switch get(gcf,'SelectionType')
                 case 'open' % double-click
-                    coord = get(gca,'Currentpoint');
-                    x = coord(1,1);
-                    obj.addCyclePoint(x);
+                    obj.addCyclePoint(event.IntersectionPoint(1));
             end
         end
         
@@ -1274,12 +1636,10 @@ classdef Preprocessing < Gui.Modules.GuiModule
             obj.updateSensorPlots();
         end
         
-        function cycleAxesButtonDownCallback(obj,varargin)
+        function cycleAxesButtonDownCallback(obj,src,event)
             switch get(gcf,'SelectionType')
                 case 'open' % double-click
-                    coord = get(gca,'Currentpoint');
-                    x = coord(1,1);
-                    obj.addIndexPoint(x);
+                    obj.addIndexPoint(event.IntersectionPoint(1));
             end
         end
         
@@ -1287,7 +1647,7 @@ classdef Preprocessing < Gui.Modules.GuiModule
             val = logical(obj.hCompareWith.hCompareWithCheckbox.Value);
         end
         
-        function onParameterChangedCallback(obj,prop,param)
+        function onParameterChangedCallback(obj,src,event)
             obj.getCurrentSensor().preComputePreprocessedData();
             obj.compareSensor.preComputePreprocessedData();
             obj.updatePlotsInPlace();

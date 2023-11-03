@@ -39,33 +39,44 @@ classdef CycleRanges < Gui.Modules.GuiModule
         
         function delete(obj)
             delete(obj.rangeTable);
-        end         
+        end  
         
-        function [panel,menu] = makeLayout(obj)
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
-            panel = Gui.Modules.Panel();
+            moduleLayout = uigridlayout(uiParent,[2 1],...
+                'Visible','off',...
+                'Padding',[0 0 0 0],...
+                'RowHeight',{'3x','2x'},...
+                'RowSpacing',7);
             
-            menu = uimenu('Label','CycleRanges');
-            uimenu(menu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
-            uimenu(menu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
-            uimenu(menu,'Label','change range length (batch)', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
-            uimenu(menu,'Label','make cycle ranges and grouping from selected ("binary") sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
+            moduleMenu = uimenu(mainFigure,'Label','CycleRanges');
+            uimenu(moduleMenu,'Label','export cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickExport);
+            uimenu(moduleMenu,'Label','import cycle ranges', getMenuCallbackName(),@(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label','change range length (batch)','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickChangeRangeLength);
+            uimenu(moduleMenu,'Label','make cycle ranges and grouping from selected sensor', getMenuCallbackName(),@(varargin)obj.onClickMakeCycleRangesAndGroupingFromSelectedSensor);
 
-            layout = uiextras.VBox('Parent',panel);
+            rangeAx = uiaxes(moduleLayout);
+            rangeAx.Title.String = 'Quasistatic signal';
+            rangeAx.ButtonDownFcn = @obj.axesButtonDownCallback;
+            rangeAx.XLabel.String = 'Cycle number';
+            rangeAx.YLabel.String = 'Data / a.u.';
             
-            obj.hAx = axes(layout); title('quasistatic signal');
-            obj.hAx.ButtonDownFcn = @obj.axesButtonDownCallback;
-            xlabel('cycle number'); ylabel('data / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
+            rangeAx.Layout.Row = 1;
+           
+            obj.hAx = rangeAx;
             
-            obj.rangeTable = JavaTable(layout);
+            rangeTable = uitable(moduleLayout);
+            rangeTable.Layout.Row = 2;
             
-            layout.Sizes = [-3,-1];
+            obj.rangeTable = rangeTable;            
         end
         
         function onClickChangeRangeLength(obj,onlyCluster)
-            answer = inputdlg({'start','end'},'Change range size',[1 10],{'0','0'});
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',{'start','end'},...
+                'DefaultValues',{'0','0'},'Name','Change range size');
+            if ~ext
+                return
+            end
             startVal = str2double(answer{1});
             endVal = str2double(answer{2});
             r = obj.getProject().ranges;
@@ -80,15 +91,24 @@ classdef CycleRanges < Gui.Modules.GuiModule
         function onClickImport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uigetfile(options,'Choose cycle range file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
             obj.oldPath = path;
             
             if ~isempty(obj.ranges)
-                re = questdlg('This will delete the current cycle ranges. Proceed?','Proceed?','Yes','No','No');
-                if ~strcmp(re,'Yes')
-                    return
+                selection = uiconfirm(obj.main.hFigure,...
+                                'This will delete the current cycle ranges. Proceed?',...
+                                'Confirm cycle range import','Icon','warning',...
+                                'Options',{'Yes, Import','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, Cancel'
+                        return
                 end
             end
             splitFile = strsplit(file,'.');
@@ -113,6 +133,10 @@ classdef CycleRanges < Gui.Modules.GuiModule
         function onClickExport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uiputfile(options,'Choose cycle range file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -141,6 +165,15 @@ classdef CycleRanges < Gui.Modules.GuiModule
             data = sensor.data;
             data = data';
             data = data(:);
+
+%             if numel(unique(data))>2
+%                 warning('This function is limited to a sensor that only has the values 0 and 1.')
+%                 return;
+%             end
+            
+%             lastOff = find(diff(data) == 1);
+%             lastOn = find(diff(data) == -1);
+%             changes = sort([[lastOff,lastOn],[lastOff,lastOn]+1]);
 
             change = find(diff(data) ~= 0)';
             changes = sort([change,change+1]);
@@ -299,7 +332,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             else
                 allowed = true;
             end
@@ -317,7 +350,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
             obj.ranges.updateYLimits();
-            set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
+%             set(obj.main.hFigure,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
         
         function onClose(obj)
@@ -349,7 +382,7 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 hold(obj.hAx,'on');
                 obj.quasistaticLines = plot(obj.hAx,x,d,'-k');
                 hold(obj.hAx,'off');
-                uistack(obj.quasistaticLines,'bottom');
+%                 uistack(obj.quasistaticLines,'bottom');
                 cClr = newSensor.getIndexPoints().getColorCell();
                 l = [obj.quasistaticLines];
                 [l.Color] = deal(cClr{:});
@@ -387,36 +420,65 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
                 time_positions = num2cell(gRanges.getTimePosition());
-                colors = num2cell(gRanges.getRange().getJavaColor());
+
+                clrArray = gRanges.getRange().getColor();
+                colors = cell(size(clrArray,1),1);
+                for i = 1:size(clrArray,1)
+                    colors{i} = clr2str(clrArray(i,:));
+                end
                 data = [captions, positions, time_positions, colors];
+%                 data = [captions, positions, time_positions];
             else
                 data = {};
             end
-
+            
             t = obj.rangeTable;
-            t.setData(data,{'caption','begin','end','time begin in s','time end in s','color'});
-            t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','int','int','double','double','clr'});
-            t.setColumnsEditable([true true true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(4);
-            t.jTable.setAutoResort(false)
-            obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
-            obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
+            t.Data = data;
+            t.UserData = gRanges;
+            
+            t.ColumnName = {'caption','begin','end','time begin in s','time end in s','color'};
+            t.ColumnFormat = {'char','numeric','numeric','numeric','numeric','char'};
+            t.ColumnEditable = [true true true true true true];
+            
+%             t.ColumnName = {'caption','begin','end','time begin in s','time end in s'};
+%             t.ColumnFormat = {'char','numeric','numeric','numeric','numeric'};
+%             t.ColumnEditable = [true true true true true];
+            
+            if ~isempty(gRanges) %only sort if there is a range
+                ind = tableColSort(t,4,'a');
+                gRanges = gRanges(ind);
+            end
+            if ~isempty(data)
+                clrArray = clrArray(ind,:); %sort colors, then style
+                if size(clrArray,1) > 1
+                    for i = 1:size(clrArray,1)
+                        s = uistyle('BackgroundColor',clrArray(i,:));
+                        addStyle(t,s,'cell',[i 6])
+                    end
+                else
+                    s = uistyle('BackgroundColor',clrArray);
+                    addStyle(t,s,'column',6)
+                end
+            end
+            obj.rangeTable.CellEditCallback = @(src,event) obj.rangeTableDataChangeCallback(src,event);
+            obj.rangeTable.CellSelectionCallback = @(src,event) obj.rangeTableMouseClickedCallback(src,event);
         end
         
         function cycleRangeDraggedCallback(obj,gRange)
             %%
             % update the position in the table when the point is dragged
-            row = obj.rangeTable.getRowObjectRow(gRange);
+%             row = obj.rangeTable.getRowObjectRow(gRange);
+            row = ismember(obj.rangeTable.UserData,gRange);
             pos = gRange.getPosition();
             time_pos = gRange.getTimePosition();
-            obj.rangeTable.setValue(pos(1),row,2);
-            obj.rangeTable.setValue(pos(2),row,3);
-            obj.rangeTable.setValue(time_pos(1),row,4);
-            obj.rangeTable.setValue(time_pos(2),row,5);
+            clr = gRange.getObject().getColorCell();
+            obj.rangeTable.Data{row,2} = pos(1);
+            obj.rangeTable.Data{row,3} = pos(2);
+            obj.rangeTable.Data{row,4} = time_pos(1);
+            obj.rangeTable.Data{row,5} = time_pos(2);
+            obj.rangeTable.Data{row,6} = clr2str(clr{:});
+            tableColSort(obj.rangeTable,4,'a');
+            obj.populateRangeTable(obj.ranges);
         end
         
         function cycleRangeDragStartCallback(obj,gObj)
@@ -424,9 +486,11 @@ classdef CycleRanges < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
-            obj.rangeTable.setCallbacksActive(false);
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+            obj.rangeTable.Enable = 'off';
+%             obj.rangeTable.setCallbacksActive(false);
+%             idx = ismember(gObj,obj.rangeTable.UserData);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
         end
         
         function cycleRangeDragStopCallback(obj,gObj)
@@ -435,56 +499,78 @@ classdef CycleRanges < Gui.Modules.GuiModule
             % messed up, probably due to dynamic sorting in the table?),
             % set cycle line width back to normal
             pause(0.01); % to make sure all callbacks have been processed
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-            obj.rangeTable.setCallbacksActive(true);
-            obj.rangeTable.jTable.sortColumn(4);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.rangeTable.setCallbacksActive(true);
+            tableColSort(obj.rangeTable,4,'a');
+            obj.populateRangeTable(obj.ranges);
+            obj.rangeTable.Enable = 'on';
+%             obj.rangeTable.jTable.sortColumn(4);
         end
         
-        function rangeTableDataChangeCallback(obj,rc,v)
+        function rangeTableDataChangeCallback(obj,src,event)
             %% Called when any data in the table changes.
             % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.rangeTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition([v{i} nan],obj.getProject().getCurrentSensor());
-                    case 3
-                        o.setPosition([nan v{i}],obj.getProject().getCurrentSensor());
-                    case 4
-                        o.setTimePosition([v{i} nan]);
-                    case 5
-                        o.setTimePosition([nan v{i}]);
-                    case 6
-                        o.setColor(v{i});
-                end
-                pos = o.getPosition();
-                time_pos = o.getTimePosition();
-                obj.rangeTable.setValue(pos(1),rc(i,1),2);
-                obj.rangeTable.setValue(pos(2),rc(i,1),3);
-                obj.rangeTable.setValue(time_pos(1),rc(i,1),4);
-                obj.rangeTable.setValue(time_pos(2),rc(i,1),5);
+            row = event.Indices(1);
+            column = event.Indices(2);
+            rangeObj = src.UserData(row);
+            switch column
+                case 1
+                    rangeObj.getObject().setCaption(event.NewData);
+                case 2
+                    rangeObj.setPosition([event.NewData nan],obj.getProject().getCurrentSensor());
+                    time_pos = rangeObj.getTimePosition();
+                    src.Data{row,4} = time_pos(1);
+                case 3
+                    rangeObj.setPosition([nan event.NewData],obj.getProject().getCurrentSensor());
+                    time_pos = rangeObj.getTimePosition();
+                    src.Data{row,5} = time_pos(2);
+                case 4
+                    rangeObj.setTimePosition([event.NewData nan]);
+                    pos = rangeObj.getPosition();
+                    src.Data{row,2} = pos(1);
+                case 5
+                    rangeObj.setTimePosition([nan event.NewData]);
+                    pos = rangeObj.getPosition();
+                    src.Data{row,3} = pos(2);
+                case 6
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row column]);
+                    rangeObj.setColor(rgbClr);
             end
-            obj.rangeTable.jTable.sortColumn(4);
+            tableColSort(src,4,'a');
         end
                 
-        function rangeTableMouseClickedCallback(obj,visRC,actRC)
+        function rangeTableMouseClickedCallback(obj,src,event)
             %% Called when the mouse is clicked in the table.
-            % highlight the corresponding graphics object when the mouse
-            % button is pressed on a table row
-            o = obj.rangeTable.getRowObjectsAt(visRC(1));
-            o.setHighlight(true);
-            obj.rangeTable.onMouseReleasedCallback = @()obj.rangeTableMouseReleasedCallback(o);
-        end
-        
-        function rangeTableMouseReleasedCallback(obj,gObject)
-            %% Called when the mouse is released in the table.
-            % un-highlight the previously highlighted graphics object when
-            % the mouse button is released again
-            gObject.setHighlight(false);
-            obj.rangeTable.onMouseReleasedCallback = [];
+            % catch interaction with the colour column to show a colour
+            % picker, we dont need anything else
+            if size(event.Indices,1) == 1 && event.Indices(2) == 6
+                row = event.Indices(1);
+                col = event.Indices(2);
+                rangeObj = src.UserData(row);
+                origClr = rangeObj.getRange().getColor();
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    obj.main.hFigure.Visible = 'off';
+                    obj.main.hFigure.Visible = 'on';
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
+                
+                rangeObj.setColor(rgbClr);
+            end
         end
         
         function axesButtonDownCallback(obj,varargin)
@@ -504,8 +590,8 @@ classdef CycleRanges < Gui.Modules.GuiModule
             if nargin >= 3
                 r = ranges;
             else
-                nCycles = obj.getCurrentCluster().nCycles;
-                r = obj.getCurrentCluster().makeCycleRange([pos,pos+nCycles*0.1]);
+%                 nCycles = obj.getCurrentCluster().nCycles;
+                r = obj.getCurrentCluster().makeCycleRange([pos,pos+10]); % Length of Range: 10 cycles %[pos,pos+nCycles*0.02]);
             end
             obj.getProject().addCycleRange(r);
             rg = r.makeGraphicsObject('cycle',true);
@@ -529,13 +615,16 @@ classdef CycleRanges < Gui.Modules.GuiModule
 
         function scrollWheelCallback(obj,~,e)
             %%
+            if isempty(obj.ranges)  %stop if there are no ranges
+                return;
+            end
             dir = e.VerticalScrollCount;
             p = get(gca,'CurrentPoint');
             x = p(1,1); y = p(1,2); ylimits = ylim;
             pos = obj.ranges.getPosition();
             onRange = (x >= pos(:,1)) & (x <= pos(:,2));
             inYLimits = (y >= ylimits(1)) && (y <= ylimits(2));
-            if ~inYLimits || ~any(onRange)
+            if ~inYLimits || ~any(onRange)  %stop if we hit no range
                 return
             end
             affectedRanges = obj.ranges(onRange);

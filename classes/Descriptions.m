@@ -76,6 +76,14 @@ classdef Descriptions < handle
             captions = [objArray.caption];
         end
         
+        function types = getType(objArray)
+            if isempty(objArray)
+                types = string('');
+                return
+            end
+            types = string([objArray.type]);
+        end
+
         function setShortCaption(objArray,shortCaption)
             shortCaption = string(shortCaption);
             for i = 1:numel(objArray)

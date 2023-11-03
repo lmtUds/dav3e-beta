@@ -320,15 +320,7 @@ classdef DataProcessingBlockChain < Descriptions
                 return
             end
             b = obj.blocks(1).getLastBlock();
-        end
-
-        function pgf = makePropGridFields(obj)
-            b = obj.getAllBlocksInChain();
-            pgf = PropGridField.empty;
-            for i = 1:numel(b)
-                pgf(end+1) = b(i).makePropGridField();
-            end
-        end     
+        end  
     end
     
     methods(Static)

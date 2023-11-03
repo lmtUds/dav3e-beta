@@ -18,28 +18,29 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = confusionmatrix(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = confusionmatrix(parent,project,dataprocessingblock)
+    populateGui(project,parent);
+    updateFun = @()populateGui(project,parent);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    xlabel('DF1'); ylabel('DF2');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
+function populateGui(project,parent)
     [target,pred] = project.currentModel.getValidatedDataForTrainedIndexSet().getTargetAndValidatedPrediction();
-    if ~iscategorical(target) || isempty(target)
-        cla(elements.hAx);
-        return
-    end
+    
     [confmat,order] = confusionmat(target,pred);
-    axes(elements.hAx);
-    plotConfMat(confmat',cellstr(order));
+    if ~isempty(confmat)
+        delete(parent.Children)
+        confChart = confusionchart(confmat',order,...
+            'Parent',parent);
+        % confChart.Normalization = 'column-normalized';
+        % confChart.RowSummary = 'row-normalized';
+        confChart.ColumnSummary = 'column-normalized';
+        colorFactor = 0.75;
+        confChart.DiagonalColor = [0 1 0]*colorFactor;
+        confChart.OffDiagonalColor = [1 0 0]*colorFactor;
+        confChart.XLabel = 'Target: True Class'; confChart.YLabel = 'Output: Predicted Class';
+        confChart.Title = sprintf('Accuracy: %.2f%%', 100*trace(confmat)/sum(confmat(:)));  %adapted from https://github.com/vtshitoyan/plotConfMat/blob/master/plotConfMat.m, Copyright (c) 2018 Vahe Tshitoyan, MIT License
+        % sortClasses(confChart,sort(categories(order)));
+        confChart.Layout.Row = 1;
+        confChart.Layout.Column = 1;
+    end
 end

@@ -18,38 +18,28 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-f = figure;
+function clrStr = clr2str(rgbClr)
+%CLR2STR generates a string to display a colour triplet's values in  the UI.
+% input: colour triplet as 1x3 double r,g,b array in [0,1]
+% output: colour string encoding the triplet as 'r,g,b'
 
-m = msgbox('Click on the plot, then OK.'); WinOnTop(m); uiwait(m);
-if hasLegend(gca,gcf)
-    newH = copyobj([gca legend],f);
-    newAx = newH(1); newL = newH(2);
-else
-    newAx = copyobj(gca,f);
+% check if the triplet is numeric
+if ~isnumeric(rgbClr)
+    error('RGB triplet values must be of numeric type.')
+end
+% check is the triplet has the correct dimensions
+if size(rgbClr,1) ~= 1 || size(rgbClr,2) ~= 3
+    error(['RBG triplet must be of size 1x3, but was ',...
+        num2str(size(rgbClr,1)),'x',num2str(size(rgbClr,2)),'.'])
+end
+% check if the values of the triplet are withing the valid range
+if any(rgbClr >1) || any(rgbClr <0)
+    error('RBG triplet values must be in range [0,1].')
 end
 
-axes(newAx);
-hAx = gca;
-
-e = findall(hAx);
-set(e,'UserData',[]);
-
-set(hAx,'box','on');
-title(hAx,'');
-
-f.Units = 'pixel';
-hAx.Units = 'pixel';
-bottomAx.Units = 'pixel';
-f.Position = [f.Position([1,2]),460,420];
-hAx.Position = [88.6-30 47.2 342.3 342.3];
-
-function found = hasLegend(hAx,hFig)
-    lh = findall(hFig,'Type','Legend');
-    found = true;
-    for i = 1:numel(lh)
-        if hAx == lh(i).PlotChildren(1).Parent
-            return
-        end
-    end
-    found = false;
+% as we asserted integrity we can generate the final string
+precision = 2;
+clrStr = [num2str(rgbClr(1),precision),',',...
+    num2str(rgbClr(2),precision),',',num2str(rgbClr(3),precision)];
 end
+

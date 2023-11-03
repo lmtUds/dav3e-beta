@@ -25,7 +25,7 @@ function info = groups()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','grouping', 'value','', 'enum',{''}),...
-        Parameter('shortCaption','groups', 'value',{''}, 'enum',{''})...
+        Parameter('shortCaption','groups', 'value',{''}, 'enum',{''}, 'selectionType','multiple')...
         ];
     info.apply = @apply;
     info.updateParameters = @updateParameters;
@@ -53,7 +53,6 @@ function updateParameters(params,project)
             if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
                 params(i).enum = cellstr(categories(grouping));
                 params(i).value = params(i).enum;
-                params(i).updatePropGridField();
             end
         end
     end

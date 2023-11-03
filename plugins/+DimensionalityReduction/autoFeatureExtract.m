@@ -143,7 +143,6 @@ function updateParameters(params,project)
             autoNumFeat= params(i).value;
         elseif params(i).shortCaption == string('numFeat')
             params(i).hidden = autoNumFeat;
-            params(i).updatePropGridField();
         elseif params(i).shortCaption == string('methods')
         end
     end

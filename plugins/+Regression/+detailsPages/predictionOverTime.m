@@ -18,22 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = predictionOverTime(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = predictionOverTime(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam)
         return
@@ -69,11 +59,15 @@ function populateGui(elements,project,dataprocessingblock)
         testData = dataprocessingblock.revertChain(testData);
     end
     
-    hold(elements.hAx,'on');
-    setpoint = plot(elements.hAx,trainOffsets,trainTarget,'--k','LineWidth',1.5);
-    plot(elements.hAx,testOffsets,testTarget,'--r','LineWidth',1.5);
-    trainPrediction = plot(elements.hAx,trainOffsets,trainData,'-k','LineWidth',0.1);
-    testPrediction = plot(elements.hAx,testOffsets,testData,'-r','LineWidth',0.1);
+    delete(parent.Children);
+    hAx = uiaxes(parent);
+    hAx.Layout.Column = 1; hAx.Layout.Row = 1;
+    
+    hold(hAx,'on');
+    setpoint = plot(hAx,trainOffsets,trainTarget,'--k','LineWidth',1.5);
+    plot(hAx,testOffsets,testTarget,'--r','LineWidth',1.5);
+    trainPrediction = plot(hAx,trainOffsets,trainData,'-k','LineWidth',0.1);
+    testPrediction = plot(hAx,testOffsets,testData,'-r','LineWidth',0.1);
     
     legData = [setpoint trainPrediction];
     legCap = {'actual','prediction (training)'};
@@ -82,6 +76,6 @@ function populateGui(elements,project,dataprocessingblock)
         legCap = [legCap, 'prediction (testing)'];
     end
     
-    legend(elements.hAx,legData,legCap,'Location','NorthWest');
-    hold(elements.hAx,'off');
+    legend(hAx,legData,legCap,'Location','NorthWest');
+    hold(hAx,'off');
 end

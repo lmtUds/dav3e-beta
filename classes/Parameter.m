@@ -31,7 +31,6 @@ classdef Parameter < Descriptions
     end
     
     properties (Transient)
-        propGridField
         onChangedCallback
     end
     
@@ -67,46 +66,6 @@ classdef Parameter < Descriptions
             if isempty(obj.caption) || (obj.caption == string(''))
                 obj.setCaption(obj.shortCaption);
             end
-        end
-        
-        function prmpgf = makePropGridField(obj)
-            value_ = obj.value;
-            try
-                value_ = value_.getCaption();
-            catch
-                %
-            end
-            
-            enum_ = obj.enum;
-            try
-                enumConv = cell(0,1);
-                for i = 1:numel(enum_)
-                    e = enum_{i};
-                    enumConv{i} = e.getCaption();
-                end
-                enum_ = enumConv;
-            catch
-                %
-            end
-                
-            prmpgf = PropGridField(char(obj.getCaption()),value_,...
-                    'enum',enum_,...
-                    'selectionType',obj.selectionType,...
-                    'visible',~obj.hidden,...
-                    'editable',obj.editable);
-            prmpgf.setParameter(obj);
-            prmpgf.setMatlabObj(obj);
-            obj.propGridField = prmpgf;
-        end
-        
-        function updatePropGridField(obj)
-            if isempty(obj.propGridField)
-                return
-            end
-            obj.propGridField.enum = obj.enum;
-            obj.propGridField.value = obj.value;
-            obj.propGridField.visible = ~obj.hidden;
-            obj.propGridField.update();
         end
         
         function cap = getValueCaptions(obj)

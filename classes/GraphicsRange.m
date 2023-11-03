@@ -247,7 +247,7 @@ classdef GraphicsRange < GraphicsObject
                         'LineStyle','-','LineWidth',1,'Marker','none',...
                         'YLimInclude','off','Color',objArray(i).getObject().clr);
                     objArray(i).handleSubRangeLines = l;
-                    uistack(l,'bottom');
+%                     uistack(l,'bottom');
                 end
             end
         end

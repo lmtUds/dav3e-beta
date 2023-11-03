@@ -37,7 +37,7 @@ function info = lda()
     info.train = @train;
     info.reset = @reset;
     info.updateParameters = @updateParameters;
-    info.detailsPages = {'scatter','histogram'};
+    info.detailsPages = {'histogram','scatter'};
 end
 
 function [data,params] = apply(data,params)

@@ -29,10 +29,7 @@ classdef Grouping < Gui.Modules.GuiModule
 
         ranges
         quasistaticLines
-        
-        colorGradientDialog
-        createGroupingDialog
-        
+                
         oldPath
     end
     
@@ -43,21 +40,21 @@ classdef Grouping < Gui.Modules.GuiModule
     methods
         function obj = Grouping(main)
             obj@Gui.Modules.GuiModule(main);
-            obj.colorGradientDialog = Gui.Dialogs.GroupingColorGradient(main,obj);
-            obj.createGroupingDialog = Gui.Dialogs.GroupingCreation(main,obj);
         end
         
         function delete(obj)
             delete(obj.groupingTable);
             delete(obj.groupsTable);
-            delete(obj.colorGradientDialog.f);
-            delete(obj.createGroupingDialog.f);
         end
         
         function reset(obj)
             reset@Gui.Modules.GuiModule(obj);
-            obj.groupingTable.clear();
-            obj.groupsTable.clear();
+%             obj.groupingTable.clear();
+            obj.groupingTable.Data = {};
+            obj.groupingTable.UserData = {};
+%             obj.groupsTable.clear();
+            obj.groupsTable.Data = {};
+            obj.groupsTable.UserData = {};
             delete(obj.ranges);
             obj.ranges = GraphicsRange.empty;
         end
@@ -72,59 +69,107 @@ classdef Grouping < Gui.Modules.GuiModule
         
         function onClickMenuSetCurrentGrouping(obj)
             s = cellstr(obj.getProject().groupings.getCaption());
-            [sel,ok] = listdlg('ListString',s, 'SelectionMode','single');
+            [sel,ok] = Gui.Dialogs.Select('ListItems',s,'MultiSelect',false);
             if ~ok
                 return
             end
             obj.main.getActiveModule().onClose();
-            obj.getProject().currentGrouping = obj.getProject().groupings(sel);
+            obj.getProject().currentGrouping = obj.getProject().groupings(ismember(s,sel));
             obj.main.getActiveModule().onOpen();
         end
-        
-        function [panel,menu] = makeLayout(obj)
-            panel = Gui.Modules.Panel();
+                
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
+            moduleLayout = uigridlayout(uiParent,[3 2],...
+                'Visible','off',...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'4x','1x'},...
+                'RowHeight',{'2x','1x','3x'},...
+                'RowSpacing',7);
             
-            menu = uimenu('Label','Grouping');
-            uimenu(menu,'Label','set current grouping', getMenuCallbackName(),@(varargin)obj.onClickMenuSetCurrentGrouping);
-            uimenu(menu,'Label','make color gradient', getMenuCallbackName(),@(varargin)obj.colorGradientDialog.show());
-            uimenu(menu,'Label','import groupings', getMenuCallbackName(),@(varargin)obj.onClickImport);
-            uimenu(menu,'Label','export groupings', getMenuCallbackName(),@(varargin)obj.onClickExport);
+            moduleMenu = uimenu(mainFigure,'Label','Grouping');
+            uimenu(moduleMenu,'Label', 'export groupings',...
+                getMenuCallbackName(), @(varargin)obj.onClickExport);
+            uimenu(moduleMenu,'Label', 'import groupings',...
+                getMenuCallbackName(), @(varargin)obj.onClickImport);
+            uimenu(moduleMenu,'Label', 'make color gradient','Separator','on',...
+                getMenuCallbackName(), @(varargin)Gui.Dialogs.GroupingColorGradient(obj.main, obj));
+            uimenu(moduleMenu,'Label', 'set current grouping',...
+                getMenuCallbackName(), @(varargin)obj.onClickMenuSetCurrentGrouping);
             
-            layout = uiextras.VBox('Parent',panel);
-            obj.hAx = axes(layout);
-            xlabel('cycle number'); ylabel('prepro. data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
+                        
+            groupAx = uiaxes(moduleLayout);
+            groupAx.XLabel.String = 'Cycle number';
+            groupAx.YLabel.String = 'Prepro. data / a.u.';
             
-            tablePropLayout = uiextras.HBox('Parent',layout);
+            groupAx.Layout.Row = 1;
+            groupAx.Layout.Column = [1 2];
+           
+            obj.hAx = groupAx;
+            
+            groupingTable = uitable(moduleLayout,'ColumnRearrangeable','on');
+            groupingTable.Layout.Row = [2 3];
+            groupingTable.Layout.Column = 1;
+            
+            groupingCM = uicontextmenu(mainFigure);
+            renameMenu = uimenu(groupingCM,...
+                'Text','Rename Groupings',...
+                'MenuSelectedFcn',@(src,event) obj.renameGroupings(src,event));
+            groupingTable.ContextMenu = groupingCM;
 
-            obj.groupingTable = JavaTable(tablePropLayout,'editable');
+            obj.groupingTable = groupingTable;
             
-            configLayout = uiextras.VBox('Parent',tablePropLayout);
-            uicontrol('Parent',configLayout, 'String','add new grouping',...
-                'Callback',@obj.addGroupingButtonCallback);
-            uicontrol('Parent',configLayout, 'String','create new grouping',...
-                'Callback',@(varargin)obj.createGroupingDialog.show());
-            obj.deleteButton = uicontrol('Parent',configLayout, 'String','delete grouping',...
-                'Callback',@obj.deleteGroupingButtonCallback);
-            obj.groupsTable = JavaTable(configLayout);
-
-            layout.Sizes = [-1,-3];
-            tablePropLayout.Sizes = [-4,-1];
-            configLayout.Sizes = [25,25,25,-1];
+            buttonGrid = uigridlayout(moduleLayout,[3 1],...
+                'Padding' ,[0 0 0 0],...
+                'RowSpacing',4,...
+                'RowHeight',{'1x','1x','1x'});
+            buttonGrid.Layout.Row = 2;
+            buttonGrid.Layout.Column = 2;
+            
+            addButton = uibutton(buttonGrid,...
+                'Text','Add new grouping',...
+                'ButtonPushedFcn',@obj.addGroupingButtonCallback);
+            addButton.Layout.Row = 1;
+            
+            createButton = uibutton(buttonGrid,...
+                'Text','Create new grouping',...
+                'ButtonPushedFcn',@(varargin)...
+                            Gui.Dialogs.GroupingCreation(obj.main,obj));
+            createButton.Layout.Row = 2;
+            
+            deleteButton = uibutton(buttonGrid,...
+                'Text','Delete grouping',...
+                'ButtonPushedFcn',@obj.deleteGroupingButtonCallback);
+            deleteButton.Layout.Row = 3;
+            
+            obj.deleteButton = deleteButton;
+            
+            groupsTable = uitable(moduleLayout);
+            groupsTable.Layout.Row = 3;
+            groupsTable.Layout.Column = 2;
+            
+            obj.groupsTable = groupsTable;
         end
 
         function onClickImport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uigetfile(options,'Choose groupings file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uigetfile
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
             obj.oldPath = path;
             
-            re = questdlg('This will delete the current groupings. Proceed?','Proceed?','Yes','No','No');
-            if ~strcmp(re,'Yes')
-                return
+            selection = uiconfirm(obj.main.hFigure,...
+                                'This will delete the current groupings. Proceed?',...
+                                'Confirm grouping import','Icon','warning',...
+                                'Options',{'Yes, Import','No, Cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+            switch selection
+                case 'No, Cancel'
+                    return
             end
             
             splitFile = strsplit(file,'.');
@@ -151,6 +196,10 @@ classdef Grouping < Gui.Modules.GuiModule
         function onClickExport(obj)
             options = {'*.json','JSON file';'*.csv','CSV (human readable)'};
             [file,path] = uiputfile(options,'Choose groupings file',obj.oldPath);
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.main.hFigure.Visible = 'off';
+            obj.main.hFigure.Visible = 'on';
             if file == 0
                 return
             end
@@ -175,10 +224,10 @@ classdef Grouping < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             elseif numel(p.ranges) == 0
                 allowed = false;
-                errordlg('Define at least one cycle range.');
+                uialert(obj.main.hFigure,'Define at least one cycle range.','Cycle ranges required');
             else
                 allowed = true;
             end
@@ -188,10 +237,7 @@ classdef Grouping < Gui.Modules.GuiModule
             % temporarily, should check for changes
 %             obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
 %             obj.populateGroupingTable();
-            
-            obj.populateGroupsTable(obj.currentGrouping);
-            obj.deleteButton.String = sprintf('delete "%s"',obj.currentGrouping.getCaption());
-            
+
             % TODO: needs to check for any change in cycle ranges
 %             if obj.clusterHasChanged()
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
@@ -199,6 +245,8 @@ classdef Grouping < Gui.Modules.GuiModule
 %             if obj.sensorHasChanged()
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
 %             end
+            obj.populateGroupsTable(obj.currentGrouping);
+            obj.deleteButton.Text = sprintf('Delete "%s"',obj.currentGrouping.getCaption());    
 
 %             obj.getProject().createGroupingFrom(...
 %                 obj.getProject().getGroupingByCaption('valve V10'),...
@@ -274,25 +322,29 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.handleSensorChange(obj.getProject().getCurrentSensor());
         end
         
-        function populateGroupingTable(obj)
-            t = obj.groupingTable;
-            g = obj.getProject().groupings;
-            header = g.getCaption();
+        function populateGroupingTable(obj)            
+            gps = obj.getProject().groupings;
+            header = gps.getCaption();
             r = obj.getCurrentCluster().getCycleRanges();
-            data = cellstr(g.getValues(r));
-            t.setData(data,header);
-            t.setColumnObjects(g);
-            t.setRowObjects(r);
-%             t.setColumnClasses({'str','int','clr'});
-            t.setColumnsEditable(true(1,numel(g)));
-            t.setColumnReorderingAllowed(true);
-            t.jTable.setAutoResizeMode(t.jTable.AUTO_RESIZE_OFF);
+            data = cellstr(gps.getValues(r));
             
-            t.onColumnSelectionChangedCallback = @obj.groupingTableColumnSelectionChanged;
-            t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
-            t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
-            t.onDataChangedCallback = @obj.groupingTableDataChanged;
-            t.onMouseClickedCallback = @obj.groupingTableMouseClickedCallback;
+            t = obj.groupingTable;
+            t.Data = data;
+%             t.UserData = r;
+            t.UserData = gps;
+            
+            t.ColumnName = header;
+            t.ColumnEditable = true;
+            
+%             t.setColumnObjects(gps);
+%             t.setColumnClasses({'str','int','clr'});
+            
+            t.CellSelectionCallback = @(src,event) obj.groupingTableColumnSelectionChanged(src,event);
+            t.CellEditCallback = @(src,event) obj.groupingTableDataChanged(src,event);
+%             t.ButtonDownFcn = @(src,event) obj.groupingTableMouseClickedCallback(src,event);
+            
+%             t.onColumnMovedCallback = @obj.groupingTableColumnMoved;
+%             t.onHeaderTextChangedCallback = @obj.groupingTableHeaderTextChanged;
 
 %             obj.cyclePointTable.onDataChangedCallback = @obj.cyclePointTableDataChangeCallback;
 %             obj.cyclePointTable.onMouseClickedCallback = @obj.cyclePointTableMouseClickedCallback;
@@ -302,36 +354,52 @@ classdef Grouping < Gui.Modules.GuiModule
             if nargin < 2
                 grouping = obj.currentGrouping;
             end
-            t = obj.groupsTable;
-            c = grouping.getJavaColors();
-            header = {'group','color'};
+            
+            c = grouping.colors;
             keys = grouping.getSortedColorKeys();
-            data = [keys' values(c,keys)'];
-            %data = [keys(c)' values(c)'];
-            t.setData(data,header);
-            t.setRowObjects(keys);
-            t.setColumnClasses({'str','clr'});
-            t.setColumnsEditable([true true]);
-            t.setSortingEnabled(true)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.repaint();
+            clrArray = values(c,keys);
+            clrArray = vertcat(clrArray{:});
+            colors = cell(size(clrArray,1),1);
+            for i = 1:size(clrArray,1)
+                colors{i} = clr2str(clrArray(i,:));
+            end
             
-            t.onDataChangedCallback = @obj.groupsTableDataChanged;
+            data = [keys' colors];
             
-%             if ~isempty(obj.ranges)
-%                 obj.ranges.setColor(grouping.getColorsForRanges(obj.getCurrentCluster().getCycleRanges()));
-%             end
+            t = obj.groupsTable;
+            t.Data = data;
+            t.UserData = keys;
             
-            obj.deleteButton.String = sprintf('delete "%s"',grouping.getCaption());
+            t.ColumnName = {'group','color'};
+            t.ColumnFormat = {'char','char'};
+            t.ColumnEditable = [true true];
+            
+            if size(clrArray,1) > 1
+                for i = 1:size(clrArray,1)
+                    s = uistyle('BackgroundColor',clrArray(i,:));
+                    addStyle(t,s,'cell',[i 2])
+                end
+            else
+                s = uistyle('BackgroundColor',clrArray);
+                addStyle(t,s,'column',2)
+            end
+            
+            t.CellEditCallback = @(src,event) obj.groupsTableDataChanged(src,event);
+            t.CellSelectionCallback = @(src,event) obj.groupsTableClicked(src,event);
+            
+            if ~isempty(obj.ranges)
+                obj.ranges.setColor(grouping.getColorsForRanges(obj.getCurrentCluster().getCycleRanges()));
+            end
+            
+            obj.deleteButton.Text = sprintf('Delete "%s"',grouping.getCaption());
         end
         
-        function groupingTableMouseClickedCallback(obj,visRC,actRC)
+        function groupingTableMouseClickedCallback(obj,src,event)
             %%
             % highlight the corresponding graphics object when the mouse
             % button is pressed on a table row
 %             o = obj.groupingTable.getRowObjectsAt(visRC(1));
-            o = obj.ranges(visRC(1));
+            o = obj.ranges(src(1));
             o.setHighlight(true);
 %             obj.ranges(visRC(1)).setHighlight(true);
             obj.groupingTable.onMouseReleasedCallback = @()obj.groupingTableMouseReleasedCallback(o);
@@ -345,16 +413,35 @@ classdef Grouping < Gui.Modules.GuiModule
             obj.groupingTable.onMouseReleasedCallback = [];
         end
         
-        function groupingTableColumnSelectionChanged(obj,visC,actC)
-            if visC(2) == 0
-                obj.groupingTable.jTable.getColumnModel().getSelectionModel().setSelectionInterval(visC(1),visC(1));
+        function groupingTableColumnSelectionChanged(obj,src,event)
+            if isempty(event.Indices)
                 return
+            else
+                row = event.Indices(1,1);
+                column = event.Indices(1,2);
+                g = src.UserData(column);
             end
-            g = obj.groupingTable.getColumnObjectsAt(actC(2));
             obj.currentGrouping = g;
             obj.populateGroupsTable(g);
             obj.updateRangeColors();
-            obj.colorGradientDialog.update(deStar(g.getDestarredCategories()));
+            removeStyle(obj.groupingTable);
+            style = uistyle("BackgroundColor",[221,240,255]./256);
+            addStyle(src,style,"Column",column);
+            
+            % if a double click on the whole column happended
+            % rename the grouping
+            if strcmp(get(gcf,'SelectionType'),'open') ...
+                    && size(event.Indices,1) == size(src.Data,1)
+                
+                [answer,ext] = Gui.Dialogs.Input('FieldNames',{g.caption},...
+                    'DefaultValues',{g.caption},...
+                    'Message','Enter new grouping names:',...
+                    'Name','Rename Grouping');
+                if ~ext
+                    return
+                end
+                g.setCaption(answer);
+            end
         end
         
         function addGroupingButtonCallback(obj,varargin)
@@ -368,6 +455,10 @@ classdef Grouping < Gui.Modules.GuiModule
             if isempty(p.groupings)
                 p.addGrouping();
             end
+            
+            % choose the first grouping as the new active grouping
+            p.currentGrouping = p.groupings(1);
+            
             obj.populateGroupingTable();
             obj.populateGroupsTable(obj.currentGrouping);
         end
@@ -385,30 +476,69 @@ classdef Grouping < Gui.Modules.GuiModule
             p.groupings.getCaption()
         end
         
-        function groupingTableDataChanged(obj,rc,v)
-            for i = 1:size(rc)
-                g = obj.groupingTable.getColumnObjectsAt(rc(i,2));
-                r = obj.groupingTable.getRowObjectsAt(rc(i,1));
-                g.setValue(v{i},r);
-                g.updateColors();
-                obj.populateGroupsTable(g);
-            end
+        function groupingTableDataChanged(obj,src,event)
+            row = event.Indices(1);
+            column = event.Indices(2);
+            grouping = src.UserData(column);
+            row = find(grouping.ranges == obj.ranges(1, row).object);
+            range = grouping.ranges(row);
+            
+            grouping.setValue(event.EditData,range);
+            grouping.updateColors();
+            obj.populateGroupingTable();
+            obj.populateGroupsTable(grouping);
         end
         
-        function groupsTableDataChanged(obj,rc,v)
-            for i = 1:size(rc,1)
-                g = obj.groupsTable.getRowObjectsAt(rc(i,1));
-                g = g{1};
-                switch rc(i,2)
-                    case 1
-                        obj.currentGrouping.replaceGroup(g,v{i});
-                    case 2
-                        obj.currentGrouping.setColor(g,v{i});
-                        obj.currentGrouping.updateColors();
-                        obj.updateRangeColors();
-                end
+        function groupsTableDataChanged(obj,src,event)
+            row = event.Indices(1);
+            column = event.Indices(2);
+            key = src.UserData(row);
+            key = key{1};
+            switch column
+                case 1
+                    obj.currentGrouping.replaceGroup(key,event.NewData);
+                case 2
+                    try %to convert the edited string to a color triplet
+                        rgbClr = str2clr(event.EditData);
+                    catch ME %revert back to the previous string and colour
+                        disp(ME)
+                        rgbClr = str2clr(event.PreviousData);
+                        src.Data{row,col} = event.PreviousData;
+                    end
+                    s = uistyle('BackgroundColor',rgbClr);
+                    addStyle(src,s,'cell',[row column]);
+                    obj.currentGrouping.setColor(key,rgbClr);
+                    obj.currentGrouping.updateColors();
+                    obj.updateRangeColors();
             end
             obj.populateGroupingTable();
+        end
+        
+        function groupsTableClicked(obj,src,event)
+            % catch interaction with the colour column to show a colour
+            % picker, we dont need anything else
+            if size(event.Indices,1) == 1 && event.Indices(2) == 2
+                row = event.Indices(1);
+                col = event.Indices(2);
+                key = src.UserData(row);
+%                 key = key{1};
+                clrArray = values(obj.currentGrouping.colors,key);
+                origClr = clrArray{:};
+                try
+                    rgbClr = uisetcolor(origClr,'Select a color');
+                    movegui(gcf,'center');
+                    obj.main.hFigure.Visible = 'off';
+                    obj.main.hFigure.Visible = 'on';
+                    src.Data{row,col} = clr2str(rgbClr);
+                catch ME
+                    disp(ME)
+                    rgbClr = origClr;
+                end
+                s = uistyle('BackgroundColor',rgbClr);
+                addStyle(src,s,'cell',[row col]);
+                obj.currentGrouping.setColor(key{:},rgbClr);                
+                obj.updateRangeColors();
+            end
         end
         
         function updateRangeColors(obj)
@@ -416,6 +546,29 @@ classdef Grouping < Gui.Modules.GuiModule
 %                 r = obj.getCurrentCluster().getCycleRanges();
                 obj.ranges.setColor(obj.currentGrouping.getColorsForRanges(obj.ranges.getObject()));
             end
+        end
+        
+        function renameGroupings(obj,src,event)
+            gps = obj.getProject().groupings;
+            caps = gps.getCaption();
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',caps,...
+                    'DefaultValues',caps,...
+                    'Message','Enter new grouping names:',...
+                    'Name','Rename Grouping');
+            if ~ext
+                return
+            end
+            gps.setCaption(answer);
+            
+            %check for renamed groupings 
+            %then choose the first renamed one as active
+            idx = ~strcmp(answer,caps);
+            if any(idx)
+                [~,ind] = max(idx);
+                obj.populateGroupsTable(gps(ind));
+                obj.currentGrouping = gps(ind);
+            end
+            obj.populateGroupingTable();
         end
     end
 end

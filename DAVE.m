@@ -20,24 +20,9 @@
 
 init
 
-errorMsg = [...
-    'Please install the GUI Layout Toolbox (>2014b) from '...
-    'https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox. ' ...
-    'DO NOT USE MATLAB Add-Ons since this supplies the pre-2014b version! ' ...
-    'You can either install the Toolbox in MATLAB (Download>Toolbox), '...
-    'or put the extracted zip file (Download>Zip) in the folder "toolboxes" in DAV³E.'];
-
-if ~exist('uiextras.BoxPanel','class')
-    error(errorMsg,'I''m afraid I can''t do that.');
-end
-
 try
     dave = Gui.Main();
 catch ME
-    if strcmp(ME.message,'No constructor ''handle.listener'' with matching signature found.')
-        error(errorMsg,'I''m afraid I can''t do that.');
-    else
-        rethrow(ME);
-    end
+    rethrow(ME);
 end
     

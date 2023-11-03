@@ -18,194 +18,161 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef Clusters < handle
-    properties
-        main
-        f
-        hTable
-        normalizeCycleDurationButton
-        deleteButton
-        plotButton
-        applyButton
+function Clusters(main)
+    fig = uifigure('Name','Cluster Properties',...
+        'WindowStyle','modal','Visible','off');
+    fig.Position(3) = 680;
+    centerFigure(fig);
+    grid = uigridlayout(fig,[2 4],'RowHeight',{'1x', 22});
+    table = uitable(grid,...
+        'CellEditCallback',@(src,event)TableEdit(src,event,main,fig));
+    table.CellSelectionCallback = @(src,event)selectionChanged(src,event,table);
+    table.Layout.Column = [1 4];
+    plotBtn = uibutton(grid,'Text','Plot Tracks',...
+        'ButtonPushedFcn',@(src,event) PlotTracks(src,event,main));
+    plotBtn.Layout.Column = 1;
+    plotBtn = uibutton(grid,'Text','Normalize Cycle Durations',...
+        'ButtonPushedFcn',@(src,event) NormCycleDurations(src,event,main,table));
+    plotBtn.Layout.Column = 2;
+    plotBtn = uibutton(grid,'Text','Delete Clusters...',...
+        'ButtonPushedFcn',@(src,event) DeleteClusters(src,event,main,table));
+    plotBtn.Layout.Column = 3;
+    plotBtn = uibutton(grid,'Text','Apply Changes & Close',...
+        'ButtonPushedFcn',@(src,event) closeFigure(src,event,main,table));
+    plotBtn.Layout.Column = 4;
+    Refresh(main,table);
+    fig.Visible = 'on';
+    uiwait(fig)
+
+    main.getActiveModule().onOpen();
+    main.populateSensorSetTable();
+    function TableEdit(src,event,main,fig)
+        cluster = src.UserData(event.Indices(1));
+        switch event.Indices(2)
+            case 1
+                captions = main.project.clusters.getCaption();
+                if ismember(event.EditData,captions)
+                    message = {sprintf('Cluster caption %s already used.',...
+                        event.EditData),'Caption edit was reverted.'};
+                    uialert(fig,message,...
+                        'Caption already used','Icon','warning')
+                    src.Data{event.Indices(1),event.Indices(2)} = event.PreviousData;
+                    return
+                else
+                    cluster.setCaption(event.EditData);
+                end
+            case 2
+                cluster.track = event.EditData;
+            case 3
+                cluster.offset = event.NewData;
+                iOffset = cluster.getAutoIndexOffset(main.project.clusters);
+                cluster.indexOffset = iOffset;                        
+            case 4
+                cluster.samplingPeriod = event.NewData;
+        end
     end
-    
-    methods
-        function obj = Clusters(main)
-            obj.main = main;
-            obj.f = figure('Name','Clusters','WindowStyle','modal',...
-                'CloseRequestFcn',@(varargin)obj.onDialogClose);
-            layout = uiextras.VBox('Parent',obj.f);
-            
-            obj.hTable = JavaTable(layout,'default');
-            obj.refreshTable();
-            
-             obj.applyButton = uicontrol(layout,...
-                'String','Apply',...
-                'Callback',@(h,e)obj.applyButtonClicked);
-            
-            obj.plotButton = uicontrol(layout,...
-                'String','plot tracks',...
-                'Callback',@(h,e)obj.plotButtonClicked);
-            
-            obj.normalizeCycleDurationButton = uicontrol(layout,...
-                'String','normalize all cycle durations',...
-                'Callback',@(h,e)obj.normalizeCycleDurationsButtonClicked);
-            obj.deleteButton = uicontrol(layout,...
-                'String','delete...',...
-                'Callback',@(h,e)obj.deleteButtonClicked);
-            
-            layout.Sizes = [-1,30,30,30,30];
+    function Refresh(main,table)
+        clusters = main.project.clusters;
+        data = cell(numel(clusters),6);
+        for i = 1:numel(clusters)
+            data{i,1} = char(clusters(i).getCaption());
+            data{i,2} = char(clusters(i).track);
+            data{i,3} = clusters(i).offset;
+            data{i,4} = clusters(i).samplingPeriod;
+            data{i,5} = clusters(i).nCycles;
+            data{i,6} = clusters(i).nCyclePoints;
+        end
+        table.Data = data;
+        table.ColumnName = {'caption','track','offset',...
+            'sampling period','cycles','cycle points'};
+        table.ColumnEditable = [true true true true false false];
+        table.ColumnFormat = {'char','char',...
+            'numeric','numeric','numeric','numeric'};
+        table.UserData = clusters;
+    end
+    function PlotTracks(src,event,main)
+        % get the number and captions of tracks
+        tracks = unique([main.project.clusters.track]);
+
+        % get clusters for individual tracks and their boundaries
+        % in the time domain
+        trackClusters = cell(numel(tracks),1);
+        trackTimeVecs = cell(numel(tracks),1);
+        for i = 1:numel(tracks)
+            trackClusters{i} = ...
+                main.project.clusters([main.project.clusters.track] == tracks(i));
+            timeVec = [];
+            for j = 1:numel(trackClusters{i})
+                cluster = trackClusters{i}(j);
+                lower = cluster.offset;
+                upper = cluster.offset + cluster.samplingPeriod...
+                    * cluster.nCycles * cluster.nCyclePoints;
+                timeVec = [timeVec lower upper];
+            end
+            trackTimeVecs{i} = timeVec;
         end
 
-        function tableDataChange(obj,rc,v)
-            for i = 1:size(rc,1)
-                o = obj.hTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        c1 = obj.main.project.clusters;
-                        c2 = c1.getCaption();
-                        for j=1:length(c2)
-                            if (c2(j))==v{i} && j ~= rc(1)
-                                v{i} = 'error';
-                            end
-                        end
-                        o.setCaption(v{i});
-                    case 2
-                        o.track = v{i};
-                    case 3
-                        o.offset = v{i};
-                        iOffset = o.getAutoIndexOffset(obj.main.project.clusters);
-                        o.indexOffset = iOffset;                        
-                    case 4
-                        o.samplingPeriod = v{i};
-                end
-            end
-        end
-        
-        function normalizeCycleDurationsButtonClicked(obj)
-            clusters = obj.main.project.clusters;
-            for i = 1:numel(clusters)
-                clusters(i).samplingPeriod = 1 / clusters(i).nCyclePoints;
-            end
-            obj.refreshTable();
-        end
-        
-        function applyButtonClicked(obj)
-            obj.refreshTable();
-        end
-        
-        function plotButtonClicked(obj)
-            % get the number and captions of tracks
-            for i=1:length(obj.main.project.clusters)
-                try
-                    coll(i) = obj.main.project.clusters(i, 1).track;
-                catch
-                    coll(i) = obj.main.project.clusters(1, i).track;
-                end
-            end
-            tracks = unique(coll);
-            X = 1:1:length(tracks);
+        % plot clusters
+        track_fig = uifigure('Name','Track System',...
+            'WindowStyle','modal','Visible','off');
+        track_grid = uigridlayout(track_fig,[1 1]);
+        ax = uiaxes(track_grid);
+        title(ax,'Track System')
+        xlabel(ax,'time');
+        hold(ax,'on')
+        % y-Coordinates of a 4 sided polygon
+        % bot left, bot right, top right, top left
+        yfill=[0.75,0.75,1.25,1.25];
 
-            % get clusters for individual track
-            for i=1:length(tracks)
-                k = 1;
-                for j=1:length(obj.main.project.clusters)
-                    try
-                        att = obj.main.project.clusters(j, 1);
-                    catch
-                        att = obj.main.project.clusters(1, j);
-                    end
-                    if strcmp(att.track,tracks(i))
-                        clust(i,k) = att;
-                        k = k+1;
-                    end
-                end
+        verticalOffset = 0;
+        for i = 1:numel(tracks)
+            timeVec = trackTimeVecs{i};
+            for j = 1:2:size(timeVec,2)
+                lower = timeVec(j);
+                upper = timeVec(j+1);
+                fill(ax,[lower upper upper lower],...
+                    yfill+verticalOffset,rand(1,3),...
+                    'DisplayName',trackClusters{i}((j-1)/2+1).caption)
             end
-            
-            % get time information of clusters
-            for i=1:size(clust,1)
-                sclust = clust(i,:);
-                for j=2:length(sclust)+1
-%                     timed(i,2*j-3)=sclust(1, j-1).creationDate+seconds(sclust(1, j-1).offset);
-%                     timed(i,2*j-2)=sclust(1, j-1).creationDate+seconds(sclust(1, j-1).offset)+seconds(sclust(1, j-1).samplingPeriod*sclust(1, j-1)*sclust(1, j-1).nCycles*sclust(1, j-1).nCyclePoints);  
-%                     timed(i,2*j-3)=datetime(sclust(1, j-1).offset, 'ConvertFrom', 'posixtime','TimeZone','Europe/Zurich');
-%                     timed(i,2*j-2)=datetime((sclust(1, j-1).offset+sclust(1, j-1).samplingPeriod*sclust(1, j-1).nCycles*sclust(1, j-1).nCyclePoints), 'ConvertFrom', 'posixtime','TimeZone','Europe/Zurich');
-                    timed(i,2*j-3)=sclust(1, j-1).offset;
-                    timed(i,2*j-2)=(sclust(1, j-1).offset+sclust(1, j-1).samplingPeriod*sclust(1, j-1).nCycles*sclust(1, j-1).nCyclePoints);
-                    cap(i,j-1) = sclust(1, j-1).caption;
-                end
-            end
-            
-            % plot clusters
-            figure;
-            yfill=[0.75,0.75,1.25,1.25];
-            for j=1:size(timed,1)
-                for i=1:(size(timed,2)/2)
-                    sec(i,1) = timed(j,i*2-1);
-                    sec(i,2) = timed(j,i*2);
-                    sec(i,3) = timed(j,i*2);
-                    sec(i,4) = timed(j,i*2-1);
-                    if ~any(isnan(sec(i,:))) 
-                        f=fill(sec(i,:),yfill,rand(1,3));
-                        hold on;
-                    end
-%                     if ~any(isnat(sec(i,:))) 
-%                         f=fill(sec(i,:),yfill,rand(1,3));
-%                         hold on;
-%                     end
-                end
-                yfill=yfill+1;
-            end
-            ylim([0 j+1]);
-            yticks(0:1:(j+1));
-            yticklabels(['', tracks]);
-            xlabel('time');
-            title('"track" system');
-            set(gcf,'Position',[20,200,1500,200]);
-            cap = strrep(cap,'_','-');
-            legend(reshape(cap',numel(cap),1),'Location','bestoutside');
-            hold off;
+            verticalOffset = verticalOffset + 1;
         end
-        
-        function deleteButtonClicked(obj)
-            c = obj.main.project.clusters;
-            captions = c.getCaption();
-            [sel,ok] = listdlg('ListString',captions);
-            if ~ok
-                return
-            end
-            obj.main.project.clusters(sel) = [];
-            obj.refreshTable();
-            obj.main.populateSensorSetTable();
+        ylim(ax,[0 numel(tracks)+1]);
+        yticks(ax,1:numel(tracks));
+        yticklabels(ax,tracks);
+        legend(ax);
+        track_fig.Visible = 'on';
+        track_fig.Position(3:4) = [900,250];
+    end
+    function NormCycleDurations(src,event,main,table)
+        clusters = main.project.clusters;
+        for i = 1:numel(clusters)
+            clusters(i).samplingPeriod = 1 / clusters(i).nCyclePoints;
         end
-        
-        function refreshTable(obj)
-            t = obj.hTable;
-            c = obj.main.project.clusters;
-            data = cell(numel(c),6);
-            for i = 1:numel(c)
-                data{i,1} = char(c(i).getCaption());
-                data{i,2} = char(c(i).track);
-                data{i,3} = c(i).offset;
-                data{i,4} = c(i).samplingPeriod;
-                data{i,5} = c(i).nCycles;
-                data{i,6} = c(i).nCyclePoints;
-            end
-            t.setData(data,{'caption','track','offset','sampling period','cycles','cycle points'});
-            t.setColumnsEditable([true true true true false false]);
-            t.setColumnClasses({'str','str','double','double','int','int'});
-            t.setRowObjects(c);
-            t.onDataChangedCallback = @obj.tableDataChange;
+        Refresh(main,table);
+    end
+    function DeleteClusters(src,event,main,table)
+        captions = main.project.clusters.getCaption();
+        [selection, exit] = Gui.Dialogs.Select(...
+            'Name','Delete Clusters','ListItems',captions);
+        if ~exit
+            return
         end
+        main.project.clusters(ismember(captions,selection)) = [];
+        Refresh(main,table);
+        main.populateSensorSetTable();
+    end
+    function selectionChanged(src,event,table)
+        if isempty(event.Indices)
+            return
+        end
+        row = event.Indices(1,1);
+        removeStyle(table);
+        style = uistyle("BackgroundColor",[221,240,255]./256);
+        addStyle(src,style,"Row",row);
+    end
 
-        function onDialogClose(obj)
-            try
-                obj.main.getActiveModule().onOpen();
-                obj.main.populateSensorSetTable();
-            catch ME
-                warning(ME.message);
-            end
-            delete(obj.f);
-        end
+    function closeFigure(src,event,main,table)
+        Refresh(main,table);
+        close(fig);
     end
 end

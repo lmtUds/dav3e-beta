@@ -20,35 +20,26 @@
 
 % !!! Only works for PLSR as regressor
 
-function [panel,updateFun] = error3D(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = error3D(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-%     xlabel('nFeatures'); 
-%     ylabel('nComp.PLSR');
-%     zlabel('RMSE');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
+function populateGui(parent,project,dataprocessingblock)
     errorT = dataprocessingblock.parameters.getByCaption('error').value.training(:,:);
     errorV = dataprocessingblock.parameters.getByCaption('error').value.validation(:,:);
     if isempty(errorV)
         errorV=[0];
     end
+
+    delete(parent.Children)
+    ax = uiaxes(parent);
+    ax.Layout.Column = 1; ax.Layout.Row = 1;
     try
-        mesh(elements.hAx,errorV');
+        mesh(ax,errorV');
     end
-    xlabel(elements.hAx,'nComp.PLSR');
-    ylabel(elements.hAx,'nFeatures'); 
-    zlabel(elements.hAx,'RMSE');
-    set(elements.hAx, 'View', [120 20]);
+    xlabel(ax,'nComp.PLSR');
+    ylabel(ax,'nFeatures'); 
+    zlabel(ax,'RMSE');
+    ax.View = [120 20];
 end

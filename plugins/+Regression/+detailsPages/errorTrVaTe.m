@@ -18,23 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = errorTrVaTe(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = errorTrVaTe(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-%     xlabel('nFeatures'); 
-%     ylabel('RMSE');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
+function populateGui(parent,project,dataprocessingblock)
     errorTr = dataprocessingblock.parameters.getByCaption('error').value.training(:,:);
     errorTrstd = dataprocessingblock.parameters.getByCaption('error').value.stdTraining(:,:);
     errorV = dataprocessingblock.parameters.getByCaption('error').value.validation(:,:);
@@ -47,10 +36,15 @@ function populateGui(elements,project,dataprocessingblock)
         errorV=[0];
     end
     x = 1:1:size(errorTr,2);
-    plot(elements.hAx,x,errorTr(nCompPLSR,:),'k',x,errorV(nCompPLSR,:),'r',x,errorTe(nCompPLSR,:),'b');
-    xlabel(elements.hAx,'nFeatures');
-    ylabel(elements.hAx,'RMSE');
-    legend(elements.hAx,'Training','Validation','Testing');
+    
+    delete(parent.Children)
+    ax = uiaxes(parent);
+    ax.Layout.Column = 1; ax.Layout.Row = 1;
+    plot(ax,x,errorTr(nCompPLSR,:),'k',x,errorV(nCompPLSR,:),'r',x,errorTe(nCompPLSR,:),'b');
+    xlabel(ax,'nFeatures');
+    ylabel(ax,'RMSE');
+    legend(ax,'Training','Validation','Testing');
+
     numFeat=dataprocessingblock.parameters.getByCaption('numFeat').value;
     errTraining=errorTr(nCompPLSR,numFeat);
     errTrSTD = errorTrstd(nCompPLSR,numFeat);

@@ -97,19 +97,22 @@ classdef NoveltyDetectionInterface < handle
             xlabel('score (au)', 'FontSize', 16);
         end
         
-        function T = plotROC(this, data, normal)
+        function T = plotROC(this, data, normal, parent)
             scores = this.apply(data);
             [X,Y,T,AUC,OPTROCPT] = perfcurve(normal , scores, ~this.isNoveltyMeasure);
             T = T(X == OPTROCPT(1) & Y == OPTROCPT(2));
-%             figure;
-            hold on;
-            plot(X,Y, 'LineWidth', 2);
-            scatter(OPTROCPT(1), OPTROCPT(2), 'o', 'MarkerEdgeColor', 'red', 'LineWidth', 2);
-            legend({['ROC-Curve (AUC: ', num2str(AUC),')'],...
+            
+            delete(parent.Children);            
+            ax = uiaxes(parent);
+            ax.Layout.Row = 1; ax.Layout.Column = 1;
+            hold(ax, 'on');
+            plot(ax,X,Y, 'LineWidth', 2);
+            scatter(ax,OPTROCPT(1), OPTROCPT(2), 'o', 'MarkerEdgeColor', 'red', 'LineWidth', 2);
+            legend(ax,{['ROC-Curve (AUC: ', num2str(AUC),')'],...
                 ['optimal operating point (t = ', num2str(T),')']},...
                 'Location', 'best');
-            xlabel('False positive rate', 'FontSize', 16);
-            ylabel('True positive rate', 'FontSize', 16);
+            xlabel(ax,'False positive rate');
+            ylabel(ax,'True positive rate');
         end
     end
     

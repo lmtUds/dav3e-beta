@@ -18,27 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = histogramNovelty(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = histogramNovelty(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-%     hAx = axes(panel2); title('');
-%     xlabel('DF1'); ylabel('DF2');
-%     box on,
-%     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-%     elements.hAx = hAx;
-    elements.axesPanel = panel2;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-%     cla(elements.hAx,'reset');
-    delete(elements.axesPanel.Children);
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('inputData');
     if isempty(dataParam)
         return
@@ -59,12 +44,19 @@ function populateGui(elements,project,dataprocessingblock)
     end
     trainScores = dataprocessingblock.parameters.getByCaption('trainScores').getValue();
     testScores = dataprocessingblock.parameters.getByCaption('testScores').getValue();
-    minLimTe = min(testScores);
-    maxLimTe = max(testScores);
-    minLimTr = min(trainScores);
-    maxLimTr = max(trainScores);
-    [h1,c1] = histPlot(elements.axesPanel,threshold,trainGrouping,dims,groupingColors,[minLimTr;maxLimTr],trainScores);
-    [h2,c2] = histPlot(elements.axesPanel,threshold,testGrouping,dims,groupingColors,[minLimTe;maxLimTe],testScores);
+    minLimTe = min(testScores); maxLimTe = max(testScores);
+    minLimTr = min(trainScores); maxLimTr = max(trainScores);
+
+    delete(parent.Children);
+    
+    tl = tiledlayout(parent,numel(dims),1);
+    tl.Layout.Row = 1; tl.Layout.Column = 1;
+    [h1,c1] = histPlot(tl,threshold,trainGrouping,dims,...
+        groupingColors,[minLimTr;maxLimTr],trainScores);
+    
+    [h2,c2] = histPlot(tl,threshold,testGrouping,dims,...
+        groupingColors,[minLimTe;maxLimTe],testScores);
+    
     c2 = c2 + string(' (testing)');
     for i = 1:size(c1,2)
         nov = string(dataprocessingblock.parameters.getByCaption('classifier').getValue().novelTag);
@@ -78,19 +70,22 @@ function populateGui(elements,project,dataprocessingblock)
     legend([h1,h2],[c1,c2]);
 end
 
-function [handles,captions] = histPlot(panel,threshold,grouping,dims,groupingColors,limits,scores)
+function [handles,captions] = histPlot(tileLayout,threshold,grouping,dims,...
+                                        groupingColors,limits,scores)
     handles = [];
     captions = string.empty;
     for i = 1:numel(dims)
-        hsAx = subplot(numel(dims),1,i,'Parent',panel);
-%         legend(hsAx,'off');
-%         cla(hsAx);
+        hsAx = nexttile(tileLayout,i);
         hold(hsAx,'on');
+        xlabel(hsAx,'novelty scores')
+        ylabel(hsAx,'counts');
         cats = categories(deStar(grouping));
         for j = 1:numel(cats)
             idx = grouping == cats{j};
-            p = histogram(scores(idx,i),linspace(limits(1,i),limits(2,i),50));
-            line([threshold threshold],get(hsAx,'YLim'),'Color',[1 0 0],'DisplayName','Threshold')
+            p = histogram(hsAx,scores(idx,i),...
+                linspace(limits(1,i),limits(2,i),50));
+            line(hsAx,[threshold threshold],get(hsAx,'YLim'),...
+                'Color',[1 0 0],'DisplayName','Threshold')
             if i == 1
                 if isempty(handles)
                     handles = p;
@@ -102,10 +97,6 @@ function [handles,captions] = histPlot(panel,threshold,grouping,dims,groupingCol
             end
             set(p,'FaceColor',groupingColors(cats{j}));
         end
-%         set(handles,'MarkerEdgeColor',[1,1,1],'MarkerEdgeAlpha',0.7,'MarkerFaceAlpha',0.7);
-%         xlabel(sprintf('DF%d (%0.1f %%)',dims(i),scores(i)));
-        xlabel('novelty scores')
-        ylabel('counts');
         hold(hsAx,'off');
     end
 end

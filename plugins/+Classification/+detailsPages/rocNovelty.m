@@ -18,27 +18,14 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = rocNovelty(parent,project,dataprocessingblock)
+function updateFun = rocNovelty(parent,project,dataprocessingblock)
 %ROCNOVELTY Summary of this function goes here
 %   Detailed explanation goes here
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-%     hAx = axes(panel2); title('');
-%     xlabel('DF1'); ylabel('DF2');
-%     box on,
-%     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-%     elements.hAx = hAx;
-    elements.axesPanel = panel2;
-end
-
-function populateGui(elements,project,dataprocessingblock)
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('inputData');
     if isempty(dataParam)
         return
@@ -55,6 +42,6 @@ function populateGui(elements,project,dataprocessingblock)
     [~,labelsTe]= det.apply(testData);
     data = vertcat(trainData,testData);
     labels = vertcat(labelsTr,labelsTe);
-    subplot(1,1,1,'Parent',elements.axesPanel);
-    det.plotROC(data, labels);
+    
+    det.plotROC(data, labels, parent);
 end

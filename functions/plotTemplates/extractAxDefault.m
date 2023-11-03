@@ -18,24 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-classdef (ConstructOnLoad) EventData < event.EventData
-
-   properties
-      oldValue = NaN
-      newValue = NaN
-      property = '';
-      misc     = struct();
-   end
-   
-   methods
-      function eventData = EventData(oldValue,newValue,property,misc)
-          eventData.oldValue = oldValue;
-          eventData.newValue = newValue;
-          eventData.property = property;
-          if exist('misc','var')
-            eventData.misc = misc;
-          end
-      end
-   end
+function extractAxDefault(MainFig)
+%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a default uiFigure
+    fig = uifigure('Name','Plot Extraction: Default','Visible','off');
+    grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
+    ax = copyobj(MainFig.CurrentAxes,grid);
+    ax.Layout.Row = 1; ax.Layout.Column = 1;
+    fig.Visible = 'on';
 end
 

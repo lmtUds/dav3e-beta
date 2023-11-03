@@ -18,27 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = histogram(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = histogram(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    layout = uiextras.VBox('Parent',panel);
-    panel2 = uipanel(layout,'BorderType','none');
-%     hAx = axes(panel2); title('');
-%     xlabel('DF1'); ylabel('DF2');
-%     box on,
-%     set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-%     elements.hAx = hAx;
-    elements.axesPanel = panel2;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-%     cla(elements.hAx,'reset');
-    delete(elements.axesPanel.Children);
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam)
         return
@@ -64,24 +49,35 @@ function populateGui(elements,project,dataprocessingblock)
     maxLim = max([trainData;testData]);
     
     cumEnergy = dataprocessingblock.parameters.getByCaption('cumEnergy').getValue();
-    [h1,c1] = histPlot(elements.axesPanel,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
-    [h2,c2] = histPlot(elements.axesPanel,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy);
+    
+    switch dataprocessingblock.caption
+        case 'LDA'
+            labelStr = 'DF';
+        case 'PCA'
+            labelStr = 'PC';
+        otherwise
+            labelStr = 'XYZ';
+    end
+
+    delete(parent.Children);
+    tl = tiledlayout(parent,numel(dims),1); %TODO: better solution without warning?
+    tl.Layout.Row = 1; tl.Layout.Column = 1;
+    [h1,c1] = histPlot(tl,trainData,trainGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy,0,labelStr);
+    [h2,c2] = histPlot(tl,testData,testGrouping,dims,groupingColors,[minLim;maxLim],cumEnergy,1,labelStr);
     c2 = c2 + string(' (testing)');
     legend([h1,h2],[c1,c2]);
 end
 
-function [handles,captions] = histPlot(panel,data,grouping,dims,groupingColors,limits,cumEnergy)
+function [handles,captions] = histPlot(tl,data,grouping,dims,groupingColors,limits,cumEnergy,isTesting,labelStr)
     handles = [];
     captions = string.empty;
     for i = 1:numel(dims)
-        hsAx = subplot(numel(dims),1,i,'Parent',panel);
-%         legend(hsAx,'off');
-%         cla(hsAx);
+        hsAx = nexttile(tl,i);
         hold(hsAx,'on');
         cats = categories(deStar(grouping));
         for j = 1:numel(cats)
             idx = grouping == cats{j};
-            p = histogram(data(idx,i),linspace(limits(1,i),limits(2,i),50));
+            p = histogram(hsAx,data(idx,i),linspace(limits(1,i),limits(2,i),50));
             
             if i == 1
                 if isempty(handles)
@@ -93,10 +89,15 @@ function [handles,captions] = histPlot(panel,data,grouping,dims,groupingColors,l
                 end
             end
             set(p,'FaceColor',groupingColors(cats{j}));
+            set(p,'EdgeColor',groupingColors(cats{j})/1.5);
+            if isTesting
+                set(p,'EdgeColor','k','LineWidth',1); %,'LineStyle','--'
+            end
         end
 %         set(handles,'MarkerEdgeColor',[1,1,1],'MarkerEdgeAlpha',0.7,'MarkerFaceAlpha',0.7);
-        xlabel(sprintf('DF%d (%0.1f %%)',dims(i),100*cumEnergy(i)));
-        ylabel('counts');
+%         legend(hsAx,captions)
+        xlabel(hsAx,sprintf([labelStr,'%d (%0.1f %%)'],dims(i),100*cumEnergy(i)));
+        ylabel(hsAx,'counts');
         hold(hsAx,'off');
     end
 end

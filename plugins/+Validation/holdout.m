@@ -55,7 +55,6 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = ~groupbased;
-            params(i).updatePropGridField();
         end
     end
 end

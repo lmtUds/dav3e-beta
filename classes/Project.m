@@ -253,7 +253,7 @@ classdef Project < handle
                 case '*'
                     for i = 1:numel(new.vals)
                         if mask(i)
-                            new.vals(i) = [char(new.vals(i)) '*'];
+                            new.vals(i) = [char(new.vals(i)) '*'];    
                         end
                     end
                 otherwise
@@ -351,6 +351,8 @@ classdef Project < handle
             data.featureSelection(invalid) = [];
             data.featureCaptions(invalid) = [];
             data.data(:,invalid) = [];
+%             %potential fiy for github issue #3
+%             data.groupings(isundefined(data.groupings)) = '<ignore>';
             obj.mergedFeatureData = data;
         end
         

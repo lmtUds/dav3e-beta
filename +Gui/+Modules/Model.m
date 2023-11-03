@@ -33,8 +33,10 @@ classdef Model < Gui.Modules.GuiModule
         setDropdown
         detailsLayout
         tabLayout
+        dynamicGrid
         parametersDropdownPanel
-        parametersDropdownGrid
+        valErrorPanel
+        testErrorPanel
         parameterPopups
         
         featurePreviewX
@@ -42,6 +44,8 @@ classdef Model < Gui.Modules.GuiModule
         
         rangeTable
         propGrid
+        
+        addDataTipRowsMenu
     end
     
     properties (Dependent)
@@ -61,41 +65,106 @@ classdef Model < Gui.Modules.GuiModule
         function set.currentModel(obj,val)
             obj.getProject().currentModel = val;
         end      
-        
-        function [panel,menu] = makeLayout(obj)
+                       
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
-            panel = Gui.Modules.Panel();
+            %Define the main three column module layout
+            moduleLayout = uigridlayout(uiParent,[1 3],...
+                'Visible','off',...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'2x','5x',0},...
+                'RowHeight',{'1x'},...
+                'RowSpacing',7);
             
-            menu = uimenu('Label','Model');
+            %Add the menubar item for this module
+            moduleMenu = uimenu(mainFigure,'Label','Model');
+            obj.addDataTipRowsMenu = uimenu(moduleMenu,...
+                'Label','scatter plots: add offset, cycle, and grouping info to data tips (time-consuming!)',...
+                'Checked','off',...
+                getMenuCallbackName(),@obj.addDataTipRowsMenuClicked);
+            
+            %Create the grid to house the model definition section in the
+            %leftmost column
+            defsGrid = uigridlayout(moduleLayout, [5 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'fit','fit','15x','fit',40},...
+                'RowSpacing',4,...
+                'Padding',[0 0 0 0]);
+            defsGrid.Layout.Row = 1;
+            defsGrid.Layout.Column = 1;
+            
+            defsLabel = uilabel(defsGrid,...
+                'Text','Model',...
+                'FontWeight','bold');
+            defsLabel.Layout.Row = 1;
+            defsLabel.Layout.Column = [1 4];
+            
+            defsDropdown = uidropdown(defsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@(src,event) obj.dropdownModelCallback(src,event));
+            defsDropdown.Layout.Row = 2;
+            defsDropdown.Layout.Column = [1 2];
+            
+            defsAdd = uibutton(defsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@(src,event) obj.dropdownNewModel(src,event,defsDropdown));
+            defsAdd.Layout.Row = 2;
+            defsAdd.Layout.Column = 3;
+            
+            defsRem = uibutton(defsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@(src,event) obj.dropdownRemoveModel(src,event,defsDropdown));
+            defsRem.Layout.Row = 2;
+            defsRem.Layout.Column = 4;
+            
+%             propGridPanel = uipanel(defsGrid);
+%             propGridPanel.Layout.Row = 3;
+%             propGridPanel.Layout.Column = [1 4];
 
-            layout = uiextras.HBox('Parent',panel);
-            leftLayout = uiextras.VBox('Parent',layout);
-            obj.detailsLayout = uiextras.HBox('Parent',layout, 'Spacing',5, 'Padding',5);
-
-            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','model', 'Padding',5);
-%             tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
-            
-            propGridLayout = uiextras.VBox('Parent',defsPanel);
-            
+            obj.propGrid = Gui.uiParameterBlockGrid('mainFigure',obj.main.hFigure,'Parent',defsGrid,...
+                'ValueChangedFcn',@(src,event) obj.updatePropGrid(),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event));%,...
+%                 'SelectionChangedFcn',@(src,event) obj.changeCurrentPreprocessing(src,event));
+            obj.propGrid.Layout.Row = 3;
+            obj.propGrid.Layout.Column = [1 4];
+            obj.propGrid.columnRatio = {'4x','2x'};
+                        
             % model dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewModel;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemoveModel;
-            obj.setDropdown.EditCallback = @obj.dropdownModelRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownModelChange;            
+            obj.setDropdown = defsDropdown;           
             
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addModelChainBlock);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeModelChainBlock);
-            uicontrol(propGridControlsLayout,'String','/\', 'Callback',@(h,e)obj.moveModelChainBlockUp);
-            uicontrol(propGridControlsLayout,'String','\/', 'Callback',@(h,e)obj.moveModelChainBlockDown);
+%             obj.propGrid = PropGrid(propGridLayout);
+%             obj.propGrid.setShowToolbar(false);
+%             propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
             
-            modelControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(modelControlsLayout,'String','train', 'Callback',@(h,e)obj.trainModel);
-%             uicontrol(modelControlsLayout,'String','show details', 'Callback',@(h,e)obj.showModelDetails);
-            propGridLayout.Sizes = [30,-1,20,40];
+            defsElementAdd = uibutton(defsGrid,...
+                'Text','Add...',...
+                'ButtonPushedFcn',@(h,e)obj.addModelChainBlock);
+            defsElementAdd.Layout.Row = 4;
+            defsElementAdd.Layout.Column = 1;
+            
+            defsElementDel = uibutton(defsGrid,...
+                'Text','Delete...',...
+                'ButtonPushedFcn',@(h,e)obj.removeModelChainBlock);
+            defsElementDel.Layout.Row = 4;
+            defsElementDel.Layout.Column = 2;
+            
+            defsElementUp = uibutton(defsGrid,...
+                'Text','/\',...
+                'ButtonPushedFcn',@(h,e)obj.moveModelChainBlockUp);
+            defsElementUp.Layout.Row = 4;
+            defsElementUp.Layout.Column = 3;
+            
+            defsElementDwn = uibutton(defsGrid,...
+                'Text','\/',...
+                'ButtonPushedFcn',@(h,e)obj.moveModelChainBlockDown);
+            defsElementDwn.Layout.Row = 4;
+            defsElementDwn.Layout.Column = 4;
+            
+            defsTrain = uibutton(defsGrid,...
+                'Text','Train',...
+                'ButtonpushedFcn',@(h,e)obj.trainModel);
+            defsTrain.Layout.Row = 5;
+            defsTrain.Layout.Column = [1 4];
 
             % This works fine for R2018a (and possibly lower), but causes a
             % fatal Java crash with R2016b (and possibly higher)
@@ -107,31 +176,77 @@ classdef Model < Gui.Modules.GuiModule
             % David Sampson (creater of GUI Layout Toolbox) could so far
             % not reproduce the issue
 %             obj.tabGroup = uitabgroup(obj.detailsLayout);
-            obj.tabLayout = uiextras.VBox('Parent',obj.detailsLayout);
-            obj.parametersDropdownPanel = Gui.Modules.Panel('Parent',obj.detailsLayout, 'Title','parameters', 'Padding',2);
-            obj.parametersDropdownGrid = uiextras.Grid('Parent',obj.parametersDropdownPanel, 'Spacing',2, 'Padding',0);
-            obj.parametersDropdownPanel.Visible = 'off';
+            
+            %Create the tabbed container to house the main module display
+            tabGroup = uitabgroup(moduleLayout);
+            tabGroup.Layout.Row = 1;
+            tabGroup.Layout.Column = 2;
+            
+            obj.tabGroup = tabGroup;
+            obj.tabLayout = moduleLayout;
+            
+            %Create the panel for the parameter adjusting section after
+            %training
+            
+            dynamicGrid = uigridlayout(moduleLayout,[3 1],...
+                'Visible','off',...
+                'Padding',[0 0 0 0]);
+            dynamicGrid.Layout.Row = 1;
+            dynamicGrid.Layout.Column = 3;
+            obj.dynamicGrid = dynamicGrid;
+            
+            parameterPanel = uipanel(dynamicGrid,...
+                'Title','Adjust Parameters',...
+                'BorderType','none',...
+                'Visible','off');
+            parameterPanel.Layout.Row = 1;
+            obj.parametersDropdownPanel = parameterPanel;
 
-            layout.Sizes = [-1,-3];
-            leftLayout.Sizes = [-1];
+            valErrorPanel = uipanel(dynamicGrid,...
+                'Title','Errors',...
+                'BorderType','none',...
+                'Visible','off');
+            valErrorPanel.Layout.Row = 2;
+            obj.valErrorPanel = valErrorPanel;
+
+            testErrorPanel = uipanel(dynamicGrid,...
+                'Title','Errors',...
+                'BorderType','none',...
+                'Visible','off');
+            testErrorPanel.Layout.Row = 3;
+            obj.testErrorPanel = testErrorPanel;
         end
-
+        
+        function addDataTipRowsMenuClicked(obj,h,varargin)
+            switch h.Checked
+                case 'on', h.Checked = 'off';
+                case 'off', h.Checked = 'on';
+            end
+        end
+        
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,65,0,11]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                      % depending on screen resolution?
+        end
+        
         function addModelChainBlock(obj,desc)
             if nargin < 2
                 methods = Model.getAvailableMethods(true);
 %                 s = keys(fe);
                 s = {};
+                c = {};
                 fields = fieldnames(methods);
                 for i = 1:numel(fields)
                     if numel(keys(methods.(fields{i}))) == 0
                         continue
                     end
-                    s{end+1} = sprintf('<html><b>%s</b></html>',fields{i});
                     s = horzcat(s,keys(methods.(fields{i})));
-                    s{end+1} = '';
+                    c = horzcat(c,repmat(fields(i),1,size(keys(methods.(fields{i})),2)));
                 end
-                [sel,ok] = listdlg('ListString',s);
-                if ~ok
+                [sel,ext,cats] = Gui.Dialogs.SelectCategory('ListItems',s,'Categories',c);
+                if ~ext
                     return
                 end
             else
@@ -139,19 +254,9 @@ classdef Model < Gui.Modules.GuiModule
             end
 
             for i = 1:numel(sel)
-                str = s{sel(i)};
-                if isempty(str) || str(1) == '<'
-                    continue
-                end
-                
-                for j = sel(i):-1:1
-                    field = s{j};
-                    if ~isempty(field) && field(1) == '<'
-                        map = methods.(field(10:end-11));
-                        fcn = map(str);
-                        break
-                    end
-                end
+                str = sel{i};
+                map = methods.(cats{i});
+                fcn = map(str);
                 
                 obj.getModel().addToChain(DataProcessingBlock(fcn));
             end
@@ -159,42 +264,70 @@ classdef Model < Gui.Modules.GuiModule
             obj.updatePropGrid();
         end
 
-        function removeModelChainBlock(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
-                return
-            end
-            idx = obj.propGrid.jPropList.indexOf(prop.jProperty);
-            block = prop.getMatlabObj();
-            obj.getModel().removeFromChain(block);
-            obj.propGrid.removeProperty(prop);
-            if obj.propGrid.jPropList.size() > 0
-                nextSelProp = obj.propGrid.jPropList.get(max([0, idx-1]));
-                obj.propGrid.grid.setSelectedProperty(nextSelProp);
-            end
-        end
+%         function removeModelChainBlock(obj)
+%             block = obj.propGrid.getSelectedBlock();
+%             if isempty(block)
+%                 return
+%             end
+%             obj.getModel().removeFromChain(block);
+%             obj.updatePropGrid();
+%         end
         
-        function moveModelChainBlockUp(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
+        function removeModelChainBlock(obj, src, event)
+            mod = obj.currentModel.processingChain.blocks;
+            captions = mod.getCaption();
+            types = mod.getType();
+
+            % Sort to make it the same order as in the "Add" dialog
+            methods = string(fieldnames(Model.getAvailableMethods(true)))';  %all method blocks
+            methods = intersect(methods,types,'stable'); %only used blocks
+            [~,methodidx] = ismember(methods, types); %find (first) index of method blocks in used methods
+            methodidx = unique([methodidx,[1:numel(types)]],'stable'); %add missing entries at the end (rest is handled by for loop in SelectCategory)
+            mod = mod(methodidx); %sort accordingly
+            captions = captions(methodidx); %sort accordingly
+            types = types(methodidx); %sort accordingly
+
+%             [sel,ok] = Gui.Dialogs.Select('ListItems',captions,'MultiSelect',false);
+            [sel,ok,cat] = Gui.Dialogs.SelectCategory('ListItems',captions,'Categories',types,'MultiSelect',false);
+            if ~ok
                 return
             end
-            block = prop.getMatlabObj();
+
+            rem = mod(ismember(captions,sel) & ismember(types,cat));
+            %TODO: Better prevent model chain blocks from being added if already in model chain (instead of handling a delete conflict as follows).
+            if numel(rem)>1
+                rem = rem(1,end);
+                warning('Backtrace','off')
+                warning('More than one model chain block fits the deletion selection. The last one added has been removed, the other remain(s).')
+                warning('Backtrace','on')
+            end
+            obj.currentModel.removeFromChain(rem);
+            obj.updatePropGrid();
+            obj.getCurrentSensor().preComputePreprocessedData();
+%             obj.updatePlotsInPlace();
+%             obj.setGlobalYLimits();
+        end
+
+    
+        function moveModelChainBlockUp(obj)
+            block = obj.propGrid.getSelectedBlock();
+            if isempty(block)
+                return
+            end
             if block.canMoveUp()
                 block.moveUp();
-                obj.propGrid.movePropertyUp(prop);
+                obj.updatePropGrid();
             end
         end
         
         function moveModelChainBlockDown(obj)
-            prop = obj.propGrid.getSelectedProperty().getHighestParent();
-            if isempty(prop)
+            block = obj.propGrid.getSelectedBlock();
+            if isempty(block)
                 return
             end
-            block = prop.getMatlabObj();
             if block.canMoveDown()
                 block.moveDown();
-                obj.propGrid.movePropertyDown(prop);
+                obj.updatePropGrid();
             end
         end
         
@@ -206,27 +339,36 @@ classdef Model < Gui.Modules.GuiModule
         function updatePropGrid(obj)
             obj.propGrid.clear();
             obj.getModel().processingChain.updateChainParameters(obj.getProject());
-            pgf = obj.getModel().makePropGridFields();
-            obj.propGrid.addProperty(pgf);       
+            obj.propGrid.addBlocks(obj.getModel().processingChain.getAllBlocksInChain());     
         end
         
-        function dropdownNewModel(obj,h)
+        function dropdownNewModel(obj,src,event,dropdown)
             model = obj.getProject().addModel();
             obj.currentModel = model;
-            h.appendItem(model.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(model.getCaption());
+            dropdown.Value = char(model.getCaption());
+            
+            prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+            drawnow
+            obj.updatePropGrid;
+            obj.updateTabs();
+            close(prog)
         end
         
-        function dropdownRemoveModel(obj,h)
-            idx = h.getSelectedIndex();
-%             models = obj.getProject().removeModelAt(idx);
+        function dropdownRemoveModel(obj,src,event,dropdown)
+            %get selected item and index it via number
+            selItem = ismember(dropdown.Items,dropdown.Value);
+            idx = 1:size(dropdown.Items,2);
+            idx = idx(selItem);
             
             % if there is only one model, it will now be deleted
             % so we have to add a new one
             if numel(obj.getProject().models) == 1
                 newModel = obj.getProject().addModel();
-                h.appendItem(newModel.getCaption());
-            else
+                dropdown.Items{end+1} = char(newModel.getCaption());
+            else %if we had more models remove accordingly
                 if idx == 1
                     newModel = obj.getProject().models(2);
                 else
@@ -236,20 +378,60 @@ classdef Model < Gui.Modules.GuiModule
 
             obj.currentModel = newModel;
             obj.getProject().removeModelAt(idx);
-                
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentModel.getCaption());
+            
+            dropdown.Items(idx) = [];
+            dropdown.Value = char(obj.currentModel.getCaption());
+
+            prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+            drawnow
+            obj.updatePropGrid;
+            obj.updateTabs();
+            if obj.currentModel.trained
+                [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
+                obj.makeParameterDropdowns(caps,inds);
+                obj.makeErrorPanel();
+            end
+            close(prog)
         end
         
-        function dropdownModelRename(obj,h,newName,index)
+        function dropdownModelCallback(obj,src,event)
+            if event.Edited                
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                   cellstr(obj.getProject().models.getCaption()));
+                obj.getProject().models(index).setCaption(newName);
+                src.Items{index} = newName;
+            else
+                prog = uiprogressdlg(obj.main.hFigure,...
+                    'Title','Changing model',...
+                    'Indeterminate','on');
+                drawnow
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentModel = ...
+                    obj.getProject().models(index);
+                obj.updatePropGrid;
+                obj.updateTabs();
+                if obj.currentModel.trained
+                    [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
+                    obj.makeParameterDropdowns(caps,inds);
+                    obj.makeErrorPanel();
+                end
+                close(prog)
+            end
+        end
+        
+        function dropdownModelRename(obj,h,newName,index)   %Not used anymore?!?
             newName = matlab.lang.makeUniqueStrings(newName,cellstr(obj.getProject().models.getCaption()));
             obj.getProject().models(index).setCaption(newName);
             h.renameItemAt(newName,h.getSelectedIndex());
         end
         
-        function dropdownModelChange(obj,h,newItem,newIndex)
-            statusbar(obj.main.hFigure,'Changing model...'); 
-            
+        function dropdownModelChange(obj,h,newItem,newIndex)   %Not used anymore?!?
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Changing model',...
+                'Indeterminate','on');
+            drawnow
             obj.currentModel = ...
                 obj.getProject().models(newIndex);
             obj.updatePropGrid;
@@ -257,9 +439,8 @@ classdef Model < Gui.Modules.GuiModule
 
             [~,caps,inds] = obj.currentModel.getCurrentIndexSet();
             obj.makeParameterDropdowns(caps,inds);
-            
-            sb = statusbar(obj.main.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false); 
+            obj.makeErrorPanel();
+            close(prog)
         end        
         
         function updateTabs(obj)
@@ -268,18 +449,23 @@ classdef Model < Gui.Modules.GuiModule
         
         function success = computeFeatures(obj)
             success = true;
-            sb = statusbar(obj.main.hFigure, 'Computing features...');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Computing features',...
+                'Indeterminate','on');
+            drawnow
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                    sprintf('Could not compute features.\n %s', ME.message),...
+                    'Feature computation error');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                    sprintf('Could not merge features.\n %s', ME.message),...
+                    'Feature merge error');
                 disp('''Could not merge features'' help (most obvious cases):');
                 disp('''Cluster collision'' means that you have to check the timing (offset and length) of your clusters, as there are unexpected overlaps of clusters in one track.');
                 disp('''Index in position 1 exceeds array bounds'' might either originate from a mislabeled track, which leads to unintended parallel tracks and deletion of clusters during merging process (no clusters in both tracks at the same time).');
@@ -289,16 +475,14 @@ classdef Model < Gui.Modules.GuiModule
                 success = false;
             end
 %             features.featureCaptions'
-            sb = statusbar(obj.main.hFigure, 'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
         
         function trainModel(obj)
             %obj.getProject().mergedFeatureData.groupingCaptions = obj.getProject().groupings.getCaption();
-
-            sb = statusbar(obj.main.hFigure,'Building model...');
-            set(sb.ProgressBar, 'Visible',true, 'Indeterminate',true);            
-            
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Building model',...
+                'Indeterminate','on');
+            drawnow
             % preparation, training, validation, testing
             data = obj.getProject().mergedFeatureData;
             
@@ -306,59 +490,172 @@ classdef Model < Gui.Modules.GuiModule
                 obj.getModel().train(data);
             catch ME
                 f = gcf;
-                errordlg(sprintf('Error during model training.\n%s', ME.message),'I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    sprintf('Error during model training.\n %s', ME.message),...
+                    'Model training error');
                 set(0, 'CurrentFigure', f)
             end
 
             [~,caps,inds] = obj.getModel().getLowestErrorData();
             obj.getModel().trainForParameterIndexSet(data,caps,inds);
-
-            sb = statusbar(obj.main.hFigure,'Plotting...');            
+                      
+            prog.Title = 'Plotting';
             
             obj.makeModelTabs();
             obj.makeParameterDropdowns(caps,inds);
+            obj.makeErrorPanel();
+
+            obj.updatePropGrid();
             
-            sb = statusbar(obj.main.hFigure,'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);  
+            close(prog)
         end
         
         function makeParameterDropdowns(obj,caps,inds)
-            delete(obj.parametersDropdownGrid.Children);
+%             delete(obj.parametersDropdownGrid.Children);
+            obj.parametersDropdownPanel.Children.delete();
             obj.parameterPopups = [];
-
+            
+            obj.parametersDropdownPanel.Parent.RowHeight = {'1x','1x'};
+            %get the hyper parameters that are varied with caption and
+            %values available for variation
             [cap,~,val] = obj.getModel().getVariedHyperParameters();
             
-            for i = 1:numel(cap)
-                uicontrol(obj.parametersDropdownGrid,'Style','text', 'String',cap{i});
-                ind = inds(ismember(caps,cap{i}));
-                popup = uicontrol(obj.parametersDropdownGrid,...
-                    'Style','popupmenu', 'String',val{i},...
-                    'UserData',cap{i},...
-                    'Value',ind,...
-                    'Callback',@obj.parameterDropdownChanged);
-                if isempty(obj.parameterPopups)
-                    obj.parameterPopups = popup;
-                else
-                    obj.parameterPopups(i) = popup;
-                end
-            end
+            %check if any parameters have varied selection
             if numel(cap) > 0
-                set(obj.parametersDropdownGrid, 'ColumnSizes', [100], 'RowSizes', repmat([30 30],1,numel(cap)));
-                obj.detailsLayout.Sizes = [-1,110];
+                %setup the grid to arrange the parameter variation dropdowns
+                parametersDropdownGrid = uigridlayout(obj.parametersDropdownPanel,...
+                    [2*numel(cap) 1],'RowHeight',repmat(32,1,2*numel(cap)),...
+                    'Padding',[0 0 0 0],'RowSpacing',5,'ColumnWidth',{'1x'});
+
+                %loop through the changed hyper parameters
+                for i = 1:numel(cap)
+                    %add a label for each varied parameter
+                    uilabel(parametersDropdownGrid,'Text',cap{i},'WordWrap','on');
+                    %select the last variation value by default
+                    ind = inds(ismember(caps,cap{i}));
+                    %add a dropdown to select the variable value
+                    popup = uidropdown(parametersDropdownGrid,...
+                        'Items',string(val{i}),...
+                        'UserData',cap{i},...
+                        'Value',string(val{i}{ind}),...
+                        'ValueChangedFcn',@(src,event) obj.parameterDropdownChanged());
+                    %append to all parameterDropdowns
+                    if isempty(obj.parameterPopups)
+                        obj.parameterPopups = popup;
+                    else
+                        obj.parameterPopups(i) = popup;
+                    end
+                end
+                obj.parametersDropdownPanel.Parent.Parent.ColumnWidth{3} = '1x';
+                obj.dynamicGrid.Visible = 'on';
                 obj.parametersDropdownPanel.Visible = 'on';
+
             else
-                obj.detailsLayout.Sizes = [-1,0];
+%                 obj.parametersDropdownPanel.Parent.Parent.ColumnWidth{3} = 0; 
                 obj.parametersDropdownPanel.Visible = 'off';
+                obj.parametersDropdownPanel.Parent.RowHeight = {0 '1x'};
             end
         end
         
+        function makeErrorPanel(obj)
+            obj.valErrorPanel.Children.delete();
+            obj.testErrorPanel.Children.delete();
+
+            valErrorGrid = uigridlayout(obj.valErrorPanel,[2 2],...
+                'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,6,1),...
+                'Padding',[0 0 0 0],'RowSpacing',5);
+            
+            if iscategorical(obj.currentModel.datas(1).target)
+                label = ' (%)';
+                nSig = 2;
+                tSig = 'decimal';
+                factor = 100;
+            else
+                label = ' (RMSE)';
+                nSig = 4;
+                 tSig = 'significant';
+                factor = 1;
+            end
+
+            obj.valErrorPanel.Title = 'Validation';   %['Validation',label];
+
+            trainErrorCap = uilabel(valErrorGrid,'Text',['training error',label],'WordWrap','on');
+            trainErrorCap.Layout.Row = 1;
+            trainErrorCap.Layout.Column = 1;
+
+            valErrorCap = uilabel(valErrorGrid,'Text',['validation error',label],'WordWrap','on');
+            valErrorCap.Layout.Row = 2;
+            valErrorCap.Layout.Column = 1;
+
+%             testErrorCap = uilabel(errorGrid,'Text','(testing)','WordWrap','on');
+%             testErrorCap.Layout.Row = 3;
+%             testErrorCap.Layout.Column = 1;
+              
+            testErrorGrid = uigridlayout(obj.testErrorPanel,[2 2],...
+                'ColumnWidth',{'2x','1x'},'RowHeight',repmat(32,6,1),...
+                'Padding',[0 0 0 0],'RowSpacing',5);
+
+            obj.testErrorPanel.Title = 'Testing (fullModel)';   %['Testing',label];
+
+            fullModelTrainErrorCap = uilabel(testErrorGrid,'Text',['training error',label],'WordWrap','on');
+            fullModelTrainErrorCap.Layout.Row = 1;
+            fullModelTrainErrorCap.Layout.Column = 1;
+
+            fullModelTestErrorCap = uilabel(testErrorGrid,'Text',['testing error',label],'WordWrap','on');
+            fullModelTestErrorCap.Layout.Row = 2;
+            fullModelTestErrorCap.Layout.Column = 1;
+
+%             caps = {}; inds = [];
+%             for i = 1:numel(obj.parameterPopups)
+%                 caps{i} = obj.parameterPopups(i).UserData;
+%                 logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+%                 proxArray = 1:size(obj.parameterPopups(i).Items,2);
+%                 inds(i) = proxArray(logInd);
+%             end
+%             if isempty(inds)
+%                 inds = 1;
+%             end
+
+            trainIdxSet = obj.main.project.currentModel.trainedIndexSet;
+            hyperParaIdx = obj.main.project.currentModel.hyperParameterIndices;
+            inds = sum(trainIdxSet~=hyperParaIdx,1) == 0;
+
+            trainErrorVal = uilabel(valErrorGrid,'Text',num2str(round(obj.currentModel.trainingErrors(inds)*factor,nSig,tSig)));
+            trainErrorVal.Layout.Row = 1;
+            trainErrorVal.Layout.Column = 2;
+
+            valErrorVal = uilabel(valErrorGrid,'Text',num2str(round(obj.currentModel.validationErrors(inds)*factor,nSig,tSig)));
+            valErrorVal.Layout.Row = 2;
+            valErrorVal.Layout.Column = 2;
+
+%             testErrorVal = uilabel(errorGrid,'Text',num2str(round(obj.currentModel.testingErrors(inds)*factor,nSig,tSig)));
+%             testErrorVal.Layout.Row = 3;
+%             testErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(testErrorGrid,'Text',num2str(round(obj.currentModel.fullModelTrainingError*factor,nSig,tSig)));
+            testErrorVal.Layout.Row = 1;
+            testErrorVal.Layout.Column = 2;
+
+            testErrorVal = uilabel(testErrorGrid,'Text',num2str(round(obj.currentModel.fullModelTestingError*factor,nSig,tSig)));
+            testErrorVal.Layout.Row = 2;
+            testErrorVal.Layout.Column = 2;
+
+            obj.valErrorPanel.Parent.Parent.ColumnWidth{3} = '1x';
+            obj.dynamicGrid.Visible = 'on';
+            obj.valErrorPanel.Visible = 'on';
+            obj.testErrorPanel.Visible = 'on';
+        end
+
+
         function parameterDropdownChanged(obj,varargin)
             caps = {}; inds = [];
             for i = 1:numel(obj.parameterPopups)
                 caps{i} = obj.parameterPopups(i).UserData;
-                inds(i) = obj.parameterPopups(i).Value;
+                logInd = ismember(obj.parameterPopups(i).Items,obj.parameterPopups(i).Value);
+                proxArray = 1:size(obj.parameterPopups(i).Items,2);
+                inds(i) = proxArray(logInd);
             end
-            
+
             data = obj.getProject().mergedFeatureData.copy();
             data.setValidation('none');
             data.setTesting('none');
@@ -366,18 +663,24 @@ classdef Model < Gui.Modules.GuiModule
             
             % update current details page
             obj.getCurrentDetailsPageTab().UserData();
+%             obj.updatePropGrid();
+
+            % update errors
+            obj.makeErrorPanel();
         end
         
         function tab = getCurrentDetailsPageTab(obj)
-            tab = obj.tabGroup.SelectedTab.Children.SelectedTab.Children.SelectedTab;
+            %double children bc. a grid is inbetween
+            tab = obj.tabGroup.SelectedTab.Children.Children.SelectedTab.Children.Children.SelectedTab;
         end
         
         function updateChildrenTab(obj,h,varargin)
-            selTab = h.SelectedTab.Children.SelectedTab;
+            %double children bc. a grid is inbetween
+            selTab = h.SelectedTab.Children.Children.SelectedTab;
             if isa(selTab.UserData,'function_handle')
                 selTab.UserData();
             else
-                selTab = selTab.Children.SelectedTab;
+                selTab = selTab.Children.Children.SelectedTab;
                 selTab.UserData();
             end
         end
@@ -388,29 +691,33 @@ classdef Model < Gui.Modules.GuiModule
         end
         
         function makeModelTabs(obj)
+            %%
             % delete old tabs
             if isempty(obj.tabGroup)
-                obj.tabGroup = uitabgroup(obj.tabLayout,'SelectionChangedFcn',@obj.updateChildrenTab);
+                obj.tabGroup = uitabgroup('Parent',obj.tabLayout,...
+                    'SelectionChangedFcn',@obj.updateChildrenTab);
+                obj.tabGroup.Layout.Row = 1;
+                obj.tabGroup.Layout.Column = 2;
             else
                 tabs = obj.tabGroup.Children;
-                obj.tabLayout.Visible = 'off';
+                obj.tabGroup.Visible = 'off';
                 delete(tabs);
-                delete(obj.parametersDropdownGrid.Children);
                 obj.parameterPopups = [];
+%                 delete(obj.parametersDropdownGrid.Children);
+                obj.parametersDropdownPanel.Children.delete();
                 obj.parametersDropdownPanel.Visible = 'off';
+                obj.valErrorPanel.Children.delete();
+                obj.valErrorPanel.Visible = 'off';
             end
             
-            % if model not trained -> return
+            % if model not trained, no ouput tabs -> return
             if ~obj.getModel().trained
                return 
             end
-           
-            % activate tab layout to create tabs
-            obj.tabLayout.Visible = 'on';
             
-            % create tabs
+            % create tabs for each processing block type
             blocks = obj.getModel().processingChain.getBlocksInOrder();
-            if isempty(blocks)
+            if isempty(blocks) %no blocks, no tabs
                 return
             end
             types = cellfun(@char,{blocks.type},'uni',false);
@@ -418,34 +725,63 @@ classdef Model < Gui.Modules.GuiModule
             for i = 1:numel(uniqueTypes)
                 uitab(obj.tabGroup,'title',uniqueTypes{i});
             end
-
-            for i = numel(blocks):-1:1
-                if isempty(blocks(i).detailsPages)
+            % loop through individual blocks to fill their specific tabs
+%             for i = numel(blocks):-1:1
+            for i = 1:numel(blocks)
+                if isempty(blocks(i).detailsPages) %skip block with no output
                     continue;
                 end
+                %check block type and create a new tab under type's tab
                 type = char(blocks(i).type);
                 typeTab = obj.tabGroup.Children(ismember({obj.tabGroup.Children.Title},type));
                 if isempty(typeTab.Children)
-                    t = uitabgroup(typeTab,'SelectionChangedFcn',@obj.updateChildrenTab);
+                    typeGrid = uigridlayout(typeTab,[1 1],'Padding',[0 0 0 0]);
+                    typeGroup = uitabgroup(typeGrid,'SelectionChangedFcn',@obj.updateChildrenTab);
                 else
-                    t = typeTab.Children;
+                    typeGrid = typeTab.Children;
+                    typeGroup = typeGrid.Children;
                 end
-                t = uitab(t,'title',char(blocks(i).getCaption()));
-                tg = uitabgroup(t,'SelectionChangedFcn',@obj.onTabChanged);
+                blockTab = uitab(typeGroup,'title',char(blocks(i).getCaption()));
+                blockGrid = uigridlayout(blockTab,[1 1],'Padding',[0 0 0 0]);
+                %create a new group and fill it with blocks output tabs
+                blockGroup = uitabgroup(blockGrid,...
+                    'SelectionChangedFcn',@obj.onTabChanged);
                 for j = 1:numel(blocks(i).detailsPages)
-                    t = uitab(tg,'title',blocks(i).detailsPages{j});
-                    [~,updateFun] = blocks(i).createDetailsPage(blocks(i).detailsPages{j},t,obj.getProject());
-                    t.UserData = updateFun;
+                    detailTab = uitab(blockGroup,'title',blocks(i).detailsPages{j});
+                    detailGrid = uigridlayout(detailTab,[1 1],'Padding',[7 7 7 7]);
+                    updateFun = blocks(i).createDetailsPage(blocks(i).detailsPages{j},detailGrid,obj.getProject());
+                    detailTab.UserData = updateFun;
+                    %Select the tab  created once
+                    blockGroup.SelectedTab = detailTab;
                 end
+                %Select the tab  created once
+                typeGroup.SelectedTab = blockTab;
             end
             
-            tg.SelectedTab = t;
+            %delete empty tab groups
             for i = numel(obj.tabGroup.Children):-1:1
                 if isempty(obj.tabGroup.Children(i).Children)
                     delete(obj.tabGroup.Children(i));
                 end
             end
-            obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
+                        
+            % set all created tabs visible
+            obj.tabGroup.Visible = 'on';
+            % set the last tab in each group as active
+            % selection appears to be bugged as of now
+            %https://mathworks.com/matlabcentral/answers/545120-bug-in-tabgroup-appearance-in-appdesigner-r2019b
+            if ~isempty(obj.tabGroup.Children)
+                %Set the last type tab as active
+                obj.tabGroup.SelectedTab = obj.tabGroup.Children(end);
+                %Set the last block in that type as active
+                typeTab = obj.tabGroup.Children(end);
+                blockGroup = typeTab.Children.Children;
+                blockGroup.SelectedTab = blockGroup.Children(end);
+                %Set the last details page for the active bloack as active
+                blockTab = blockGroup.Children(end);
+                detailsGroup = blockTab.Children.Children;
+                detailsGroup.SelectedTab = detailsGroup.Children(end);
+            end
             
         end
         
@@ -454,29 +790,70 @@ classdef Model < Gui.Modules.GuiModule
             allowed = true;
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.','I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    'Load at least one sensor.',...
+                    'Data required');
             elseif isempty(obj.getProject().groupings)
                 allowed = false;
-                errordlg('Make at least one grouping.','I''m afraid I can''t do that.');
+                uialert(obj.main.hFigure,...
+                    'Create at least one grouping.',...
+                    'Grouping required');
             elseif isempty(obj.getProject().mergedFeatureData)
-                q = questdlg('Must compute features first. Compute features now?','','Yes','No','Yes');
-                allowed = false;
-                if strcmp(q,'Yes')
-                    try
-                        allowed = obj.computeFeatures();
-                        obj.currentModel.reset();
-                        obj.makeModelTabs()
-                    catch ME
-                        errordlg(sprintf('Error during feature computation.\n%s', ME.message),'I''m afraid I can''t do that.');
-                    end
+                selection = uiconfirm(obj.main.hFigure,...
+                                {'No features available.','Features must be computed first.','Compute features now?'},...
+                                'Confirm feature computation','Icon','warning',...
+                                'Options',{'Yes, compute now','No, cancel'},...
+                                'DefaultOption',2,'CancelOption',2);
+                switch selection
+                    case 'No, cancel'
+                        allowed = false;
+                        return
+                end
+                try
+                    allowed = obj.computeFeatures();
+                    obj.currentModel.reset();
+                    obj.makeModelTabs()
+                catch ME
+                    uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation error');
+                end
+            else
+                selection = uiconfirm(obj.main.hFigure,...
+                                {'Merged features available.','Compute features again or use existing features?','Note: Features should be computed again after any significant changes!'},...
+                                'Confirm feature (re-)computation','Icon','warning',...
+                                'Options',{'Yes, compute now','No, keep existing features','Cancel'},...
+                                'DefaultOption',1,'CancelOption',3);
+                switch selection
+                    case 'No, keep existing features'
+                        allowed = true;
+                        return
+                    case 'Cancel'
+                        allowed = false;
+                        return
+                end
+                try
+                    allowed = obj.computeFeatures();
+                    obj.currentModel.reset();
+                    obj.makeModelTabs()
+                catch ME
+                    uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation error');
                 end
             end
         end
         
         function onOpen(obj)
             obj.updatePropGrid();
-            obj.setDropdown.setItems(cellstr(obj.getProject().models.getCaption()));
-            obj.setDropdown.setSelectedItem(char(obj.currentModel.getCaption()));
+            
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().models.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentModel.getCaption();
+            
+%             obj.setDropdown.setItems(cellstr(obj.getProject().models.getCaption()));
+%             obj.setDropdown.setSelectedItem(char(obj.currentModel.getCaption()));
         end
         
         function onClose(obj)
@@ -485,7 +862,10 @@ classdef Model < Gui.Modules.GuiModule
             % module, which makes sure that the features are always up to
             % date, but is quite inefficient
             % TODO
-            obj.getProject().mergedFeatureData = Data.empty;
+            % Edit: was removed/commented, as there is a new dialog asking
+            % if features should be calculated even though there already
+            % are mergedFeatures.
+%             obj.getProject().mergedFeatureData = Data.empty;
         end     
     end
 end

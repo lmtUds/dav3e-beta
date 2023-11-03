@@ -47,6 +47,20 @@ classdef Model < Descriptions
         datas
         
         trained = false;
+
+        fullModelTrainingError
+%         fullModelValidationError
+        fullModelTestingError
+        fullModelTrainingErrorStd
+%         fullModelValidationErrorStd
+        fullModelTestingErrorStd
+
+        fullModelTrainingCorr
+%         fullModelValidationCorr
+        fullModelTestingCorr
+        fullModelTrainingCorrStd
+%         fullModelValidationCorrStd
+        fullModelTestingCorrStd
     end
     
     properties(Hidden)
@@ -87,10 +101,6 @@ classdef Model < Descriptions
             obj.testingCorrStds = [];
             
             obj.trainedIndexSet = [];
-        end
-
-        function pgf = makePropGridFields(obj)
-            pgf = obj.processingChain.makePropGridFields();
         end
         
         function addToChain(obj,block)
@@ -203,6 +213,23 @@ classdef Model < Descriptions
             traindata.target = b.revertChain(traindata.target);
             obj.fullModelData = traindata;
             obj.trained = true;
+
+            fullModelErrors = traindata.computeErrors();
+            fullModelCorrs = traindata.computePearsonCorrelation();
+        
+            obj.fullModelTrainingError = [fullModelErrors.training];
+%             obj.fullModelValidationError = [fullModelErrors.validation];
+            obj.fullModelTestingError = [fullModelErrors.testing];
+            obj.fullModelTrainingErrorStd = [fullModelErrors.trainingStd];
+%             obj.fullModelValidationErrorStd = [fullModelErrors.validationStd];
+            obj.fullModelTestingErrorStd = [fullModelErrors.testingStd];
+
+            obj.fullModelTrainingCorr = [fullModelCorrs.training];
+%             obj.fullModelValidationCorr = [fullModelCorrs.validation];
+            obj.fullModelTestingCorr = [fullModelCorrs.testing];
+            obj.fullModelTrainingCorrStd = [fullModelCorrs.trainingStd];
+%             obj.fullModelValidationCorrStd = [fullModelCorrs.validationStd];
+            obj.fullModelTestingCorrStd = [fullModelCorrs.testingStd];
         end
         
         function data = getValidatedDataForTrainedIndexSet(obj)
@@ -331,21 +358,21 @@ classdef Model < Descriptions
             % So, for now, we remove all handles here and put them back in
             % when the parfor is finished
             % TODO: better concept...
-            parameters = Parameter.empty;
-            pgfs = PropGridField('',0); pgfs = pgfs(false);
-            changeCallbacks = {};
-            for i = 1:numel(chain.blocks)
-                params = chain.blocks(i).parameters;
-                for j = 1:numel(params)
-                    if ~isempty(params(j).propGridField)
-                        parameters(end+1) = params(j);
-                        pgfs(end+1) = params(j).propGridField;
-                        changeCallbacks{end+1} = params(j).onChangedCallback;
-                        params(j).propGridField = [];
-                        params(j).onChangedCallback = [];
-                    end
-                end
-            end            
+%             parameters = Parameter.empty;
+%             pgfs = PropGridField('',0); pgfs = pgfs(false);
+%             changeCallbacks = {};
+%             for i = 1:numel(chain.blocks)
+%                 params = chain.blocks(i).parameters;
+%                 for j = 1:numel(params)
+%                     if ~isempty(params(j).propGridField)
+%                         parameters(end+1) = params(j);
+%                         pgfs(end+1) = params(j).propGridField;
+%                         changeCallbacks{end+1} = params(j).onChangedCallback;
+%                         params(j).propGridField = [];
+%                         params(j).onChangedCallback = [];
+%                     end
+%                 end
+%             end            
             
             % the actual cross-validation
             tic
@@ -357,11 +384,11 @@ classdef Model < Descriptions
             end
             toc
             
-            % put the PropGridField handles back (see above)
-            for i = 1:numel(parameters)
-                parameters(i).propGridField = pgfs(i);
-                parameters(i).onChangedCallback = changeCallbacks{i};
-            end
+%             % put the PropGridField handles back (see above)
+%             for i = 1:numel(parameters)
+%                 parameters(i).propGridField = pgfs(i);
+%                 parameters(i).onChangedCallback = changeCallbacks{i};
+%             end
             
             % compute errors
             for i = 1:numel(d)

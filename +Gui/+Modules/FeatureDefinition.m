@@ -25,6 +25,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
 %         currentFeatureDefinitionSet = FeatureDefinitionSet.empty;
         currentFeatureDefinition
         ranges = GraphicsRange.empty;
+        selectedRanges
         
         cycleLines
         previewLines
@@ -58,7 +59,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function reset(obj)
             reset@Gui.Modules.GuiModule(obj);
-            obj.rangeTable.clear();
+%             obj.rangeTable.clear();
+            obj.rangeTable.Data = {};
+            obj.rangeTable.UserData = {};
             obj.propGrid.clear();
             delete(obj.ranges);
             obj.ranges = GraphicsRange.empty;
@@ -83,34 +86,40 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         
         function onClickMenuPlotFeaturesOverTime(obj)
             if isempty(obj.getProject().mergedFeatureData)
-                errordlg('No features to plot.');
+                uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
-            figure; axes;
             d = obj.getProject().mergedFeatureData;
             data = d.data;
-%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
             offsets = (1:size(data,1))';
-            plot(repmat(offsets,1,size(data,2)),data);
-            l = legend(d.featureCaptions,'Interpreter','none');
-            l.ItemHitFcn = @obj.legendCallback;
-            xlabel('time / s'); ylabel('feature / a.u.');
+%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
+            
+            popOut = figure('Visible','off');
+            ax = axes(popOut);
+            plot(ax,repmat(offsets,1,size(data,2)),data);
+            legend(ax,d.featureCaptions,'Interpreter','none',...
+                'ItemHitFcn',@obj.legendCallback);
+            xlabel(ax,'time / s'); ylabel(ax,'feature / a.u.');
+            popOut.Visible = 'on';
         end
         
         function onClickMenuPlotFeaturesOverTimeStandardized(obj)
             if isempty(obj.getProject().mergedFeatureData)
-                errordlg('No features to plot.');
+                uialert(obj.main.hFigure,'No Features to plot.','Features required');
                 return
             end
-            figure; axes;
             d = obj.getProject().mergedFeatureData;
             data = (d.data - mean(d.data)) ./ std(d.data);
-%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
             offsets = (1:size(data,1))';
-            plot(repmat(offsets,1,size(data,2)),data);
-            l = legend(d.featureCaptions,'Interpreter','none');
-            l.ItemHitFcn = @obj.legendCallback;
-            xlabel('time / s'); ylabel('feature / a.u.');
+%             [data,offsets] = obj.insertNanAtOffsetSteps(data,d.offsets);
+            
+            popOut = figure('Visible','off');
+            ax = axes(popOut);
+            plot(ax,repmat(offsets,1,size(data,2)),data);
+            legend(ax,d.featureCaptions,'Interpreter','none',...
+                'ItemHitFcn',@obj.legendCallback);
+            xlabel(ax,'time / s'); ylabel(ax,'feature / a.u.');
+            popOut.Visible = 'on';
         end
         
         function legendCallback(obj,src,evt)
@@ -123,18 +132,23 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                
         function onClickMenuComputeFeatures(obj)
             success = true;
-            sb = statusbar(obj.main.hFigure, 'Computing features...');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',true);
+            prog = uiprogressdlg(obj.main.hFigure,'Title','Computing features',...
+                'Indeterminate','on');
+            drawnow
             try
                 features = obj.getProject().computeFeatures();
             catch ME
-                errordlg(sprintf('Could not compute features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                        sprintf('Could not compute features.\n %s', ME.message),...
+                        'Feature computation failed');
                 success = false;
             end
             try
                 features = obj.getProject().mergeFeatures();
             catch ME
-                errordlg(sprintf('Could not merge features.\n%s', ME.message),'I''m afraid I can''t do that.','modal');
+                uialert(obj.main.hFigure,...
+                        sprintf('Could not merge features.\n %s', ME.message),...
+                        'Feature merge failed');
                 disp('''Could not merge features'' help (most obvious cases):');
                 disp('''Cluster collision'' means that you have to check the timing (offset and length) of your clusters, as there are unexpected overlaps of clusters in one track.');
                 disp('''Index in position 1 exceeds array bounds'' might either originate from a mislabeled track, which leads to unintended parallel tracks and deletion of clusters during merging process (no clusters in both tracks at the same time).');
@@ -144,70 +158,153 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 success = false;
             end
 %             features.featureCaptions'
-            sb = statusbar(obj.main.hFigure, 'Ready.');
-            set(sb.ProgressBar, 'Visible',false, 'Indeterminate',false);
+            close(prog)
         end
-        
-        function [panel,menu] = makeLayout(obj)
+                
+        function [moduleLayout,moduleMenu] = makeLayout(obj,uiParent,mainFigure)
             %%
-            panel = Gui.Modules.Panel();
+            moduleLayout = uigridlayout(uiParent,[2 2],...
+                'Visible','off',...
+                'Padding',[0 0 0 0],...
+                'ColumnWidth',{'1x','4x'},...
+                'RowHeight',{'1x','1x'},...
+                'RowSpacing',7);
             
-            menu = uimenu('Label','FeatureDefinition');
-            uimenu(menu,'Label','plot features over time', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
-            uimenu(menu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
-            uimenu(menu,'Label','compute features', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
-            uimenu(menu,'Label','copy all ranges',getMenuCallbackName(),@(varargin)obj.copyRangesCallback);
-            uimenu(menu,'Label','paste all ranges',getMenuCallbackName(),@(varargin)obj.pasteRangesCallback);
+            moduleMenu = uimenu(mainFigure,'Label','FeatureDefinition');
+            uimenu(moduleMenu,'Label','copy all ranges',getMenuCallbackName(),@(varargin)obj.copyRangesCallback);
+            uimenu(moduleMenu,'Label','paste all ranges',getMenuCallbackName(),@(varargin)obj.pasteRangesCallback);
+            uimenu(moduleMenu,'Label','compute features','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickMenuComputeFeatures);
+            uimenu(moduleMenu,'Label','plot features over time','Separator','on', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTime);
+            uimenu(moduleMenu,'Label','plot features over time (standardized)', getMenuCallbackName(),@(varargin)obj.onClickMenuPlotFeaturesOverTimeStandardized);
+                        
+            defsGrid = uigridlayout(moduleLayout, [4 4],...
+                'ColumnWidth',{'2x','2x','1x','1x'},...
+                'RowHeight',{'fit','fit','8x','fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            defsGrid.Layout.Row = 1;
+            defsGrid.Layout.Column = 1;
             
-            layout = uiextras.HBox('Parent',panel);
-            leftLayout = uiextras.VBox('Parent',layout);
-            axesLayout = uiextras.VBox('Parent',layout, 'Spacing',5, 'Padding',5);
-            
-            defsPanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature definitions', 'Padding',5);
-            tablePanel = Gui.Modules.Panel('Parent',leftLayout, 'Title','feature ranges', 'Padding',5);
-            
-            propGridLayout = uiextras.VBox('Parent',defsPanel);
+            defsLabel = uilabel(defsGrid,...
+                'Text','Feature definitions',...
+                'FontWeight','bold');
+            defsLabel.Layout.Row = 1;
+            defsLabel.Layout.Column = [1 4];
             
             % feature definition set dropdown
-            obj.setDropdown = Gui.EditableDropdown(propGridLayout);
-            obj.setDropdown.AppendClickCallback = @obj.dropdownNewFeatureDefinitionSet;
-            obj.setDropdown.RemoveClickCallback = @obj.dropdownRemoveFeatureDefinitionSet;
-            obj.setDropdown.EditCallback = @obj.dropdownFeatureDefinitionSetRename;
-            obj.setDropdown.SelectionChangedCallback = @obj.dropdownFeatureDefinitionSetChange;
+            defsDropdown = uidropdown(defsGrid,...
+                'Editable','on',...
+                'ValueChangedFcn',@(src,event) obj.dropdownFeatureDefinitionSetCallback(src,event));
+            defsDropdown.Layout.Row = 2;
+            defsDropdown.Layout.Column = [1 2];
             
-            % prop grid
-            obj.propGrid = PropGrid(propGridLayout);
-            obj.propGrid.setShowToolbar(false);
-            propGridControlsLayout = uiextras.HBox('Parent',propGridLayout);
-            uicontrol(propGridControlsLayout,'String','add', 'Callback',@(h,e)obj.addFeatureDefinition);
-            uicontrol(propGridControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeFeatureDefinition);
-            uicontrol(propGridControlsLayout,'String','/\');
-            uicontrol(propGridControlsLayout,'String','\/');
-            propGridLayout.Sizes = [30,-1,20];
+            obj.setDropdown = defsDropdown;
+            
+            defsAdd = uibutton(defsGrid,...
+                'Text','+',...
+                'ButtonPushedFcn',@(src,event) obj.dropdownNewFeatureDefinitionSet(src,event,defsDropdown));
+            defsAdd.Layout.Row = 2;
+            defsAdd.Layout.Column = 3;
+            
+            defsRem = uibutton(defsGrid,...
+                'Text','-',...
+                'ButtonPushedFcn',@(src,event) obj.dropdownRemoveFeatureDefinitionSet(src,event,defsDropdown));
+            defsRem.Layout.Row = 2;
+            defsRem.Layout.Column = 4;
+            
+            propGrid = Gui.uiParameterBlockGrid('Parent',defsGrid,...'ValueChangedFcn',@(src,event) obj.onParameterChangedCallback(src,event),...
+                'SelectionChangedFcn',@(src,event) obj.propGridFieldClickedCallback(src,event),...
+                'SizeChangedFcn',@(src,event) obj.sizechangedCallback(src,event));
+            propGrid.Layout.Row = 3;
+            propGrid.Layout.Column = [1 4];
+            
+            obj.propGrid = propGrid;
+            
+            defsElementAdd = uibutton(defsGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(src,event) obj.addFeatureDefinition);
+            defsElementAdd.Layout.Row = 4;
+            defsElementAdd.Layout.Column = [1 2];
+            
+            defsElementDel = uibutton(defsGrid,...
+                'Text','Delete...',...
+                'ButtonPushedFcn',@(src,event) obj.removeFeatureDefinition);
+            defsElementDel.Layout.Row = 4;
+            defsElementDel.Layout.Column = [3 4];
+            
+%             defsElementUp = uibutton(defsGrid,...
+%                 'Text','/\',...
+%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingUp);
+%             defsElementUp.Layout.Row = 4;
+%             defsElementUp.Layout.Column = 3;
+%             
+%             defsElementDwn = uibutton(defsGrid,...
+%                 'Text','\/',...
+%                 'ButtonPushedFcn',@(h,e)obj.movePreprocessingDown);
+%             defsElementDwn.Layout.Row = 4;
+%             defsElementDwn.Layout.Column = 4;
+                        
+            rangeGrid = uigridlayout(moduleLayout, [3 2],...
+                'ColumnWidth',{'2x','1x'},...
+                'RowHeight',{'fit','8x','fit'},...
+                'RowSpacing',4,...
+                'Padding',[4 4 4 4]);
+            rangeGrid.Layout.Row = 2;
+            rangeGrid.Layout.Column = 1;
+            
+            rangeLabel = uilabel(rangeGrid,...
+                'Text','Feature ranges',...
+                'FontWeight','bold');
+            rangeLabel.Layout.Row = 1;
+            rangeLabel.Layout.Column = [1 2];
+            
+            rangeTable = uitable(rangeGrid,...
+                'CellSelectionCallback',@(src,event) obj.rangeTableSelectionCallback(src,event),...
+                'CellEditCallback',@(src,event) obj.rangeTableDataChangeCallback(src,event));
+            rangeTable.Layout.Row = 2;
+            rangeTable.Layout.Column = [1 2];
+            
+            obj.rangeTable = rangeTable;
+            
+            rangeAdd = uibutton(rangeGrid,...
+                'Text','Add',...
+                'ButtonPushedFcn',@(h,e)obj.addRange);
+            rangeAdd.Layout.Row = 3;
+            rangeAdd.Layout.Column = 1;
+            
+            rangeDel = uibutton(rangeGrid,...
+                'Text','Delete',...
+                'ButtonPushedFcn',@(src,event) obj.removeRange(src,event));
+            rangeDel.Layout.Row = 3;
+            rangeDel.Layout.Column = 2;
+            
+            previewAx = uiaxes(moduleLayout);
+            previewAx.Title.String = 'Feature Preview';
+            previewAx.XLabel.String = 'Time / s';
+            previewAx.YLabel.String = 'Features / a.u.';
+            previewAx.Layout.Row = 1;
+            previewAx.Layout.Column = 2;
 
-            obj.hAxPreview = axes(axesLayout); title('feature preview');
-            xlabel('time / s'); ylabel('features / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on, 
-            set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
+            obj.hAxPreview = previewAx;
             
-            obj.hAxCycle = axes(axesLayout); title('cycles with grouping colors');
-            xlabel('time / s'); ylabel('data / a.u.');% yyaxis right, ylabel('raw data / a.u.');
-            box on
-            set(gca,'LooseInset',get(gca,'TightInset'))
+            cycleAx = uiaxes(moduleLayout);
+            cycleAx.Title.String = 'Cycles with grouping colors';
+            cycleAx.ButtonDownFcn = @obj.axesButtonDownCallback;
+            cycleAx.XLabel.String = 'Time / s';
+            cycleAx.YLabel.String = 'Data / a.u.';
+            cycleAx.Layout.Row = 2;
+            cycleAx.Layout.Column = 2;
             
-            obj.hAxCycle.ButtonDownFcn = @obj.axesButtonDownCallback;
-
-            tableLayout = uiextras.VBox('Parent',tablePanel);
-            obj.rangeTable = JavaTable(tableLayout);
-            tableControlsLayout = uiextras.HBox('Parent',tableLayout);
-            uicontrol(tableControlsLayout,'String','add', 'Callback',@(h,e)obj.addRange);
-            uicontrol(tableControlsLayout,'String','delete', 'Callback',@(h,e)obj.removeRange);
-            tableLayout.Sizes = [-1,20];
-            
-            layout.Sizes = [-1,-3];
-            leftLayout.Sizes = [-1,-1];
+            obj.hAxCycle = cycleAx;
         end
-
+        
+        function sizechangedCallback(obj, src, event)
+            obj.propGrid.panel.Visible = 'off';
+            pos_parent = obj.propGrid.Position;
+            obj.propGrid.panel.Position = pos_parent - [0,25,9,12]; %values possibly subject to change 
+            obj.propGrid.panel.Visible = 'on';                     % depending on screen resolution?
+        end
+        
         function copyRangesCallback(obj)
             obj.copiedRangeInfo = obj.ranges.getObject().toStruct();
         end
@@ -254,8 +351,9 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             if nargin < 2
                 fe = FeatureDefinitionSet.getAvailableMethods(true);
                 s = keys(fe);
-                [sel,ok] = listdlg('ListString',s);
+                [sel,ok] = Gui.Dialogs.Select('ListItems',s);
                 if ~ok
+                    fds = FeatureDefinition.empty;
                     return
                 end
             else
@@ -264,26 +362,31 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             fds = FeatureDefinition.empty;
             for i = 1:numel(sel)
-                fcn = fe(s{sel(i)});
+                fcn = fe(sel{i});
                 fd = FeatureDefinition(fcn);
                 obj.currentFeatureDefinitionSet.addFeatureDefinition(fd);
                 fds(end+1) = fd;
             end
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
             obj.changeFeatureDefinition(fds(end));
         end
         
         function removeFeatureDefinition(obj,fd)
             if nargin < 2
                 fds = obj.currentFeatureDefinitionSet.getFeatureDefinitions();
-                [sel,ok] = listdlg('ListString',fds.getCaption());
+                [sel,ok] = Gui.Dialogs.Select('ListItems',fds.getCaption(),...
+                    'MultiSelect',true);
                 if ~ok
                     return
                 end
-                fd = fds(sel);
+                fd = fds(ismember(fds.getCaption(),sel));
             end
             obj.currentFeatureDefinitionSet.removeFeatureDefinition(fd);
             obj.deleteRangeDrawings();
@@ -298,17 +401,29 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             end
             
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
             [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
         end
         
         function handleFeatureDefinitionSetChange(obj)
             fds = obj.currentFeatureDefinitionSet;
             obj.propGrid.clear();
-            pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
-            obj.propGrid.addProperty(pgf);
-            [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
+%             pgf = obj.currentFeatureDefinitionSet.makePropGridFields();
+%             obj.propGrid.addProperty(pgf);
+            blocks = [];
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            for i = 1:size(fdSetDefs,2)
+               blocks = [blocks fdSetDefs(i).dataProcessingBlock]; 
+            end
+            obj.propGrid.addBlocks(blocks);
+%             [pgf.onMouseClickedCallback] = deal(@obj.propGridFieldClickedCallback);
             fdefs = fds.getFeatureDefinitions();
             if ~isempty(fdefs)
                 obj.changeFeatureDefinition(fdefs(1));
@@ -317,18 +432,18 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             end
         end
         
-        function dropdownNewFeatureDefinitionSet(obj,h)
+        function dropdownNewFeatureDefinitionSet(obj,src,event,dropdown)
             fds = obj.getProject().addFeatureDefinitionSet();
             obj.currentFeatureDefinitionSet = fds;
-            h.appendItem(fds.getCaption());
-            h.selectLastItem();
+            dropdown.Items{end+1} = char(fds.getCaption());
+            dropdown.Value = char(fds.getCaption());
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownRemoveFeatureDefinitionSet(obj,h)
-            idx = h.getSelectedIndex();
+        function dropdownRemoveFeatureDefinitionSet(obj,src,event,dropdown)
             fdss = obj.getProject().poolFeatureDefinitionSets;
+            idx = arrayfun(@(set) strcmp(set.caption,dropdown.Value),fdss);
             fds = fdss(idx);
             sensorsWithFds = obj.getProject().checkForSensorsWithFeatureDefinitionSet(fds);
             
@@ -339,21 +454,29 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 end
                 choices{end+1} = 'Replace with new';
                 choices{end+1} = 'Cancel';
-                answer = questdlg('The feature definition set is used in other sensors. What would you like to do?', ...
-                    'Conflict', ...
-                    choices{:},'Cancel');
+                
+                answer = uiconfirm(obj.main.hFigure,...
+                    ['The feature definition set "' char(fds.caption) '" is used in other sensors. What would you like to do?'],...
+                    'Feature Definition set usage conflict',...
+                    'Icon','warning',...
+                    'Options',choices,...
+                    'DefaultOption',numel(choices),'CancelOption',numel(choices));
+                
                 switch answer
                     case 'Choose a replacement'
                         fdss(idx) = [];
-                        [sel,ok] = listdlg('ListString',fdss.getCaption(), 'SelectionMode','single');
+                        [sel,ok] = Gui.Dialogs.Select('MultiSelect',false,...
+                            'ListItems',fdss.getCaption(),...
+                            'Message','Please select a replacement feature definition set.');
                         if ~ok
                             return
                         end
-                        obj.getProject().replaceFeatureDefinitionSetInSensors(fds,fdss(sel));
-                        newFds = fdss(sel);
+                        selInd = ismember(fdss.getCaption,sel);
+                        obj.getProject().replaceFeatureDefinitionSetInSensors(fds,fdss(selInd));
+                        newFds = fdss(selInd);
                     case 'Replace with new'
                         newFds = obj.getProject().addFeatureDefinitionSet();
-                        h.appendItem(newFds.getCaption());
+                        dropdown.Items = [dropdown.Items char(newFds.getCaption())];
                         obj.getProject().replaceFeatureDefinitionSetInSensors(fds,newFds);
                     case 'Cancel'
                         return
@@ -363,12 +486,13 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 % so we have to add a new one
                 if numel(obj.getProject().poolFeatureDefinitionSets) == 1
                     newFds = obj.getProject().addFeatureDefinitionSet();
-                    h.appendItem(newFds.getCaption());
-                else
-                    if idx == 1
+                    dropdown.Items = [dropdown.Items char(newFds.getCaption())];
+                else %select a FDS we already have
+                    if idx(1)   %the first logical index had the true
                         newFds = obj.getProject().poolFeatureDefinitionSets(2);
                     else
-                        newFds = obj.getProject().poolFeatureDefinitionSets(idx-1);
+                        %shift the logical index one position to the front (left)
+                        newFds = obj.getProject().poolFeatureDefinitionSets(circshift(idx,-1));
                     end
                 end
             end
@@ -376,16 +500,34 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.currentFeatureDefinitionSet = newFds;
             obj.getProject().removeFeatureDefinitionSet(fds);
                 
-            h.removeItemAt(idx);
-            h.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+            dropdown.Items = dropdown.Items(~idx);  %drop the old option
+            dropdown.Value = char(newFds.caption);  %set the new one
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
         
-        function dropdownFeatureDefinitionSetRename(obj,h,newName,index)
+        function dropdownFeatureDefinitionSetCallback(obj,src,event)
+            if event.Edited
+                index = cellfun(@(x) strcmp(x,event.PreviousValue), src.Items);
+                newName = matlab.lang.makeUniqueStrings(event.Value,...
+                    cellstr(obj.getProject().poolFeatureDefinitionSets.getCaption()));
+                obj.getProject().poolFeatureDefinitionSets(index).setCaption(newName);
+                src.Items{index} = newName;
+                obj.handleFeatureDefinitionSetChange();
+                obj.main.populateSensorSetTable();
+            else 
+                index = cellfun(@(x) strcmp(x,event.Value), src.Items);
+                obj.currentFeatureDefinitionSet = ...
+                    obj.getProject().poolFeatureDefinitionSets(index);
+                obj.handleFeatureDefinitionSetChange();
+                obj.main.populateSensorSetTable();
+            end
+        end
+        
+        function dropdownFeatureDefinitionSetRename(obj,src,newName,index)
             newName = matlab.lang.makeUniqueStrings(newName,obj.getProject().poolFeatureDefinitionSets.getCaption());
             obj.getProject().poolFeatureDefinitionSets(index).setCaption(newName);
-            h.renameItemAt(newName,h.getSelectedIndex());
+            src.renameItemAt(newName,src.getSelectedIndex());
             obj.handleFeatureDefinitionSetChange();
             obj.main.populateSensorSetTable();
         end
@@ -416,9 +558,12 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             end
             fd = obj.currentFeatureDefinition;
             cc = obj.getProject().getCurrentCluster();
-            iPos = [pos pos+floor(cc.nCyclePoints/10)];
+            iPos = [pos pos+floor(cc.nCyclePoints/60)];
             if isempty(fd)
                 fd = obj.addFeatureDefinition();
+                if isempty(fd) %feature def. method dialog was canceled
+                    return
+                end
                 for i = 1:numel(fd)
                     r = cc.makeIndexRange(iPos);
                     fd(i).addRange(r);
@@ -436,18 +581,19 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.updateFeaturePreview();
         end
         
-        function removeRange(obj)
-            selectedRangeIDs = obj.rangeTable.jTable.getSelectedRows() + 1;
-            gObjects = {};
-            for i=1:numel(selectedRangeIDs)
-                selectedRangeID = selectedRangeIDs(i);
-                if selectedRangeID == 0
-                    return
-                end
-                gObjects{i} = obj.rangeTable.getRowObjectsAt(selectedRangeID);
-            end
-            for i=1:numel(gObjects)
-                deleteRangeCallback(obj,gObjects{i})
+        function removeRange(obj,src,event)
+%             selectedRangeIDs = obj.rangeTable.jTable.getSelectedRows() + 1;
+%             gObjects = {};
+            rangeObjects = obj.rangeTable.UserData(obj.selectedRanges);
+%             for i=1:numel(selectedRangeIDs)
+%                 selectedRangeID = selectedRangeIDs(i);
+%                 if selectedRangeID == 0
+%                     return
+%                 end
+%                 gObjects{i} = obj.rangeTable.getRowObjectsAt(selectedRangeID);
+%             end
+            for i=1:numel(rangeObjects)
+                obj.deleteRangeCallback(rangeObjects(i))
             end
         end
 
@@ -461,8 +607,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             obj.updateFeaturePreview();
         end        
         
-        function propGridFieldClickedCallback(obj,pgf)
-            obj.changeFeatureDefinition(pgf.getMatlabObj());
+        function propGridFieldClickedCallback(obj,src,event)
+            fdSetDefs = obj.currentFeatureDefinitionSet.featureDefinitions;
+            blk = src.getSelectedBlock;
+            idx = arrayfun(@(fDef) strcmp(fDef.caption,blk.caption),fdSetDefs);
+            obj.changeFeatureDefinition(fdSetDefs(idx));
         end
         
         function changeFeatureDefinition(obj,fd)
@@ -491,6 +640,11 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             [ranges.onDragStopCallback] = deal(@obj.cycleRangeDragStopCallback);
             [ranges.onDeleteRequestCallback] = deal(@obj.deleteRangeCallback);
             obj.ranges = [obj.ranges, ranges];
+            if isempty(obj.ranges)
+                obj.selectedRanges = [];
+            else
+                obj.selectedRanges = 1;
+            end
         end
         
         function deleteRangeDrawings(obj)
@@ -506,10 +660,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             p = obj.getProject();
             if isempty(p) || isempty(p.getCurrentCluster()) || isempty(p.getCurrentSensor())
                 allowed = false;
-                errordlg('Load at least one sensor.');
+                uialert(obj.main.hFigure,'Load at least one sensor.','Data required');
             elseif isempty(obj.getProject().groupings)
                 allowed = false;
-                errordlg('Make at least one grouping.');
+                uialert(obj.main.hFigure,'Define at least one grouping.','Grouping required');
             else
                 allowed = true;
             end
@@ -526,14 +680,29 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
             end
             
-            obj.setDropdown.setItems(obj.getProject().poolFeatureDefinitionSets.getCaption());
-            obj.setDropdown.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+            obj.setDropdown.Items = ...
+                cellfun(@(x) x,obj.getProject().poolFeatureDefinitionSets.getCaption(),...
+                'UniformOutput',false);
+            obj.setDropdown.Value = obj.currentFeatureDefinitionSet.getCaption();
             if obj.featureDefinitionSetHasChanged()
                 obj.handleFeatureDefinitionSetChange();
             end
             
+            % display the current grouping features are being computed for
+            tCyc = 'cycles with grouping colors';
+            tCyc = strcat(tCyc, {' of '''},...
+                obj.getProject.currentGrouping.caption, {''''});
+            obj.hAxCycle.Title.String = tCyc;
+            set(obj.hAxCycle.Title,'Interpreter','none');
+            
+            tPre = 'feature preview';
+            tPre = strcat(tPre, {' for '''},...
+                obj.getProject.currentGrouping.caption, {''''});
+            obj.hAxPreview.Title.String = tPre;
+            set(obj.hAxPreview.Title,'Interpreter','none');
+            
             obj.updateFeaturePreview();
-            set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
+%             set(gcf,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
         
         function onClose(obj)
@@ -619,7 +788,7 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
                 obj.ranges.updatePosition(newSensor);
                 obj.ranges.setYLimits(ylimits);
             else
-                obj.setDropdown.setSelectedItem(obj.currentFeatureDefinitionSet.getCaption());
+                obj.setDropdown.Value = obj.currentFeatureDefinitionSet.getCaption();
 %                 obj.handleFeatureDefinitionSetChange();
 %                 fds = newSensor.featureDefinitionSet.getFeatureDefinitions();
 %                 if numel(fds) > 0
@@ -656,37 +825,39 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function populateRangeTable(obj,gRanges)
             %%
             % write data to the table, style and configure it, activate callbacks
+            t = obj.rangeTable;
             if isempty(gRanges)
-                data = {};
+                t.Data = {};
+                return
             else
                 captions = cellstr(gRanges.getRange().getCaption()');
                 positions = num2cell(gRanges.getPosition());
-    %             colors = num2cell(gRanges.getRange().getJavaColor());
                 divs = num2cell(vertcat(gRanges.getRange().subRangeNum));
                 forms = {gRanges.getRange().subRangeForm}';
-                data = [captions, positions, divs, forms];  %colors];
+                data = [captions, positions, divs, forms];
             end
 
-            t = obj.rangeTable;
+            t.Data = data;
+            t.UserData= gRanges;
             
-            t.setData(data,{'caption','begin','end','divs','form'});
-            t.setRowObjects(gRanges);
-            t.setColumnClasses({'str','double','double','int',{'lin','log','invlog'}});
-            t.setColumnsEditable([true true true true true true]);
-            t.setSortingEnabled(false)
-            t.setFilteringEnabled(false);
-            t.setColumnReorderingAllowed(false);
-            t.jTable.sortColumn(2);
-            t.jTable.setAutoResort(false);
-            obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
-            obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
+            t.ColumnName = {'caption','begin','end','divs','form'};
+            t.ColumnFormat = {'char','numeric','numeric','numeric',{'lin','log','invlog'}};
+            t.ColumnEditable = [true true true true true true];
+            ind = tableColSort(t,2,'a');
+            
+%             obj.rangeTable.onDataChangedCallback = @obj.rangeTableDataChangeCallback;
+%             obj.rangeTable.onMouseClickedCallback = @obj.rangeTableMouseClickedCallback;
         end
         
         function updateFeaturePreview(obj)
             fd = obj.currentFeatureDefinition;
             if isempty(fd)
-                delete(obj.previewLines);
-                obj.previewLines = [];
+                %instead of deleting the lines, just make them invisible
+                for line = 1:numel(obj.previewLines)
+                    obj.previewLines(line).Visible = 0;
+                end
+%                 delete(obj.previewLines);
+%                 obj.previewLines = [];
 %                 cla(obj.hAxPreview);
                 return
             end
@@ -710,12 +881,14 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             
             % get rid of feature offset for graphing
             for i = 1:size(y,2)
-                y(:,i) = y(:,i) - nanmean(y(:,i));%zscore(y(:,i));
+                y(:,i) = y(:,i) - mean(y(:,i),'omitnan');%zscore(y(:,i));
             end
             
+            %set preview line data and make it visible
             for i = 1:numel(obj.previewLines)
                 obj.previewLines(i).XData = x;
                 obj.previewLines(i).YData = y(i,:);
+                obj.previewLines(i).Visible = 1;
             end
         end
         
@@ -726,10 +899,15 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
         function rangeDraggedCallback(obj,gRange)
             %%
             % update the position in the table when the point is dragged
-            row = obj.rangeTable.getRowObjectRow(gRange);
+%             row = obj.rangeTable.getRowObjectRow(gRange);
+            row = ismember(obj.rangeTable.UserData,gRange);
             pos = gRange.getPosition();
-            obj.rangeTable.setValue(pos(1),row,2);
-            obj.rangeTable.setValue(pos(2),row,3);
+            obj.rangeTable.Data{row,2} = pos(1);
+            obj.rangeTable.Data{row,3} = pos(2);
+            tableColSort(obj.rangeTable,2,'a');
+%             pos = gRange.getPosition();
+%             obj.rangeTable.setValue(pos(1),row,2);
+%             obj.rangeTable.setValue(pos(2),row,3);
         end
         
         function cycleRangeDragStartCallback(obj,gObj)
@@ -737,9 +915,10 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % disable table callbacks (to omit "wrong" data changed events),
             % move the current selection to the corresponding row, and make
             % the corresponding cycle line bold
-            obj.rangeTable.setCallbacksActive(false);
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+            obj.rangeTable.Enable = 'off';
+%             obj.rangeTable.setCallbacksActive(false);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
         end
         
         function cycleRangeDragStopCallback(obj,gObj)
@@ -748,37 +927,47 @@ classdef FeatureDefinition < Gui.Modules.GuiModule
             % messed up, probably due to dynamic sorting in the table?),
             % set cycle line width back to normal
             pause(0.01); % to make sure all callbacks have been processed
-            objRow = obj.rangeTable.getRowObjectRow(gObj);
-            obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
-            obj.rangeTable.setCallbacksActive(true);
+%             objRow = obj.rangeTable.getRowObjectRow(gObj);
+%             obj.rangeTable.jTable.getSelectionModel().setSelectionInterval(objRow-1,objRow-1);
+%             obj.rangeTable.setCallbacksActive(true);
+            tableColSort(obj.rangeTable,2,'a');
+            obj.rangeTable.Enable = 'on';
+            obj.updateFeaturePreview();
         end
-        
-        function rangeTableDataChangeCallback(obj,rc,v)
+        function rangeTableSelectionCallback(obj,src,event)
+            obj.selectedRanges = unique(event.Indices(:,1));
+            if isempty(event.Indices)
+                return
+            end
+            row = event.Indices(1);
+            removeStyle(obj.rangeTable);
+            style = uistyle("BackgroundColor",[221,240,255]./256);
+            addStyle(src,style,"Row",row);
+        end
+        function rangeTableDataChangeCallback(obj,src,event)
             %%
             % write changes from the table to the point object
-            for i = 1:size(rc,1)
-                o = obj.rangeTable.getRowObjectsAt(rc(i,1));
-                switch rc(i,2)
-                    case 1
-                        o.getObject().setCaption(v{i});
-                    case 2
-                        o.setPosition([v{i} nan]);
-                    case 3
-                        o.setPosition([nan v{i}]);
-                    case 4
-                        o.getObject().setSubRangeNum(v{i});
-                        o.updateSubRanges();
-                        obj.updateFeaturePreview();
-                    case 5
-                        o.getObject().setSubRangeForm(v{i});
-                        o.updateSubRanges();
-                        obj.updateFeaturePreview();
-                end
-                pos = o.getPosition();
-                obj.rangeTable.setValue(pos(1),rc(i,1),2);
-                obj.rangeTable.setValue(pos(2),rc(i,1),3);
-                obj.rangeTable.jTable.sortColumn(2);
+            row = event.Indices(1);
+            col = event.Indices(2);
+            fRange = src.UserData(row);
+            switch col
+                case 1
+                    fRange.getObject().setCaption(event.EditData);
+                case 2
+                    fRange.setPosition([event.NewData nan]);
+                case 3
+                    fRange.setPosition([nan event.NewData]);
+                case 4
+                    fRange.getObject().setSubRangeNum(event.NewData);
+                    fRange.updateSubRanges();
+                    obj.updateFeaturePreview();
+                case 5
+                    fRange.getObject().setSubRangeForm(event.NewData);
+                    fRange.updateSubRanges();
+                    obj.updateFeaturePreview();
             end
+            ind = tableColSort(obj.rangeTable,2,'a');
+            obj.ranges = obj.ranges(ind);
         end
                 
         function rangeTableMouseClickedCallback(obj,visRC,actRC)

@@ -18,29 +18,13 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-f = figure;
-
-m = msgbox('Click on the plot, then OK.'); WinOnTop(m); uiwait(m);
-if hasLegend(gca,gcf)
-    newH = copyobj([gca legend],f);
-    newAx = newH(1); newL = newH(2);
-else
-    newAx = copyobj(gca,f);
+function extractAxVeryWide(MainFig)
+%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a very wide uiFigure
+    fig = uifigure('Name','Plot Extraction: Very wide','Visible','off');
+    fig.Position(3) = MainFig.CurrentAxes.Position(3) * 1.2;
+    grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
+    ax = copyobj(MainFig.CurrentAxes,grid);
+    ax.Layout.Row = 1; ax.Layout.Column = 1;
+    fig.Visible = 'on';
 end
 
-axes(newAx);
-hAx = gca;
-
-e = findall(hAx);
-set(e,'UserData',[]);
-
-function found = hasLegend(hAx,hFig)
-    lh = findall(hFig,'Type','Legend');
-    found = true;
-    for i = 1:numel(lh)
-        if hAx == lh(i).PlotChildren(1).Parent
-            return
-        end
-    end
-    found = false;
-end

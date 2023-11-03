@@ -18,22 +18,12 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function [panel,updateFun] = calibration(parent,project,dataprocessingblock)
-    [panel,elements] = makeGui(parent);
-    populateGui(elements,project,dataprocessingblock);
-    updateFun = @()populateGui(elements,project,dataprocessingblock);
+function updateFun = calibration(parent,project,dataprocessingblock)
+    populateGui(parent,project,dataprocessingblock);
+    updateFun = @()populateGui(parent,project,dataprocessingblock);
 end
 
-function [panel,elements] = makeGui(parent)
-    panel = uipanel(parent);
-    hAx = axes(panel); title('');
-    box on,
-    set(gca,'LooseInset',get(gca,'TightInset')) % https://undocumentedmatlab.com/blog/axes-looseinset-property
-    elements.hAx = hAx;
-end
-
-function populateGui(elements,project,dataprocessingblock)
-    cla(elements.hAx,'reset');
+function populateGui(parent,project,dataprocessingblock)
     dataParam = dataprocessingblock.parameters.getByCaption('projectedData');
     if isempty(dataParam) 
         return
@@ -84,7 +74,10 @@ function populateGui(elements,project,dataprocessingblock)
     maxLim = max([trainTarget;testTarget;trainData;testData]);
     limits = [minLim,maxLim] + [-1 1] * diff([minLim,maxLim]) * 0.1;
     
-    hold(elements.hAx,'on');
+    delete(parent.Children);
+    hAx = uiaxes(parent);
+    hAx.Layout.Column = 1; hAx.Layout.Row = 1;
+    hold(hAx,'on');
     
     red = [227,32,23] ./ 255;
     blue = [0,152,212] ./ 255;
@@ -96,7 +89,7 @@ function populateGui(elements,project,dataprocessingblock)
         for i = 1:numel(cats)
             t = trainTarget(trainGrouping==cats(i));
             d = trainData(trainGrouping==cats(i));
-            train = plot(elements.hAx,t,d,'ko');
+            train = plot(hAx,t,d,'ko');
             train.MarkerFaceColor = groupingColors(char(cats(i)));
             train.MarkerEdgeColor = groupingColors(char(cats(i))) / 2;
         end
@@ -105,7 +98,7 @@ function populateGui(elements,project,dataprocessingblock)
         for i = 1:numel(cats)
             t = testTarget(testGrouping==cats(i));
             d = testData(testGrouping==cats(i));
-            test = plot(elements.hAx,t,d,'k^');
+            test = plot(hAx,t,d,'k^');
             test.MarkerFaceColor = groupingColors(char(cats(i)));
             test.MarkerEdgeColor = 'k';%groupingColors(char(cats(i))) / 2;
             test.LineWidth = 1;
@@ -113,43 +106,43 @@ function populateGui(elements,project,dataprocessingblock)
     else
 %         train = plot(elements.hAx,trainTarget,trainData,'ko');
 %         test = plot(elements.hAx,testTarget,testData,'r^'); 
-        train = scatter(elements.hAx,trainTarget,trainData,25,'o');
+        train = scatter(hAx,trainTarget,trainData,25,'o');
         train.MarkerFaceColor = [1 1 1] * 0.7;
         train.MarkerEdgeColor = [1 1 1] * 0.7 ./ 1.5;
         train.MarkerFaceAlpha = .2;
         
         if ~isempty(testData)
-            test = scatter(elements.hAx,testTarget,testData,50,'^'); 
+            test = scatter(hAx,testTarget,testData,50,'^'); 
             test.MarkerFaceColor = blue; % [.2 .2 .9]
             test.MarkerEdgeColor = blue ./ 2; % [.2 .2 .9]
             test.MarkerFaceAlpha = .8;
-            rmseTest = plot(elements.hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
-            plot(elements.hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
+            rmseTest = plot(hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
+            plot(hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
         else
-            rmseTest = plot(elements.hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
-            plot(elements.hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
+            rmseTest = plot(hAx,limits,limits + testError,'-.','Color',blue); % [.2 .2 .9]
+            plot(hAx,limits,limits - testError,'-.','Color',blue); % [.2 .2 .9]
         end
     end
-    plot(elements.hAx,limits,limits,'-k');
-    rmseVal = plot(elements.hAx,limits,limits + valError,'--k');
-    plot(elements.hAx,limits,limits - valError,'--k');
-    xlim(elements.hAx,limits);
-    ylim(elements.hAx,limits);
-    box(elements.hAx,'on');
-    xlabel(elements.hAx,'setpoint');
-    ylabel(elements.hAx,'prediction');
-    axis(elements.hAx,'square');
+    plot(hAx,limits,limits,'-k');
+    rmseVal = plot(hAx,limits,limits + valError,'--k');
+    plot(hAx,limits,limits - valError,'--k');
+    xlim(hAx,limits);
+    ylim(hAx,limits);
+    box(hAx,'on');
+    xlabel(hAx,'setpoint');
+    ylabel(hAx,'prediction');
+    axis(hAx,'square');
     
     if ~isempty(test)
-        legend(elements.hAx,[train rmseVal test],...
+        legend(hAx,[train rmseVal test],...
             {'training data','RMSE (validation)','testing data'},...
             'Location','NorthWest');
     elseif ~isempty(rmseTest)
-        legend(elements.hAx,[train rmseVal rmseTest],...
+        legend(hAx,[train rmseVal rmseTest],...
             {'training data','RMSE (validation)','RMSE (testing)'},...
             'Location','NorthWest');
     else
-       legend(elements.hAx,[train rmseVal],...
+       legend(hAx,[train rmseVal],...
             {'training data','RMSE (validation)'},...
             'Location','NorthWest'); 
     end

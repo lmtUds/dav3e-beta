@@ -409,7 +409,7 @@ classdef Sensor < Descriptions
             o = Data(obj.getPPData(),obj.cluster.getCycleOffsets());
             o.groupingObj = grouping;
             o.groupings = grouping.getTargetVector(obj.cluster.getCycleRanges(),obj.cluster);
-            o.groupings
+%             o.groupings
         end
         
         function [featData,header] = computeFeatures(obj,cycles)

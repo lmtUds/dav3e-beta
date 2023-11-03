@@ -25,9 +25,9 @@ function info = annotate()
     info.description = '';
     info.parameters = [...
         Parameter('shortCaption','grouping', 'value','', 'enum',{''}),...
-        Parameter('shortCaption','groups', 'value',{''}, 'enum',{''}, 'selection','multiple')...
+        Parameter('shortCaption','groups', 'value',{''}, 'enum',{''}, 'selectionType','multiple')...
         Parameter('shortCaption','target', 'value','same as grouping', 'enum',{'same as grouping'}),...
-        Parameter('shortCaption','features', 'value',{''}, 'enum',{''}),...
+        Parameter('shortCaption','features', 'value',{''}, 'enum',{''}, 'selectionType','multiple'),...
         Parameter('shortCaption','nFeatures', 'value','', 'editable',false)...
         Parameter('shortCaption','nObservations', 'value','', 'editable',false)...
         ];
@@ -72,7 +72,6 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum;
             end
             params(i).onChangedCallback = @()updateParameters(params,project);
-            params(i).updatePropGridField();
             groups = params(i).getValue();
         elseif params(i).shortCaption == string('target')
             params(i).enum = ['same as grouping',cellstr(project.mergedFeatureData.featureCaptions)];
@@ -88,16 +87,15 @@ function updateParameters(params,project)
                 end
             end
             params(i).value = cellstr(selected);
-            params(i).updatePropGridField();
             features = params(i).getValue();
             % update all parameters when this one is changed
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('nFeatures')
-            params(i).value = sprintf('%d/%d',numel(features),numel(project.mergedFeatureData.featureCaptions));
-            params(i).updatePropGridField();
+            params(i).value = sprintf('%d/%d',...
+                numel(features),numel(project.mergedFeatureData.featureCaptions));
         elseif params(i).shortCaption == string('nObservations')
-            params(i).value = sprintf('%d/%d',sum(ismember(grouping,groups)),size(project.mergedFeatureData.data,1));    
-            params(i).updatePropGridField();
+            params(i).value = sprintf('%d/%d',...
+                sum(ismember(grouping,groups)),size(project.mergedFeatureData.data,1));
         end
     end
 end
