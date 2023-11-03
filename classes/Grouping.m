@@ -126,7 +126,7 @@ classdef Grouping < RangeAnnotation
                 ranges = obj.ranges;
             else
                 if ~obj.sorted
-                    error('Grouping must be sorted first.');
+                    error('Grouping must be sorted first. Proceed to module "FeatureDefinition", or use menu:Grouping:"set current grouping". Then retry.');
                 end
             end
             pos = ranges.getCyclePosition(cluster);

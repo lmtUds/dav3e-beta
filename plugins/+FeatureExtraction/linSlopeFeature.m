@@ -36,7 +36,7 @@ end
 function f = computeFeature(y,x,prm)
     f = zeros(size(y,1),1);
     for i = 1:size(y,1)
-        [t1, ~] = polyfit(x,y(i,:),1); 
+        [t1, ~] = polyfit(x,y(i,:),1);
         f(i,:) = t1(1);
     end
 end

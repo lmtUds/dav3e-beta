@@ -30,26 +30,19 @@ function info = deleteNaNcycles()
 end
 
 function [data,params] = apply(data,params)
-%     paramOut = struct();
-%     h = data.featureCaptions(params.a);
-%     params.b = [h{:}]; 
-%     
-%     data.data(:,params.a) = [];
-%     data.featureSelection(params.a) = [];
-%     data.featureCaptions(params.a) = [];
-%     warning([num2str(length(params.a)), ' features are ignored because NaN ', params.b])
     d = data.data; 
     t = data.target;
-    [nanCyc,~] = find(isnan(d)==1);
-    nanTar = find(isnan(t)==1);
-    params.a = unique([nanCyc;nanTar]);
+    [nanCyc,~] = find(isnan(d));
+    if iscategorical(t)
+        nanTar = find(ismember(t,'NaN'));
+        undefTar = find(isundefined(t));
+    else
+        nanTar = find(isnan(t));
+        undefTar = [];
+    end
+    params.a = unique([nanCyc;nanTar;undefTar]);
     data.reduceData(@reduceFun, params.a);
 end
-
-% function params = train(data,params)
-%     d = data.getSelectedData();
-%     [params.a,~] = find(isnan(d)==1);
-% end
 
 function [newData,newGrouping,newTarget,newOffsets] = reduceFun(data,grouping,target,offsets,varargin)
     n = varargin{1};
