@@ -6,7 +6,7 @@ This repository was moved here from https://gitlab.com/manuel.bastuck/dav3e-beta
 * Import and evaluate your own cyclic data. 
 * In case of problems, consult the [readme](#readme) or the [developers](mailto:dev@lmt.uni-saarland.de).
 # Compatibility
-MATLAB 2020b+ with Toolboxes:
+MATLAB 2022b+ with Toolboxes:
 * Image Processing Toolbox
 * Statistics and Machine Learning Toolbox
 * Deep Learning Toolbox (former Neural Network Toolbox)
