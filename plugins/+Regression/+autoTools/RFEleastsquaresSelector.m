@@ -197,6 +197,10 @@ classdef RFEleastsquaresSelector < Regression.autoTools.FeatureSelectorInterface
                  class = Regression.svr();
                  this.nComp = 1;
                  [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2), 500])), cv, class, this);
+            elseif strcmp(this.classifier, 'LSR')
+                 class = Regression.lsr();
+                 this.nComp = 1;
+                 [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2), 500])), cv, class, this);
             else
                 error(['unsupported classifier: ', this.classifier]);
             end

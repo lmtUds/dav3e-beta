@@ -49,7 +49,7 @@ function info = automatedSelection()
         Parameter('shortCaption','groupingTest','value','', 'enum',{''}),...
         Parameter('shortCaption','groupsTest','value',{''}, 'enum',{''}),...
         Parameter('shortCaption','percentTest','value',20),...
-        Parameter('shortCaption','evaluator','value','PLSR','enum',{'PLSR', 'SVR'}),...
+        Parameter('shortCaption','evaluator','value','PLSR','enum',{'PLSR', 'SVR', 'LSR'}),...
         Parameter('shortCaption','nCompPLSR','value',int32(20), 'enum',int32(1:20), 'selectionType','multiple'),...
         Parameter('shortCaption','criterion','value','MinOneStd+OptNComp','enum',{'Elbow','Min', 'MinOneStd','MinOneStd+OptNComp' , 'All'}),...
         Parameter('shortCaption','beta0','internal',true),...
@@ -117,6 +117,9 @@ function params = train(data,params)
 %     end
     
     method = params.methods;
+    if ~strcmp(params.evaluator,'PLSR') && strcmp(params.criterion,'MinOneStd+OptNComp') 
+        error('Use MinOneStd+OptNComp only as criterion in combination with PLSR as evaluator.')
+    end
     %compute the ranking by the desired method
     [rank, numFeat, error, beta0, offset, mdl, projectedData] = rankByMethod(data,params,method);
     %set parameters after training
@@ -145,6 +148,7 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = ~groupbasedVal;
+            params(i).updatePropGridField();
         % Testing
         elseif params(i).shortCaption == string('Testing')
             params(i).onChangedCallback = @()updateParameters(params,project);
@@ -154,28 +158,34 @@ function updateParameters(params,project)
             params(i).onChangedCallback = @()updateParameters(params,project);
             groupbasedTest = params(i).value;
             params(i).hidden = none;
+            params(i).updatePropGridField();
         elseif params(i).shortCaption == string('groupingTest')
             params(i).enum = cellstr(grouping_captions);
             if isempty(params(i).value)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = (~groupbasedTest && holdout) || none;
+            params(i).updatePropGridField();
             grouping = removecats(groupings(:,strcmp(grouping_captions,params(i).getValue())));
             params(i).onChangedCallback = @()updateParameters(params,project);
         elseif params(i).shortCaption == string('groupsTest')
              if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
                 params(i).enum = cellstr(categories(grouping));
                 params(i).value = params(i).enum;
+                params(i).updatePropGridField();
              end
              params(i).hidden = holdout || none;
+             params(i).updatePropGridField();
         elseif params(i).shortCaption == string('percentTest')
             params(i).hidden = ~holdout || none;
+            params(i).updatePropGridField();
         % evaluator
         elseif params(i).shortCaption == string('evaluator')
             params(i).onChangedCallback = @()updateParameters(params,project);
             plsr=strcmp(params(i).value, 'PLSR');
         elseif params(i).shortCaption == string('nCompPLSR')
             params(i).hidden = ~plsr;
+            params(i).updatePropGridField();
         end
     end
 end

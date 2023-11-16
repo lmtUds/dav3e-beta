@@ -50,8 +50,9 @@ helpVar = data.trainingSelection;
         end
         %brute force
         for i = 1:size(rank,1)
+            data.mode = 'training';
             params.trained = false;
-            [params] = class.train(data,[],params,rank(1:i));
+            [params] = class.train(data,params,rank(1:i));
             for j = 1:nComp
                 params.nComp = j; 
                 if i >= j
@@ -153,7 +154,7 @@ helpVar = data.trainingSelection;
     dat = data.data(this.projectedData.trainingSelection,:);
    
     if strcmp(this.classifier, 'PLSR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
+        [ptest] = class.train(data,params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
         if idxnComp>length(ptest.offset)
             idxnComp=length(ptest.offset);
         end
@@ -168,7 +169,7 @@ helpVar = data.trainingSelection;
         this.projectedData.errorVal = err.validation(idxnComp,this.nFeat);
         % train PLSR on testing data for trend of testing error (errorTrVaTe) 
         for i=1:(numel(rank))
-            [ptest] = class.train(data,[],params,rank(1:i));
+            [ptest] = class.train(data,params,rank(1:i));
 %             if idxnComp > length(ptest.offset)
 %                 xnComp = length(ptest.offset);
 %             else
@@ -184,23 +185,43 @@ helpVar = data.trainingSelection;
                 errTest(j,i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
             end
         end
-    elseif strcmp(this.classifier, 'SVR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
+    elseif strcmp(this.classifier, 'SVR') 
+        [ptest] = class.train(data,params,rank(1:this.nFeat)); % compute svr-params for optimal number of feature
 
-        predTr = predict(ptest.mdl,dat(:,rank(1:this.nFeat))); % train plsr on training data
+        predTr = predict(ptest.mdl,dat(:,rank(1:this.nFeat))); % train svr on training data
         % predTr = dat(:,rank(1:this.nFeat))*ptest.mdl.Beta+ptest.mdl.Bias;
         tar = data.data(this.projectedData.testingSelection,:);
-        predTe = predict(ptest.mdl,tar(:,rank(1:this.nFeat))); % train plsr on testing data
+        predTe = predict(ptest.mdl,tar(:,rank(1:this.nFeat))); % train svr on testing data
 
         this.projectedData.testing = predTe;
         this.projectedData.errorTest = sqrt(mean((predTe-data.target(data.testingSelection)).^2)); % compute RMSE for testing
         this.projectedData.errorVal = err.validation(this.nFeat);
         
         this.mdl = ptest.mdl;
-        % train PLSR on testing data for trend of testing error (errorTrVaTe) 
+        % train SVRPLSR on testing data for trend of testing error (errorTrVaTe) 
         for i=1:(numel(rank))
-            [ptest] = class.train(data,[],params,rank(1:i));
+            [ptest] = class.train(data,params,rank(1:i));
             predTe = predict(ptest.mdl,tar(:,rank(1:i)));
+            errTest(i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
+        end
+    elseif strcmp(this.classifier, 'LSR') 
+        [ptest] = class.train(data,params,rank(1:this.nFeat)); % compute lsr-params for optimal number of feature
+
+        predTr = dat(:,rank(1:this.nFeat)) * ptest.beta0 + ptest.offset; % train lsr on training data
+        % predTr = dat(:,rank(1:this.nFeat))*ptest.mdl.Beta+ptest.mdl.Bias;
+        tar = data.data(this.projectedData.testingSelection,:);
+        predTe = tar(:,rank(1:this.nFeat)) * ptest.beta0 + ptest.offset; % train lsr on testing data
+
+        this.projectedData.testing = predTe;
+        this.projectedData.errorTest = sqrt(mean((predTe-data.target(data.testingSelection)).^2)); % compute RMSE for testing
+        this.projectedData.errorVal = err.validation(this.nFeat);
+        
+        this.beta0 = ptest.beta0;
+        this.offset = ptest.offset;
+        % train LSR on testing data for trend of testing error (errorTrVaTe) 
+        for i=1:(numel(rank))
+            [ptest] = class.train(data,params,rank(1:i));
+            predTe = tar(:,rank(1:i)) * ptest.beta0 + ptest.offset;
             errTest(i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
         end
     else

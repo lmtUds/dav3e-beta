@@ -18,122 +18,78 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function info = Helpplsr()
+function info = lsr()
     info.type = DataProcessingBlockTypes.Regression;
-    info.caption = 'PLS regression';
+    info.caption = 'Least squares regression';
     info.shortCaption = mfilename;
-    info.description = '';
+    info.description = ['Fit linear regression model to high-dimensional data'];
     info.parameters = [...
         Parameter('shortCaption','trained', 'value',false, 'internal',true)...
-        Parameter('shortCaption','beta0', 'internal',true)...
-        Parameter('shortCaption','offset', 'internal',true)...
-        Parameter('shortCaption','nComp', 'value',int32(1), 'enum',1:20, 'selection','multiple'),...
+        Parameter('shortCaption','Mdl', 'internal',true)...
         Parameter('shortCaption','projectedData', 'value',[], 'internal',true),...
-        Parameter('shortCaption','lastTrainData', 'value',[], 'internal',true)...
+        Parameter('shortCaption','lastTrainData', 'value',[], 'internal',true),...
         ];
     info.apply = @apply;
     info.train = @train;
     info.reset = @reset;
-    info.detailsPages = {'calibration','predictionOverTime','coefficients'};
+    info.updateParameters = @updateParameters;
+    info.detailsPages = {'calibration','predictionOverTime'};
     info.requiresNumericTarget = true;
 end
 
-function [data,params] = apply(data,params,rank)
+function [data,params] = apply(data,params)
     if ~params.trained
         error('Regressor must first be trained.');
     end
+    Mdl = params.Mdl;
+    pred = predict(Mdl,data.getSelectedData());
     
-    d = data.getSelectedData();
-    if exist('rank','var')
-        d = d(:,rank);
-    end
-    
-    nComp = params.nComp;
-    if params.nComp > size(d,2)
-        % warning('nComp > number of features');
-        nComp = size(d,2);
-    end
-    b = params.beta0(:,nComp);
-    o = params.offset(nComp);
-    pred = d * b + o;
-
     switch data.mode
         case 'training'
             params.projectedData.training = pred;
         case 'testing'
             params.projectedData.testing = pred;
-    end
+    end    
     
-    try
-        params.pred = pred;
-        data.setSelectedPrediction(pred);
-    end 
+    data.setSelectedPrediction(pred);
 end
 
-function params = train(data, params, rank)
+function params = train(data,params)
     % if we are trained and train data is as before, we can completely skip
     % the training
-    try
-        if params.trained ...
+    if params.trained ...
             && all(size(params.lastTrainData)==size(data.getSelectedData())) ...
             && all(all(params.lastTrainData == data.getSelectedData())) ...
-            && size(params.beta0,2) >= params.nComp
-            disp('PLSR already trained.')
+        disp('LSR already trained.')
         return
-        end
-    catch
+    end
+    
+    target = data.getSelectedTarget();
+    if ~isnumeric(target) || any(isnan(target))
+        error('LSR requires numeric target.');
+    end
+    if numel(unique(target)) <= 1
+        error('LSR requires at least two different target values.');
     end
     
     d = data.getSelectedData();
-    target = data.getSelectedTarget();
-    if exist('rank','var')
-        d = d(:,rank);
-    end
-    
-    if ~isnumeric(target) || any(isnan(target))
-        error('PLSR requires numeric target.');
-    end
-    if numel(unique(target)) <= 1
-        error('PLSR requires at least two different target values.');
-    end
-    if numel(target) < params.nComp
-        error('PLSR requires more observations than components.');
-    end
-    
-    nComp = params.nComp;
-    if params.nComp > size(d,2)
-        % warning('nComp > number of features');
-        nComp = size(d,2);
-    end
     nans = isnan(d);
     if any(any(nans))
         warning('%d feature values were NaN and have been replaced with 0.',sum(sum(nans)));
         d(nans) = 0;
     end
     
-    try
-        [b,o] = Regression.helpers.quickPLSR(d,target);
-    catch
-        % quickPLSR is based on MATLAB code and cannot be distributed
-        % due to copyright
-        % use this slower alternative instead
-        b = zeros(size(d,2)+1,nComp);
-        for i = 1:nComp
-            [~,~,~,~,beta,~,~,h] = plsregress(d,target,i);
-            b(:,i) = beta;
-        end
-        o = b(1,:);
-        b(1,:) = [];
-    end
-    params.beta0 = b;
-    params.offset = o;
-    params.weights = h.W;
+    Mdl = fitrlinear(d, target, ...
+                    'Learner','leastsquares', 'Regularization', ...
+                    'ridge', 'Solver', 'lbfgs');
+    params.Mdl = Mdl;
     params.trained = true;
 end
 
 function params = reset(params)
     params.trained = false;
-    params.beta0 = [];
-    params.offset = [];
 end
 
+function updateParameters(params,project)
+
+end
