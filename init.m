@@ -18,8 +18,8 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-if verLessThan('matlab','9.9')
-    error('MATLAB R2020b or later is required.');
+if verLessThan('matlab','9.13')
+    error('MATLAB R2022b or later is required.');
 end
 
 addpath(genpath('classes'));
