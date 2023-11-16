@@ -39,8 +39,20 @@ function [data,prms] = apply(files,prms)
         d = load(file);
         fields = fieldnames(d);
         
+        try
+            t1 = strsplit(filename,'_');
+            dayOffset = t1{1}(1:4) + "-" + t1{1}(5:6) + "-" + t1{1}(7:8);
+            timeOffset = t1{2}(1:2) + ":" + t1{2}(3:4) + ":" + t1{2}(5:6);
+            t2 = datetime(dayOffset + " " + timeOffset);
+            t2.TimeZone = 'Europe/Zurich';
+            p1 = posixtime(t2);
+        catch
+            p1 = 0;
+        end
+        
         warning('Unable to extract sampling period from this filetype. Assuming 1 s.');
-        c = Cluster('samplingPeriod',1,...
+        c = Cluster('samplingPeriod',0.1,...
+            'offset',p1,...
             'nCyclePoints',size(d.(fields{1}),2),...
             'nCycles',size(d.(fields{1}),1),...
             'caption',filename);        
