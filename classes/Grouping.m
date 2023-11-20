@@ -40,7 +40,7 @@ classdef Grouping < RangeAnnotation
                 s(i).order = double(removecats(obj.vals));
                 colors = cell(numel(s(i).categories),1);
                 for j = 1:numel(s(i).categories)
-                    colors{j} = obj.colors(s(i).categories{j});
+                    colors{j} = obj.colors(deStar(s(i).categories{j}));
                 end
                 s(i).colors = colors;
             end
