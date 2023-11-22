@@ -45,10 +45,10 @@ function [data,params] = apply(data,params,rank)
     
     if exist('rank','var') 
         if strcmp(data.mode, 'training')
-            help = single(data.data(data.trainingSelection,:));
+            help = data.data(data.trainingSelection,:);
             dataH = help(:,rank);
         elseif strcmp(data.mode, 'validation')
-            help = single(data.data(data.validationSelection,:));
+            help = data.data(data.validationSelection,:);
             dataH = help(:,rank);
         elseif strcmp(data.mode, 'testing')
             dataH = [];
@@ -99,7 +99,7 @@ function params = train(data, t, params, rank)
     
     if exist('rank','var')
         target = cat2num(data.target(data.trainingSelection));
-        help = single(data.data(data.trainingSelection,:));
+        help = data.data(data.trainingSelection,:);
         d = help(:,rank);
     else
         d = data;
