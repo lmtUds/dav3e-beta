@@ -183,13 +183,13 @@ classdef RFEplsrSelector < Regression.autoTools.FeatureSelectorInterface
             end
             
             % step 3: regression
-            if strcmp(this.classifier, 'PLSR')
+            if strcmp(this.classifier, 'plsr')
                  class = Regression.autoTools.Helpers.Helpplsr();
                  [ this ] = ...
                      Regression.autoTools.Helpers.numFeatMulti(data,...
                      this.rank(1:min([size(X,2), 500])), cv, class,...
                      this);
-            elseif strcmp(this.classifier, 'SVR')
+            elseif strcmp(this.classifier, 'svr')
                  class = Regression.svr();
                  this.nComp = 1;
                  [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2), 500])), cv, class, this);

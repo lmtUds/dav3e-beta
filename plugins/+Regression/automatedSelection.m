@@ -49,7 +49,7 @@ function info = automatedSelection()
         Parameter('shortCaption','groupingTest','value','', 'enum',{''}),...
         Parameter('shortCaption','groupsTest','value',{''}, 'enum',{''}),...
         Parameter('shortCaption','percentTest','value',20),...
-        Parameter('shortCaption','evaluator','value','PLSR','enum',{'PLSR', 'SVR'}),...
+        Parameter('shortCaption','evaluator','value','plsr','enum',{'plsr', 'svr'}),...
         Parameter('shortCaption','nCompPLSR','value',int32(20), 'enum',int32(1:20), 'selectionType','multiple'),...
         Parameter('shortCaption','criterion','value','MinOneStd+OptNComp','enum',{'Elbow','Min', 'MinOneStd','MinOneStd+OptNComp' , 'All'}),...
         Parameter('shortCaption','beta0','internal',true),...
@@ -81,10 +81,6 @@ function [data,params] = apply(data,params)
     if ~params.trained
         error('automated Methods must first be trained.');
     end
-    %get training & testing Selection
-    data.trainingSelection = params.projectedData.trainingSelection;
-    data.validationSelection = params.projectedData.validationSelection;
-    data.testingSelection = params.projectedData.testingSelection;
     %get the saved ranking from previous training
     rank = params.rank;
     %get the number of features to choose;may be set manualy or via training
@@ -95,6 +91,9 @@ function [data,params] = apply(data,params)
     data.setSelectedFeatures(selFeat(rank(1:numFeat)));
     %select the best numFeat Captions matching the ranking
     params.featureCaptions = selFeat(rank(1:numFeat));
+    %apply optimized model to data
+    params.nComp = params.projectedData.nComp;
+    Regression.(params.evaluator)().apply(data,params);
 end
 
 function params = train(data,params)
@@ -173,7 +172,7 @@ function updateParameters(params,project)
         % evaluator
         elseif params(i).shortCaption == string('evaluator')
             params(i).onChangedCallback = @()updateParameters(params,project);
-            plsr=strcmp(params(i).value, 'PLSR');
+            plsr=strcmp(params(i).value, 'plsr');
         elseif params(i).shortCaption == string('nCompPLSR')
             params(i).hidden = ~plsr;
         end

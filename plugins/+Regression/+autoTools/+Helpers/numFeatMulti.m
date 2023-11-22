@@ -152,14 +152,14 @@ helpVar = data.trainingSelection;
     % data.trainingSelection(data.testingSelection) = false;
     dat = data.data(this.projectedData.trainingSelection,:);
    
-    if strcmp(this.classifier, 'PLSR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
+    if strcmp(this.classifier, 'plsr')
+        [ptest] = class.train(data,[],params,sort(rank(1:this.nFeat))); % compute plsr-params for optimal number of feature
         if idxnComp>length(ptest.offset)
             idxnComp=length(ptest.offset);
         end
-        predTr = dat(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on training data
+        predTr = dat(:,sort(rank(1:this.nFeat))) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on training data
         tar = data.data(this.projectedData.testingSelection,:);
-        predTe = tar(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on testing data
+        predTe = tar(:,sort(rank(1:this.nFeat))) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on testing data
 
         this.beta0 = ptest.beta0;
         this.offset = ptest.offset;
@@ -184,13 +184,13 @@ helpVar = data.trainingSelection;
                 errTest(j,i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
             end
         end
-    elseif strcmp(this.classifier, 'SVR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
+    elseif strcmp(this.classifier, 'svr')
+        [ptest] = class.train(data,[],params,sort(rank(1:this.nFeat))); % compute plsr-params for optimal number of feature
 
-        predTr = predict(ptest.mdl,dat(:,rank(1:this.nFeat))); % train plsr on training data
-        % predTr = dat(:,rank(1:this.nFeat))*ptest.mdl.Beta+ptest.mdl.Bias;
+        predTr = predict(ptest.mdl,dat(:,sort(rank(1:this.nFeat)))); % train plsr on training data
+        % predTr = dat(:,sort(rank(1:this.nFeat)))*ptest.mdl.Beta+ptest.mdl.Bias;
         tar = data.data(this.projectedData.testingSelection,:);
-        predTe = predict(ptest.mdl,tar(:,rank(1:this.nFeat))); % train plsr on testing data
+        predTe = predict(ptest.mdl,tar(:,sort(rank(1:this.nFeat)))); % train plsr on testing data
 
         this.projectedData.testing = predTe;
         this.projectedData.errorTest = sqrt(mean((predTe-data.target(data.testingSelection)).^2)); % compute RMSE for testing
