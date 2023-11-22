@@ -28,7 +28,7 @@ classdef PearsonSelector < Regression.autoTools.FeatureSelectorInterface
     methods
         function this = PearsonSelector(varargin)
             if nargin == 0
-                this.classifier = 'PLSR';
+                this.classifier = 'plsr';
                 this.data = [];
                 this.target = [];
                 this.rank = [];
@@ -57,56 +57,6 @@ classdef PearsonSelector < Regression.autoTools.FeatureSelectorInterface
         end
         
         function [subsInd, rank] = train(this, data)
-            % step 0: testing
-            if strcmp(this.Testing, 'groups')
-                sel = data.getGroupingByName(this.groupingTest);
-                sel2 = string(sel);
-                for i = 1:length(this.groupsTest)
-                    data.trainingSelection(strcmp(this.groupsTest(i), sel2))=false;
-                    data.testingSelection(strcmp(this.groupsTest(i), sel2))=true;
-                end
-            elseif this.groupbasedTest == 0 && strcmp(this.Testing, 'holdout')
-                cvTest = cvpartition(data.target, 'HoldOut', this.percentTest/100);
-                data.trainingSelection = cvTest.training;
-                data.testingSelection = cvTest.test;
-            elseif this.groupbasedTest == 1 && strcmp(this.Testing, 'holdout')
-                % actualTargetT = data.target;
-                selT = data.availableSelection;
-                gT = data.getGroupingByName(this.groupingTest);
-                tT = categories(removecats(gT(selT)));
-                cvTest = cvpartition(numel(tT),'HoldOut',this.percentTest/100);
-
-                trainSelT = cvTest.training;
-                testSelT = cvTest.test;
-                if this.groupbasedTest == 1
-                    trainSelNewT = true(size(tT));
-                    testSelNewT = false(size(tT));
-                    if isnumeric(tT)
-                        trainSelNewT = double(trainSelNewT);
-                        testSelNewT = double(testSelNewT);
-                    end
-                    gT = data.getGroupingByName(this.groupingTest);
-                    gT = gT(selT);
-                    for cidxT = 1:numel(tT)
-                        trainSelNewT(gT==tT(cidxT)) = trainSelT(cidxT);
-                        testSelNewT(gT==tT(cidxT)) = testSelT(cidxT);
-                    end
-                    trainSelFinal = false(size(data.cycleSelection,1),1);
-                    trainSelFinal(selT) = trainSelNewT;
-                    testSelFinal = false(size(data.cycleSelection,1),1);
-                    testSelFinal(selT) = testSelNewT;
-                    
-                    data.trainingSelection = logical(trainSelFinal);
-                    data.testingSelection = logical(testSelFinal);
-                    
-%                     testSelFinal = false(size(obj.testingSelection,1),1);
-%                     testSelFinal(sel) = testSel;
-%                     obj.testingSelection(:,teststep,testit) = testSelFinal;
-                end
-            elseif strcmp(this.Testing, 'none')
-            else
-                 error('Something wrong with Testing')
-            end
             this.projectedData.trainingSelection = data.trainingSelection;
             this.projectedData.validationSelection = data.validationSelection;
             this.projectedData.testingSelection = data.testingSelection;          

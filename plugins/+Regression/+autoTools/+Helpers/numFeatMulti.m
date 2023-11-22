@@ -34,7 +34,8 @@ err.training = zeros(nComp,size(rank,1),'single');
 err.validation = zeros(nComp,size(rank,1),'single');
 % sstot = zeros(nComp,size(rank,1),'single');
 % ssres = zeros(nComp,size(rank,1),'single');
-helpVar = data.trainingSelection;
+cacheMode = data.mode;
+cacheTrainingSelection = data.trainingSelection;
     for c = 1:cv.NumTestSets
     %     tic
         try
@@ -43,8 +44,8 @@ helpVar = data.trainingSelection;
             trTar = data.target(data.trainingSelection);
             teTar = data.target(data.validationSelection);
         catch
-            data.trainingSelection(helpVar) = cv.training(c);
-            data.validationSelection(helpVar) = cv.test(c);
+            data.trainingSelection(cacheTrainingSelection) = cv.training(c);
+            data.validationSelection(cacheTrainingSelection) = cv.test(c);
             trTar = data.target(data.trainingSelection);
             teTar = data.target(data.validationSelection);
         end
@@ -87,6 +88,9 @@ helpVar = data.trainingSelection;
 %     ssres = ssres./c;
     err.training(err.training==0) = NaN;
     err.validation(err.validation==0) = NaN;
+
+    data.mode = cacheMode;
+    data.trainingSelection = cacheTrainingSelection;
     
     %% Wahl Kriterium
     if strcmp(this.criterion, 'Elbow')
@@ -148,8 +152,6 @@ helpVar = data.trainingSelection;
     % rank = this.rank;
     % testing with the computed number of features before and save
     % results
-    % data.trainingSelection(:) = true;      % reset trainingSelection
-    % data.trainingSelection(data.testingSelection) = false;
     dat = data.data(this.projectedData.trainingSelection,:);
    
     if strcmp(this.classifier, 'plsr')
