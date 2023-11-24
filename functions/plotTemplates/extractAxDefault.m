@@ -18,12 +18,25 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function extractAxDefault(MainFig)
-%EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a default uiFigure
-    fig = uifigure('Name','Plot Extraction: Default','Visible','off');
-    grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
-    ax = copyobj(MainFig.CurrentAxes,grid);
-    ax.Layout.Row = 1; ax.Layout.Column = 1;
-    fig.Visible = 'on';
-end
+% function extractAxDefault(MainFig)
+% %EXTRACTAXDEFAULT Extracts the CurrentAxes of MainFig into a default uiFigure
+%     fig = uifigure('Name','Plot Extraction: Default','Visible','off');
+%     grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
+%     ax = copyobj(MainFig.CurrentAxes,grid);
+%     ax.Layout.Row = 1; ax.Layout.Column = 1;
+%     fig.Visible = 'on';
+% end
 
+%% Return to figure-based Plot Extraction
+% uifigure-based Figures cannot be saved as .fig-file, therefore adjusted
+% uifigure-based function to work with figure instead.
+
+function extractAxDefault(MainFig)
+
+    fig = figure('Name','Plot Extraction: Default','Visible','off');
+    t = tiledlayout(fig,1,1,'Padding','compact');
+    ax = copyobj(MainFig.CurrentAxes,t);
+    fig.Position = [fig.Position(1)-50,fig.Position(2),fig.Position(3)+50,fig.Position(4)];
+    fig.Visible = 'on';
+
+end
