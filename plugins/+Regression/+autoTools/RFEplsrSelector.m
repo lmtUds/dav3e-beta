@@ -91,10 +91,10 @@ classdef RFEplsrSelector < Regression.autoTools.FeatureSelectorInterface
             if this.groupbasedVal == 0
                 cv = cvpartition(Y, 'kFold', 10);
             elseif this.groupbasedVal == 1
-                actualTarget = Y;
                 availSel = data.availableSelection;
                 testSel = data.testingSelection;
                 sel = ~testSel & availSel;
+                actualTarget = data.target(sel);
                 g = data.getGroupingByName(this.groupingVal);
                 t = categories(removecats(g(sel)));
                 c = cvpartition(numel(t),'kFold',10);
@@ -118,11 +118,11 @@ classdef RFEplsrSelector < Regression.autoTools.FeatureSelectorInterface
                         trainSel = trainSelNew;
                         valSel = valSelNew;
                     end
-                    trainSelFinal = false(size(X,1),1);
+                    trainSelFinal = false(size(data.trainingSelection,1),1);
                     trainSelFinal(sel) = trainSel;
                     cv.training{valstep} = trainSelFinal; 
 
-                    validationSelFinal = false(size(X,1),1);
+                    validationSelFinal = false(size(data.validationSelection,1),1);
                     validationSelFinal(sel) = valSel;
                     cv.test{valstep} = validationSelFinal;
                     cv.NumTestSets = c.NumTestSets;
