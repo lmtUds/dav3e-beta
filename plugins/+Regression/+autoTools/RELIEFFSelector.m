@@ -117,7 +117,7 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
             
             % step 3: regression
             if strcmp(this.classifier, 'plsr')
-                 class = Regression.autoTools.Helpers.Helpplsr();
+                 class = Regression.plsr();
                  [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2),500])), cv, class, this);
             elseif strcmp(this.classifier, 'svr')
                  class = Regression.svr();
