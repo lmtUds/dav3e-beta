@@ -48,13 +48,20 @@ function [data,params] = apply(data,params)
     if ~params.trained
         error('Regressor must first be trained.');
     end
-    b = params.beta0(:,params.nComp);
-    o = params.offset(params.nComp);
+    nComp = params.nComp;
+    if params.nComp > size(data.getSelectedData(),2)
+      %  warning('nComp is greater than number of features, so nComp is set to number of features');
+        nComp = size(data.getSelectedData(),2);
+    end
+    b = params.beta0(:,nComp);
+    o = params.offset(nComp);
     pred = data.getSelectedData() * b + o;
     
     switch data.mode
         case 'training'
             params.projectedData.training = pred;
+        case 'validation'
+            params.projectedData.validation = pred;
         case 'testing'
             params.projectedData.testing = pred;
     end    
@@ -90,6 +97,12 @@ function params = train(data,params)
         warning('%d feature values were NaN and have been replaced with 0.',sum(sum(nans)));
         d(nans) = 0;
     end
+
+    nComp = params.nComp;
+    if params.nComp > size(d,2)
+       % warning('nComp is greater than number of features, so nComp is set to number of features');
+        nComp = size(d,2);
+    end
     
     try
         [b,o] = Regression.helpers.quickPLSR(d,target);
@@ -97,8 +110,8 @@ function params = train(data,params)
         % quickPLSR is based on MATLAB code and cannot be distributed
         % due to copyright
         % use this slower alternative instead
-        b = zeros(size(d,2)+1,params.nComp);
-        for i = 1:params.nComp
+        b = zeros(size(d,2)+1,nComp);
+        for i = 1:nComp
             [~,~,~,~,beta] = plsregress(d,target,i);
             b(:,i) = beta;
         end

@@ -28,7 +28,7 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
     methods
         function this = RELIEFFSelector(varargin)
             if nargin == 0
-                this.classifier = 'PLSR';
+                this.classifier = 'plsr';
                 this.data = [];
                 this.target = [];
                 this.rank = [];
@@ -57,56 +57,6 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
         end
         
         function [subsInd, rank] = train(this, data)
-            % step 0: testing
-            if strcmp(this.Testing, 'groups')
-                sel = data.getGroupingByName(this.groupingTest);
-                sel2 = string(sel);
-                for i = 1:length(this.groupsTest)
-                    data.trainingSelection(strcmp(this.groupsTest(i), sel2))=false;
-                    data.testingSelection(strcmp(this.groupsTest(i), sel2))=true;
-                end
-            elseif this.groupbasedTest == 0 && strcmp(this.Testing, 'holdout')
-                cvTest = cvpartition(data.target, 'HoldOut', this.percentTest/100);
-                data.trainingSelection = cvTest.training;
-                data.testingSelection = cvTest.test;
-            elseif this.groupbasedTest == 1 && strcmp(this.Testing, 'holdout')
-                % actualTargetT = data.target;
-                selT = data.availableSelection;
-                gT = data.getGroupingByName(this.groupingTest);
-                tT = categories(removecats(gT(selT)));
-                cvTest = cvpartition(numel(tT),'HoldOut',this.percentTest/100);
-
-                trainSelT = cvTest.training;
-                testSelT = cvTest.test;
-                if this.groupbasedTest == 1
-                    trainSelNewT = true(size(tT));
-                    testSelNewT = false(size(tT));
-                    if isnumeric(tT)
-                        trainSelNewT = double(trainSelNewT);
-                        testSelNewT = double(testSelNewT);
-                    end
-                    gT = data.getGroupingByName(this.groupingTest);
-                    gT = gT(selT);
-                    for cidxT = 1:numel(tT)
-                        trainSelNewT(gT==tT(cidxT)) = trainSelT(cidxT);
-                        testSelNewT(gT==tT(cidxT)) = testSelT(cidxT);
-                    end
-                    trainSelFinal = false(size(data.cycleSelection,1),1);
-                    trainSelFinal(selT) = trainSelNewT;
-                    testSelFinal = false(size(data.cycleSelection,1),1);
-                    testSelFinal(selT) = testSelNewT;
-                    
-                    data.trainingSelection = logical(trainSelFinal);
-                    data.testingSelection = logical(testSelFinal);
-                    
-%                     testSelFinal = false(size(obj.testingSelection,1),1);
-%                     testSelFinal(sel) = testSel;
-%                     obj.testingSelection(:,teststep,testit) = testSelFinal;
-                end
-            elseif strcmp(this.Testing, 'none')
-            else
-                 error('Something wrong with Testing')
-            end
             this.projectedData.trainingSelection = data.trainingSelection;
             this.projectedData.validationSelection = data.validationSelection;
             this.projectedData.testingSelection = data.testingSelection;
@@ -124,10 +74,10 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
             if this.groupbasedVal == 0
                 cv = cvpartition(Y, 'kFold', 10);
             elseif this.groupbasedVal == 1
-                actualTarget = Y;
                 availSel = data.availableSelection;
                 testSel = data.testingSelection;
                 sel = ~testSel & availSel;
+                actualTarget = data.target(sel);
                 g = data.getGroupingByName(this.groupingVal);
                 t = categories(removecats(g(sel)));
                 c = cvpartition(numel(t),'kFold',10);
@@ -151,11 +101,11 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
                         trainSel = trainSelNew;
                         valSel = valSelNew;
                     end
-                    trainSelFinal = false(size(X,1),1);
+                    trainSelFinal = false(size(data.trainingSelection,1),1);
                     trainSelFinal(sel) = trainSel;
                     cv.training{valstep} = trainSelFinal; 
 
-                    validationSelFinal = false(size(X,1),1);
+                    validationSelFinal = false(size(data.validationSelection,1),1);
                     validationSelFinal(sel) = valSel;
                     cv.test{valstep} = validationSelFinal;
                     cv.NumTestSets = c.NumTestSets;
@@ -166,10 +116,10 @@ classdef RELIEFFSelector < Regression.autoTools.FeatureSelectorInterface
             end
             
             % step 3: regression
-            if strcmp(this.classifier, 'PLSR')
-                 class = Regression.autoTools.Helpers.Helpplsr();
+            if strcmp(this.classifier, 'plsr')
+                 class = Regression.plsr();
                  [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2),500])), cv, class, this);
-            elseif strcmp(this.classifier, 'SVR')
+            elseif strcmp(this.classifier, 'svr')
                  class = Regression.svr();
                  this.nComp = 1;
                  [ this ] = Regression.autoTools.Helpers.numFeatMulti(data, this.rank(1:min([size(X,2), 500])), cv, class, this);

@@ -39,7 +39,7 @@ classdef Main < handle
         projectFile
         projectPath
         
-        version = '0.2';
+        version = '0.3';
     end
     
     methods

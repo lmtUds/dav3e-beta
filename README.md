@@ -23,7 +23,7 @@ This paper describes an earlier version of DAV³E. The current version is based 
 
 The following is a short manual to get started with DAV³E:
 
-After downloading, navigate to the respective folder in MATLAB and type "DAVE" (no quotation marks) to start the GUI. Make sure to install the GUI Layout Toolbox (https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox) first. More advanced users might want to use the command-line based version which requires executing "init" once at the start of the session to make all functions and classes available. The following paragraphs will only look at the GUI version, however.
+After downloading, navigate to the respective folder in MATLAB and type "DAVE" (no quotation marks) to start the GUI. More advanced users might want to use the command-line based version which requires executing "init" once at the start of the session to make all functions and classes available. The following paragraphs will only look at the GUI version, however.
 
 Click on "Import data", choose a file type, and import your data. Currently, the easiest way to feed files to DAV³E are *.mat or *.csv files, both in matrix form with one cycle per row. This is the usual format used in data science: one observation per row, one feature per column. The imported sensors and clusters (refer to the paper) appear in the table at the bottom of the window. Sensor-specific and cluster-specific options (names, offsets, sampling rates, abscissas, etc.) can be changed in the respective menu points in the "File" menu (top-left). Virtual sensors, derived from one or more sensors, can also be created. Note that in the bottom table, sensor properties can be changed as well. To select a sensor, click on its index (left-most column).
 

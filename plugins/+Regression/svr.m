@@ -34,16 +34,10 @@ function info = svr()
     info.detailsPages = {'calibration','predictionOverTime'};
     info.requiresNumericTarget = true;
 end
-function [params] = train(data,t,params,rank)    
-    
-    if exist('rank','var')
-        target = cat2num(data.target(data.trainingSelection));
-        help = single(data.data(data.trainingSelection,:));
-        d = help(:,rank);
-    else
-        d = data.getSelectedData();
-        target = data.getSelectedTarget();
-    end
+function [params] = train(data,params)    
+
+    d = data.getSelectedData();
+    target = data.getSelectedTarget();
 
     if numel(unique(target)) <= 1
         error('SVR requires at least two different target values.');
@@ -76,43 +70,25 @@ function [params] = train(data,t,params,rank)
     params.trained = true;
 end
 
-function [data, params] = apply(data,params,rank)
+function [data, params] = apply(data,params)
     
     if ~params.trained
         error('Regressor must first be trained.');
     end
     
-    if exist('rank','var') 
-        if strcmp(data.mode, 'training')
-            help = single(data.data(data.trainingSelection,:));
-            dataH = help(:,rank);
-        elseif strcmp(data.mode, 'validation')
-            help = single(data.data(data.validationSelection,:));
-            dataH = help(:,rank);
-        elseif strcmp(data.mode, 'testing')
-            dataH = [];
-        end
-
-        pred = predict(params.mdl,dataH);
-        params.pred = pred;
-
-    else
-        pred = predict(params.mdl,data.getSelectedData());
-        params.pred = pred;
-    end
+    pred = predict(params.mdl,data.getSelectedData());
+    params.pred = pred;
     
     switch data.mode
         case 'training'
             params.projectedData.training = pred;
+        case 'validation'
+            params.projectedData.validation = pred;
         case 'testing'
             params.projectedData.testing = pred;
     end
 
-    try
-        data.setSelectedPrediction(pred);
-    catch
-        params.pred = pred;
-    end 
+    data.setSelectedPrediction(pred);
 end
 
 function params = reset(params)

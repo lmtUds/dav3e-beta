@@ -18,13 +18,27 @@
 % You should have received a copy of the GNU Affero General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 
-function extractAxSquare(MainFig)
-%EXTRACTAXSQUARE Extracts the CurrentAxes of MainFig into a square(ish) uiFigure
-    fig = uifigure('Name','Plot Extraction: Square','Visible','off');
-    fig.Position(3:4) = [460 420];
-    grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
-    ax = copyobj(MainFig.CurrentAxes,grid);
-    ax.Layout.Row = 1; ax.Layout.Column = 1;
-    fig.Visible = 'on';
-end
+% function extractAxSquare(MainFig)
+% %EXTRACTAXSQUARE Extracts the CurrentAxes of MainFig into a square(ish) uiFigure
+%     fig = uifigure('Name','Plot Extraction: Square','Visible','off');
+%     fig.Position(3:4) = [460 420];
+%     grid = uigridlayout(fig,[1 1],'Padding',[0 0 0 0]);
+%     ax = copyobj(MainFig.CurrentAxes,grid);
+%     ax.Layout.Row = 1; ax.Layout.Column = 1;
+%     fig.Visible = 'on';
+% end
 
+%% Return to figure-based Plot Extraction
+% uifigure-based Figures cannot be saved as .fig-file, therefore adjusted
+% uifigure-based function to work with figure instead.
+
+function extractAxSquare(MainFig)
+
+    fig = figure('Name','Plot Extraction: Square','Visible','off');
+    t = tiledlayout(fig,1,1,'Padding','compact');   % similar to uigridlayout here
+    ax = copyobj(MainFig.CurrentAxes,t);
+    fig.Units = 'pixel';
+    fig.Position = [fig.Position(1),fig.Position(2)-30,460,460];
+    fig.Visible = 'on';
+
+end

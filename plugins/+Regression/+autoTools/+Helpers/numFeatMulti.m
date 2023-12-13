@@ -21,20 +21,23 @@
 function [ this ] = numFeatMulti(data, rank, cv, class, this)
 %NUMFEATMULTI Summary of this function goes here
 %   Detailed explanation goes here
-if numel(rank)<this.nComp
-    nComp = numel(rank);
-    warning('nComp is greater than number of features, so nComp is set to number of features');
-else
-    nComp = this.nComp;
-end
+    if numel(rank)<this.nComp
+        nComp = numel(rank);
+        warning('nComp is greater than number of features, so nComp is set to number of features');
+    else
+        nComp = this.nComp;
+    end
+    
+    params.nComp = nComp;
+    params.trained = false;
+    err.training = zeros(nComp,size(rank,1),'single');
+    err.validation = zeros(nComp,size(rank,1),'single');
+    % sstot = zeros(nComp,size(rank,1),'single');
+    % ssres = zeros(nComp,size(rank,1),'single');
+    cacheMode = data.mode;
+    cacheTrainingSelection = data.trainingSelection;
+    selFeat = data.selectedFeatures();
 
-params.nComp = nComp;
-params.trained = false;
-err.training = zeros(nComp,size(rank,1),'single');
-err.validation = zeros(nComp,size(rank,1),'single');
-% sstot = zeros(nComp,size(rank,1),'single');
-% ssres = zeros(nComp,size(rank,1),'single');
-helpVar = data.trainingSelection;
     for c = 1:cv.NumTestSets
     %     tic
         try
@@ -43,27 +46,29 @@ helpVar = data.trainingSelection;
             trTar = data.target(data.trainingSelection);
             teTar = data.target(data.validationSelection);
         catch
-            data.trainingSelection(helpVar) = cv.training(c);
-            data.validationSelection(helpVar) = cv.test(c);
+            data.trainingSelection(cacheTrainingSelection) = cv.training(c);
+            data.validationSelection(cacheTrainingSelection) = cv.test(c);
             trTar = data.target(data.trainingSelection);
             teTar = data.target(data.validationSelection);
         end
         %brute force
         for i = 1:size(rank,1)
             params.trained = false;
-            [params] = class.train(data,[],params,rank(1:i));
+            data.mode = 'training';
+            data.setSelectedFeatures(selFeat(rank(1:i)));
+            [params] = class.train(data,params);
             for j = 1:nComp
                 params.nComp = j; 
                 if i >= j
                     data.mode = 'training';
-                    [~ , params] = class.apply(data,params,rank(1:i));
-                    data.mode = 'validation';
-                    [~ , params2] = class.apply(data,params,rank(1:i));
-                    errTr=sqrt(mean((params.pred-trTar).^2));
-                    errVa=sqrt(mean((params2.pred-teTar).^2));
+                    [~ , params] = class.apply(data,params);
+                    errTr=sqrt(mean((params.projectedData.training-trTar).^2));
                     err.training(j,i) = err.training(j,i) + errTr;
-                    err.validation(j,i) = err.validation(j,i) + errVa;  % regression
                     foldErrTr(j,i,c) = errTr;
+                    data.mode = 'validation';
+                    [~ , params] = class.apply(data,params);
+                    errVa=sqrt(mean((params.projectedData.validation-teTar).^2));
+                    err.validation(j,i) = err.validation(j,i) + errVa;  % regression
                     foldErrVa(j,i,c) = errVa;
 %                     n(j,i)=numel(teTar);
 %                     sstot(j,i)=sstot(j,i)+sum((params2.pred-mean(params2.pred)).^2);
@@ -87,6 +92,10 @@ helpVar = data.trainingSelection;
 %     ssres = ssres./c;
     err.training(err.training==0) = NaN;
     err.validation(err.validation==0) = NaN;
+
+    data.mode = cacheMode;
+    data.trainingSelection = cacheTrainingSelection;
+    data.setSelectedFeatures(selFeat);
     
     %% Wahl Kriterium
     if strcmp(this.criterion, 'Elbow')
@@ -135,7 +144,7 @@ helpVar = data.trainingSelection;
         [~, idx] = min(err.validation);
         idxnComp = this.nComp;
     end
-    this.nFeat = idx;
+    this.nFeat = idx(end);
     this.err = err;
 %     try
 %         this.beta0 = params.beta0;
@@ -148,66 +157,75 @@ helpVar = data.trainingSelection;
     % rank = this.rank;
     % testing with the computed number of features before and save
     % results
-    % data.trainingSelection(:) = true;      % reset trainingSelection
-    % data.trainingSelection(data.testingSelection) = false;
-    dat = data.data(this.projectedData.trainingSelection,:);
-   
-    if strcmp(this.classifier, 'PLSR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
-        if idxnComp>length(ptest.offset)
-            idxnComp=length(ptest.offset);
-        end
-        predTr = dat(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on training data
-        tar = data.data(this.projectedData.testingSelection,:);
-        predTe = tar(:,rank(1:this.nFeat)) * ptest.beta0(:,idxnComp) + ptest.offset(idxnComp); % train plsr on testing data
-
-        this.beta0 = ptest.beta0;
-        this.offset = ptest.offset;
-        this.projectedData.testing = predTe;
-        this.projectedData.errorTest = sqrt(mean((predTe-data.target(data.testingSelection)).^2)); % compute RMSE for testing
-        this.projectedData.errorVal = err.validation(idxnComp,this.nFeat);
+    errTest = zeros(idxnComp,size(rank,1),'single');
+    if strcmp(this.classifier, 'plsr')
         % train PLSR on testing data for trend of testing error (errorTrVaTe) 
         for i=1:(numel(rank))
-            [ptest] = class.train(data,[],params,rank(1:i));
-%             if idxnComp > length(ptest.offset)
-%                 xnComp = length(ptest.offset);
-%             else
-%                 xnComp = idxnComp;
-%             end
-            for j=1:this.nComp
+            teParams.trained = false;
+            teParams.nComp = idxnComp;
+            data.mode = 'training';
+            data.setSelectedFeatures(selFeat(rank(1:i)));
+            [teParams] = class.train(data,teParams);
+            for j=1:teParams.nComp
                 if i < j
-                    xnComp = i;
+                    teParams.nComp = i;
                 else
-                    xnComp = j;
+                    teParams.nComp = j;
                 end
-                predTe = tar(:,rank(1:i)) * ptest.beta0(1:i,xnComp) + ptest.offset(xnComp);
-                errTest(j,i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
+                data.mode = 'training';
+                [~ , teParams] = class.apply(data,teParams);
+%                 errTrain(j,i) = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+    
+                data.mode = 'testing';
+                [~ , teParams] = class.apply(data,teParams);
+                errTest(j,i) = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
+                
+                if (j==idxnComp) && (i==this.nFeat)
+                    predTr = teParams.projectedData.training;
+                    predTe = teParams.projectedData.testing; 
+                    this.beta0 = teParams.beta0;
+                    this.offset = teParams.offset;
+                    this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+                    this.projectedData.errorTest = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
+                end
             end
         end
-    elseif strcmp(this.classifier, 'SVR')
-        [ptest] = class.train(data,[],params,rank(1:this.nFeat)); % compute plsr-params for optimal number of feature
-
-        predTr = predict(ptest.mdl,dat(:,rank(1:this.nFeat))); % train plsr on training data
-        % predTr = dat(:,rank(1:this.nFeat))*ptest.mdl.Beta+ptest.mdl.Bias;
-        tar = data.data(this.projectedData.testingSelection,:);
-        predTe = predict(ptest.mdl,tar(:,rank(1:this.nFeat))); % train plsr on testing data
-
-        this.projectedData.testing = predTe;
-        this.projectedData.errorTest = sqrt(mean((predTe-data.target(data.testingSelection)).^2)); % compute RMSE for testing
-        this.projectedData.errorVal = err.validation(this.nFeat);
         
-        this.mdl = ptest.mdl;
-        % train PLSR on testing data for trend of testing error (errorTrVaTe) 
+        this.projectedData.errorVal = err.validation(idxnComp,this.nFeat);
+
+
+    elseif strcmp(this.classifier, 'svr')
+        % train SVR on testing data for trend of testing error (errorTrVaTe) 
         for i=1:(numel(rank))
-            [ptest] = class.train(data,[],params,rank(1:i));
-            predTe = predict(ptest.mdl,tar(:,rank(1:i)));
-            errTest(i) = sqrt(mean((predTe-data.target(data.testingSelection)).^2));
+            teParams.trained = false;
+            data.mode = 'training';
+            data.setSelectedFeatures(selFeat(rank(1:i)));
+            [teParams] = class.train(data,teParams);
+
+            data.mode = 'training';
+            [~ , teParams] = class.apply(data,teParams);
+
+            data.mode = 'testing';
+            [~ , teParams] = class.apply(data,teParams);
+            errTest(i) = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
+            
+            if i==this.nFeat
+                predTr = teParams.projectedData.training;
+                predTe = teParams.projectedData.testing; 
+                this.mdl = teParams.mdl;
+                this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+                this.projectedData.errorTest = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
+            end
         end
+        
+        this.projectedData.errorVal = err.validation(this.nFeat);
     else
         error('Something wrong with Regression in numFeatMulti');
     end
     
+    data.mode = cacheMode;
     this.err.testing = errTest;
+    this.projectedData.testing = predTe;
     this.projectedData.nComp = idxnComp;
     this.projectedData.training = predTr;
 end

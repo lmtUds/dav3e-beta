@@ -29,8 +29,8 @@ function info = automatedSelection()
     info.caption = 'automated Selection';
     info.shortCaption = mfilename;
     info.description = ['Automated Feature Selection in 3 Steps with integrated Regression: ', ...
-        '0. Sort dataset in training, validation, testing', ...
-        '1. Rank the features with the selected method', ...
+        '0. Rank the features with the selected method', ...
+        '1. Sort dataset in training and validation', ...
         '2. For hyperparamater optimization (number of features or/and PLSR-component) build', ...
         'models with i=1...n features (Bottum-Up) and compute RMSE and standard deviation for each model', ...
         '3. Define the optimal parameters with the appropriate criterion'];
@@ -44,12 +44,7 @@ function info = automatedSelection()
         Parameter('shortCaption','Validation','value','kFold'),...
         Parameter('shortCaption','groupbasedVal','value',true),...
         Parameter('shortCaption','groupingVal','value','', 'enum',{''}),...
-        Parameter('shortCaption','Testing','value','holdout','enum',{'holdout','groups','none'}),...
-        Parameter('shortCaption','groupbasedTest','value',true),...
-        Parameter('shortCaption','groupingTest','value','', 'enum',{''}),...
-        Parameter('shortCaption','groupsTest','value',{''}, 'enum',{''}),...
-        Parameter('shortCaption','percentTest','value',20),...
-        Parameter('shortCaption','evaluator','value','PLSR','enum',{'PLSR', 'SVR'}),...
+        Parameter('shortCaption','evaluator','value','plsr','enum',{'plsr', 'svr'}),...
         Parameter('shortCaption','nCompPLSR','value',int32(20), 'enum',int32(1:20), 'selectionType','multiple'),...
         Parameter('shortCaption','criterion','value','MinOneStd+OptNComp','enum',{'Elbow','Min', 'MinOneStd','MinOneStd+OptNComp' , 'All'}),...
         Parameter('shortCaption','beta0','internal',true),...
@@ -81,10 +76,6 @@ function [data,params] = apply(data,params)
     if ~params.trained
         error('automated Methods must first be trained.');
     end
-    %get training & testing Selection
-    data.trainingSelection = params.projectedData.trainingSelection;
-    data.validationSelection = params.projectedData.validationSelection;
-    data.testingSelection = params.projectedData.testingSelection;
     %get the saved ranking from previous training
     rank = params.rank;
     %get the number of features to choose;may be set manualy or via training
@@ -95,6 +86,9 @@ function [data,params] = apply(data,params)
     data.setSelectedFeatures(selFeat(rank(1:numFeat)));
     %select the best numFeat Captions matching the ranking
     params.featureCaptions = selFeat(rank(1:numFeat));
+    %apply optimized model to data
+    params.nComp = params.projectedData.nComp;
+    Regression.(params.evaluator)().apply(data,params);
 end
 
 function params = train(data,params)
@@ -145,35 +139,10 @@ function updateParameters(params,project)
                 params(i).value = params(i).enum{1};
             end
             params(i).hidden = ~groupbasedVal;
-        % Testing
-        elseif params(i).shortCaption == string('Testing')
-            params(i).onChangedCallback = @()updateParameters(params,project);
-            holdout=strcmp(params(i).value, 'holdout');
-            none=strcmp(params(i).value, 'none');
-        elseif params(i).shortCaption == string('groupbasedTest')
-            params(i).onChangedCallback = @()updateParameters(params,project);
-            groupbasedTest = params(i).value;
-            params(i).hidden = none;
-        elseif params(i).shortCaption == string('groupingTest')
-            params(i).enum = cellstr(grouping_captions);
-            if isempty(params(i).value)
-                params(i).value = params(i).enum{1};
-            end
-            params(i).hidden = (~groupbasedTest && holdout) || none;
-            grouping = removecats(groupings(:,strcmp(grouping_captions,params(i).getValue())));
-            params(i).onChangedCallback = @()updateParameters(params,project);
-        elseif params(i).shortCaption == string('groupsTest')
-             if ~all(ismember(params(i).enum,cellstr(categories(grouping))))
-                params(i).enum = cellstr(categories(grouping));
-                params(i).value = params(i).enum;
-             end
-             params(i).hidden = holdout || none;
-        elseif params(i).shortCaption == string('percentTest')
-            params(i).hidden = ~holdout || none;
         % evaluator
         elseif params(i).shortCaption == string('evaluator')
             params(i).onChangedCallback = @()updateParameters(params,project);
-            plsr=strcmp(params(i).value, 'PLSR');
+            plsr=strcmp(params(i).value, 'plsr');
         elseif params(i).shortCaption == string('nCompPLSR')
             params(i).hidden = ~plsr;
         end
@@ -192,11 +161,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
     elseif method == string('RReliefF')
         disp(method);
@@ -206,11 +170,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
     elseif method == string('Pearson')
         disp(method);
@@ -220,11 +179,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
      elseif method == string('NCA')
         disp(method);
@@ -234,11 +188,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
       elseif method == string('RFEplsr')
         disp(method);
@@ -248,11 +197,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
       elseif method == string('RFEleastsquares')
         disp(method);
@@ -262,11 +206,6 @@ function [rank, numFeat, error, beta0, offset, mdl, projectedData]  = rankByMeth
         mySel.Validation = params.Validation;
         mySel.groupbasedVal = params.groupbasedVal;
         mySel.groupingVal = params.groupingVal;
-        mySel.Testing = params.Testing;
-        mySel.groupbasedTest = params.groupbasedTest;
-        mySel.groupingTest = params.groupingTest;
-        mySel.groupsTest = params.groupsTest;
-        mySel.percentTest = params.percentTest;
         [subsInd,rank] = mySel.train(data);
     else
         error('Invalid method specified, cannot compute feature ranks');
