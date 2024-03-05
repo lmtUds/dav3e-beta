@@ -223,6 +223,7 @@ function [ this ] = numFeatMulti(data, rank, cv, class, this)
         error('Something wrong with Regression in numFeatMulti');
     end
     
+    data.setSelectedFeatures(selFeat);
     data.mode = cacheMode;
     this.err.testing = errTest;
     this.projectedData.testing = predTe;
