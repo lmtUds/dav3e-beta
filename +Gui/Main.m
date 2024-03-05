@@ -97,6 +97,8 @@ classdef Main < handle
                 callback, @obj.exportFullModelData);
             uimenu(m,'Label','Full model data to workspace',...
                 callback, @obj.exportFullModelDataToWorkspace);
+            uimenu(m,'Label','Model parameters (beta)',...
+                callback, @obj.exportModelParameters);
             uimenu(m,'Label','Merged Features',...
                 callback, @obj.exportMergedFeature);
             uimenu(m,'Label','Merged Features to workspace',...
@@ -490,6 +492,21 @@ classdef Main < handle
             filename = fullfile(path, file);
             fullModelData = struct(obj.project.currentModel.fullModelData);
             save(filename,'fullModelData')
+        end
+
+        function exportModelParameters(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save model parameters');
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
+            if file == 0
+                return
+            end
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            processingChain = struct(obj.project.currentModel.processingChain);
+            filename = fullfile(path, file);
+            save(filename, 'fullModelData', 'processingChain')
         end
         
         function exportMergedFeatureToWorkspace(obj,varargin)
