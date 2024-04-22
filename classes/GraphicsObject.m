@@ -174,6 +174,16 @@ classdef GraphicsObject < handle
             
             set(gcf,'WindowButtonMotionFcn',@(h,e)gObject.dragged(gObject,draggedObject));
             set(gcf,'WindowButtonUpFcn',@(h,e)gObject.dragStop(gObject));            
+            % Turn off Zoom/Pan/Brush if activated, otherwise dragStop
+            % cannot be executed
+            if contains(lastwarn,'Setting the "WindowButtonUpFcn" property is not permitted while this mode is active.')
+                zoom off
+                brush off
+                pan off
+                lastwarn('')
+                set(gcf,'WindowButtonMotionFcn',@(h,e)gObject.dragged(gObject,draggedObject));
+                set(gcf,'WindowButtonUpFcn',@(h,e)gObject.dragStop(gObject));
+            end
         end
        
         function dragStop(gObject)
