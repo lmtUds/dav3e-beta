@@ -44,7 +44,7 @@ function [data,prms] = apply(files,prms)
             dayOffset = t1{1}(1:4) + "-" + t1{1}(5:6) + "-" + t1{1}(7:8);
             timeOffset = t1{2}(1:2) + ":" + t1{2}(3:4) + ":" + t1{2}(5:6);
             t2 = datetime(dayOffset + " " + timeOffset);
-            t2.TimeZone = 'Europe/Zurich';
+            % t2.TimeZone = 'Europe/Zurich';
             p1 = posixtime(t2);
         catch
             p1 = 0;
