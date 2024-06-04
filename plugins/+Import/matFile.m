@@ -37,22 +37,31 @@ function [data,prms] = apply(files,prms)
         file = files{fidx};
         [~,filename,~] = fileparts(file);
         d = load(file);
-        fields = fieldnames(d);
         
-        try
-            t1 = strsplit(filename,'_');
-            dayOffset = t1{1}(1:4) + "-" + t1{1}(5:6) + "-" + t1{1}(7:8);
-            timeOffset = t1{2}(1:2) + ":" + t1{2}(3:4) + ":" + t1{2}(5:6);
-            t2 = datetime(dayOffset + " " + timeOffset);
-            % t2.TimeZone = 'Europe/Zurich';
-            p1 = posixtime(t2);
-        catch
-            p1 = 0;
+        if isfield(d,'sampletime')
+            sampletime = d.sampletime;
+            offset = d.offset;
+            d = rmfield(d,{'sampletime', 'offset'});
+        else
+            try
+                t1 = strsplit(filename,'_');
+                dayOffset = t1{1}(1:4) + "-" + t1{1}(5:6) + "-" + t1{1}(7:8);
+                timeOffset = t1{2}(1:2) + ":" + t1{2}(3:4) + ":" + t1{2}(5:6);
+                t2 = datetime(dayOffset + " " + timeOffset);
+                % t2.TimeZone = 'Europe/Zurich';
+                offset = posixtime(t2);
+                sampletime = 0.1;
+            catch
+                offset = 0;
+                sampletime = 0.1;
+            end
         end
         
+        fields = fieldnames(d);
+
         warning('Unable to extract sampling period from this filetype. Assuming 1 s.');
-        c = Cluster('samplingPeriod',0.1,...
-            'offset',p1,...
+        c = Cluster('samplingPeriod',sampletime,...
+            'offset',offset,...
             'nCyclePoints',size(d.(fields{1}),2),...
             'nCycles',size(d.(fields{1}),1),...
             'caption',filename);        
