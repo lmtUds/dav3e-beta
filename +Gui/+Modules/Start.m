@@ -116,7 +116,7 @@ classdef Start < Gui.Modules.GuiModule
             %check for track clashes and put all sensors on separate tracks
             %clashes are likely as all data is
             %put on the same "default" track on import
-            obj.resolveTracks();
+            % obj.resolveTracks();
 
             %fill the sensor data table
             obj.main.populateSensorSetTable();
