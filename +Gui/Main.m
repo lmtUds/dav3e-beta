@@ -471,7 +471,7 @@ classdef Main < handle
             end
             for i = 1:numel(sel)
                 s = matlab.lang.makeValidName(sel{i});
-                assignin('base',s,sensors(ismember(sel{i},sensors.getCaption('cluster'))).data);
+                assignin('base',s,sensors(ismember(sensors.getCaption('cluster'),sel{i})).data);
             end
         end
         
