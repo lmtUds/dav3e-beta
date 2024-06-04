@@ -185,7 +185,8 @@ function [ this ] = numFeatMulti(data, rank, cv, class, this)
                     predTe = teParams.projectedData.testing; 
                     this.beta0 = teParams.beta0;
                     this.offset = teParams.offset;
-                    this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+%                     this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+                    this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(~data.testingSelection&data.availableSelection)).^2));
                     this.projectedData.errorTest = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
                 end
             end
@@ -213,7 +214,7 @@ function [ this ] = numFeatMulti(data, rank, cv, class, this)
                 predTr = teParams.projectedData.training;
                 predTe = teParams.projectedData.testing; 
                 this.mdl = teParams.mdl;
-                this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(data.trainingSelection)).^2));
+                this.projectedData.errorTrain = sqrt(mean((teParams.projectedData.training-data.target(~data.testingSelection&data.availableSelection)).^2));
                 this.projectedData.errorTest = sqrt(mean((teParams.projectedData.testing-data.target(data.testingSelection)).^2));
             end
         end
