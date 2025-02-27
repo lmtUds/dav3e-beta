@@ -111,8 +111,8 @@ function [ this ] = numFeatMulti(data, rank, cv, class, this)
         idxnComp = this.nComp;
     elseif strcmp(this.criterion, 'Min')
          minErr = min(err.validation(:));
-         [~, idx] = find(err.validation==minErr);
-         idxnComp = this.nComp;
+         [idxnComp, idx] = find(err.validation==minErr);
+         % idxnComp = this.nComp;
     elseif strcmp(this.criterion, 'MinOneStd')
         minErr = min(err.validation(:));
         [row1, col1] = find(err.validation==minErr);

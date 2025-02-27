@@ -93,16 +93,22 @@ classdef Main < handle
 %                 callback, []);
             uimenu(m,'Label','Data to workspace',...
                 callback, @obj.exportDataToWorkspace);
-            uimenu(m,'Label','Full model data',...
-                callback, @obj.exportFullModelData);
-            uimenu(m,'Label','Full model data to workspace',...
-                callback, @obj.exportFullModelDataToWorkspace);
-            uimenu(m,'Label','Model parameters (beta)',...
-                callback, @obj.exportModelParameters);
+            uimenu(m,'Label','All sensors and corresponding groupings',...
+                callback, @obj.exportAllSensorsAndCorrespondingGroupings);
+            uimenu(m,'Label','All sensors and corresponding groupings to workspace',...
+                callback, @obj.exportAllSensorsAndCorrespondingGroupingsToWorkspace);
             uimenu(m,'Label','Merged Features',...
                 callback, @obj.exportMergedFeature);
             uimenu(m,'Label','Merged Features to workspace',...
                 callback, @obj.exportMergedFeatureToWorkspace);
+            uimenu(m,'Label','Model parameters (beta)',...
+                callback, @obj.exportModelParameters);
+            uimenu(m,'Label','Model parameters (beta) to workspace',...
+                callback, @obj.exportModelParametersToWorkspace); 
+            uimenu(m,'Label','Full model data',...
+                callback, @obj.exportFullModelData);
+            uimenu(m,'Label','Full model data to workspace',...
+                callback, @obj.exportFullModelDataToWorkspace);
             uimenu(m,'Label','CRG (ranges/groups) files',...
                 callback, @obj.exportCycleRangesAndGroups);
             m = uimenu(mh,'Label','Import');
@@ -505,8 +511,55 @@ classdef Main < handle
             end
             fullModelData = struct(obj.project.currentModel.fullModelData);
             processingChain = struct(obj.project.currentModel.processingChain);
+
+            for i = 1:numel(processingChain.blocks)
+                for j = 1:numel(processingChain.blocks(i).parameters)
+                    blocks = processingChain.blocks(i);
+                    param = processingChain.blocks(i).parameters(j);
+                    blocks_caption = matlab.lang.makeValidName(func2str(blocks.infoFcn));
+                    param_caption = matlab.lang.makeValidName(param.caption);
+                    parameters.(blocks_caption).(param_caption) = struct(param);
+                end
+            end
+
+            nClusters = numel(obj.project.clusters);
+            for i = 1:nClusters
+                nSensors = numel(obj.project.clusters(1, i).sensors);
+                for j = 1:nSensors
+                    samplingPeriod.(obj.project.clusters(1, i).sensors(1, j).caption) = obj.project.clusters(1, i).sensors(1, j).cluster.samplingPeriod;
+                end
+            end
+            fullModelData.samplingPeriod = samplingPeriod;
+
             filename = fullfile(path, file);
-            save(filename, 'fullModelData', 'processingChain')
+            save(filename, 'fullModelData', 'parameters')
+        end
+
+        function exportModelParametersToWorkspace(obj,varargin)
+            fullModelData = struct(obj.project.currentModel.fullModelData);
+            processingChain = struct(obj.project.currentModel.processingChain);
+
+            for i = 1:numel(processingChain.blocks)
+                for j = 1:numel(processingChain.blocks(i).parameters)
+                    blocks = processingChain.blocks(i);
+                    param = processingChain.blocks(i).parameters(j);
+                    blocks_caption = matlab.lang.makeValidName(func2str(blocks.infoFcn));
+                    param_caption = matlab.lang.makeValidName(param.caption);
+                    parameters.(blocks_caption).(param_caption) = struct(param);
+                end
+            end
+
+            nClusters = numel(obj.project.clusters);
+            for i = 1:nClusters
+                nSensors = numel(obj.project.clusters(1, i).sensors);
+                for j = 1:nSensors
+                    samplingPeriod.(obj.project.clusters(1, i).sensors(1, j).caption) = obj.project.clusters(1, i).sensors(1, j).cluster.samplingPeriod;
+                end
+            end
+            fullModelData.samplingPeriod = samplingPeriod;
+
+            assignin('base', 'fullModelData',fullModelData);
+            assignin('base', 'parameters',parameters);
         end
         
         function exportMergedFeatureToWorkspace(obj,varargin)
@@ -526,6 +579,124 @@ classdef Main < handle
             filename = fullfile(path, file);
             mergeFeature = struct(obj.project.mergeFeatures);
             save(filename,'mergeFeature')
+        end
+
+        function exportAllSensorsAndCorrespondingGroupings(obj,varargin)
+            [file,path] = uiputfile({'*.mat'},'Save all sensors and correspondig groupings');
+            % swap invisible shortly to regain window focus after
+            % uiputfile
+            obj.hFigure.Visible = 'off';
+            obj.hFigure.Visible = 'on';
+            if file == 0
+                return
+            end
+            filename = fullfile(path, file);
+           
+            prog = uiprogressdlg(obj.hFigure,'Title','Saving all sensors and corresponding groupings',...
+                'Indeterminate','on');
+            drawnow
+
+            prj = obj.project;
+
+            % get grouping captions
+            for h = 1:numel(prj.groupings)
+                target_captions(h,1) = prj.groupings(h).caption;
+            end
+            
+            target_captions = matlab.lang.makeValidName(target_captions);
+            
+            sensor_names = string([]);
+            % get cluster and sensor captions
+            for i = 1:numel(prj.clusters)
+                clusters(i) = prj.clusters(i).caption;
+                offset_order(i) = prj.clusters(i).offset;
+                for j = 1:numel(prj.clusters(i).sensors)
+                    sensor_names(end+1) = prj.clusters(i).sensors(j).caption;
+                end
+            end
+            sensor_names = unique(sensor_names);
+            
+            % sort clusters to offset, if they are imported disordered
+            [~, idx] = sort(offset_order);
+            clusters_sorted = clusters(idx);
+            
+            sensor = cell2struct(cell(1, numel(sensor_names)), sensor_names, 2);
+            
+            % iterate over sensors first 
+            for k = 1:numel(sensor_names)
+                target.(sensor_names(k)) = cell2struct(cell(1, numel(target_captions)), target_captions, 2);
+                % then iterate over cluster per sensor - to merge cluster for one sensor
+                for l = 1:numel(clusters_sorted)
+                    cluster = getClusterByCaption(prj, clusters_sorted(l));
+                    if ~isempty(getSensorByCaption(cluster, sensor_names(k)))
+                            sval = getSensorByCaption(cluster, sensor_names(k));
+                            preComputePreprocessedData(sval)
+                            sensor.(sensor_names(k)) = [sensor.(sensor_names(k)); sval.ppData];
+                            for m = 1:numel(prj.groupings)
+                                tval = prj.groupings(m).getTargetVector(cluster.getCycleRanges(),cluster);
+                                target.(sensor_names(k)).(target_captions(m)) = [target.(sensor_names(k)).(target_captions(m)); str2double(strrep(string(tval),'*',''))];
+                            end
+                    end
+                end
+            end
+            save(filename,'sensor','target','-v7.3')
+
+            close(prog)
+        end
+
+        function exportAllSensorsAndCorrespondingGroupingsToWorkspace(obj,varargin)        
+            prog = uiprogressdlg(obj.hFigure,'Title','Saving all sensors and corresponding groupings to workspace',...
+                'Indeterminate','on');
+            drawnow
+
+            prj = obj.project;
+
+            % get grouping captions
+            for h = 1:numel(prj.groupings)
+                target_captions(h,1) = prj.groupings(h).caption;
+            end
+            
+            target_captions = matlab.lang.makeValidName(target_captions);
+            
+            sensor_names = string([]);
+            % get cluster and sensor captions
+            for i = 1:numel(prj.clusters)
+                clusters(i) = prj.clusters(i).caption;
+                offset_order(i) = prj.clusters(i).offset;
+                for j = 1:numel(prj.clusters(i).sensors)
+                    sensor_names(end+1) = prj.clusters(i).sensors(j).caption;
+                end
+            end
+            sensor_names = unique(sensor_names);
+            
+            % sort clusters to offset, if they are imported disordered
+            [~, idx] = sort(offset_order);
+            clusters_sorted = clusters(idx);
+            
+            sensor = cell2struct(cell(1, numel(sensor_names)), sensor_names, 2);
+            
+            % iterate over sensors first 
+            for k = 1:numel(sensor_names)
+                target.(sensor_names(k)) = cell2struct(cell(1, numel(target_captions)), target_captions, 2);
+                % then iterate over cluster per sensor - to merge cluster for one sensor
+                for l = 1:numel(clusters_sorted)
+                    cluster = getClusterByCaption(prj, clusters_sorted(l));
+                    if ~isempty(getSensorByCaption(cluster, sensor_names(k)))
+                            sval = getSensorByCaption(cluster, sensor_names(k));
+                            preComputePreprocessedData(sval)
+                            sensor.(sensor_names(k)) = [sensor.(sensor_names(k)); sval.ppData];
+                            for m = 1:numel(prj.groupings)
+                                tval = prj.groupings(m).getTargetVector(cluster.getCycleRanges(),cluster);
+                                target.(sensor_names(k)).(target_captions(m)) = [target.(sensor_names(k)).(target_captions(m)); str2double(strrep(string(tval),'*',''))];
+                            end
+                    end
+                end
+            end
+
+            assignin('base', 'sensor',sensor);
+            assignin('base', 'target',target);
+
+            close(prog)
         end
         
         function selectVisibleSensors(obj,varargin)
