@@ -374,6 +374,8 @@ classdef Grouping < Gui.Modules.GuiModule
             t.ColumnFormat = {'char','char'};
             t.ColumnEditable = [true true];
             
+            removeStyle(t)
+
             if size(clrArray,1) > 1
                 for i = 1:size(clrArray,1)
                     s = uistyle('BackgroundColor',clrArray(i,:));

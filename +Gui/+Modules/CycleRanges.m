@@ -343,12 +343,15 @@ classdef CycleRanges < Gui.Modules.GuiModule
             if obj.clusterHasChanged()
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
+
             if obj.sensorHasChanged()
                 obj.handleSensorChange(obj.getProject().getCurrentSensor(),obj.lastSensor);
             end
+
             if ~isequal(obj.getProject().ranges, obj.ranges)
                 obj.handleClusterChange(obj.getProject().getCurrentCluster(),obj.lastCluster);
             end
+
             obj.ranges.updateYLimits();
 %             set(obj.main.hFigure,'WindowScrollWheelFcn',@obj.scrollWheelCallback);
         end
@@ -448,6 +451,9 @@ classdef CycleRanges < Gui.Modules.GuiModule
                 ind = tableColSort(t,4,'a');
                 gRanges = gRanges(ind);
             end
+
+            removeStyle(t)
+
             if ~isempty(data)
                 clrArray = clrArray(ind,:); %sort colors, then style
                 if size(clrArray,1) > 1
