@@ -117,6 +117,9 @@ classdef Grouping < Gui.Modules.GuiModule
             uimenu(groupingCM,...
                 'Text','Fill Grouping',...
                 'MenuSelectedFcn',@(src,event) obj.fillGrouping(src,event));
+            uimenu(groupingCM,...
+                'Text','Train-Test Split',...
+                'MenuSelectedFcn',@(src,event) obj.train_test_split(src,event));
 
             groupingTable.ContextMenu = groupingCM;
 
@@ -597,6 +600,42 @@ classdef Grouping < Gui.Modules.GuiModule
                 row = find(grouping.ranges == obj.ranges(1, i).object);
                 range = grouping.ranges(row);
                 grouping.setValue(num2str(fill_value + i * inc_multiplier), range);
+            end
+
+            grouping.updateColors();
+            obj.populateGroupingTable();
+            obj.populateGroupsTable(grouping);
+        end
+
+        function train_test_split(obj, src, event)
+            gps = obj.getProject().groupings;
+            caps = gps.getCaption();
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',{"Training Proportion", "Training value", "Testing value"},...
+                    'DefaultValues',{'0.8', '0', '1'},...
+                    'Message','Enter values to do a train-test split',...
+                    'Name','Rename Grouping');
+            if ~ext
+                return
+            end
+
+            row = event.ContextObject.Selection(1);
+            column = event.ContextObject.Selection(2);
+
+            proportion = 1 - str2num(answer{1, 1});
+            value_train = str2num(answer{1, 2});
+            value_test = str2num(answer{1, 3});
+            values = ones(row) * value_train;
+            proportion_count = row * proportion;
+            for i = 1: proportion_count
+                values(i) = value_test;
+            end
+            values = values(randperm(length(values)));
+            
+            for i = 1: row
+                grouping = obj.getProject().currentGrouping;
+                row = find(grouping.ranges == obj.ranges(1, i).object);
+                range = grouping.ranges(row);
+                grouping.setValue(num2str(values(i)), range);
             end
 
             grouping.updateColors();
