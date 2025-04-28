@@ -578,8 +578,8 @@ classdef Grouping < Gui.Modules.GuiModule
         function fillGrouping(obj, src, event)
             gps = obj.getProject().groupings;
             caps = gps.getCaption();
-            [answer,ext] = Gui.Dialogs.Input('FieldNames',{"FillValue"},...
-                    'DefaultValues',{'0'},...
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',{"FillValue", "Increment"},...
+                    'DefaultValues',{'0', '0'},...
                     'Message','Enter a fill value to use',...
                     'Name','Rename Grouping');
             if ~ext
@@ -589,11 +589,14 @@ classdef Grouping < Gui.Modules.GuiModule
             row = event.ContextObject.Selection(1);
             column = event.ContextObject.Selection(2);
 
+            fill_value = str2num(answer{1, 1});
+            inc_multiplier = str2num(answer{1, 2});
+            
             for i = 1: row
                 grouping = obj.getProject().currentGrouping;
                 row = find(grouping.ranges == obj.ranges(1, i).object);
                 range = grouping.ranges(row);
-                grouping.setValue(answer, range);
+                grouping.setValue(num2str(fill_value + i * inc_multiplier), range);
             end
 
             grouping.updateColors();
