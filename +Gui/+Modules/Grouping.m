@@ -114,6 +114,10 @@ classdef Grouping < Gui.Modules.GuiModule
             renameMenu = uimenu(groupingCM,...
                 'Text','Rename Groupings',...
                 'MenuSelectedFcn',@(src,event) obj.renameGroupings(src,event));
+            uimenu(groupingCM,...
+                'Text','Fill Grouping',...
+                'MenuSelectedFcn',@(src,event) obj.fillGrouping(src,event));
+
             groupingTable.ContextMenu = groupingCM;
 
             obj.groupingTable = groupingTable;
@@ -570,5 +574,32 @@ classdef Grouping < Gui.Modules.GuiModule
             end
             obj.populateGroupingTable();
         end
+
+        function fillGrouping(obj, src, event)
+            gps = obj.getProject().groupings;
+            caps = gps.getCaption();
+            [answer,ext] = Gui.Dialogs.Input('FieldNames',{"FillValue"},...
+                    'DefaultValues',{'0'},...
+                    'Message','Enter a fill value to use',...
+                    'Name','Rename Grouping');
+            if ~ext
+                return
+            end
+
+            row = event.ContextObject.Selection(1);
+            column = event.ContextObject.Selection(2);
+
+            for i = 1: row
+                grouping = obj.getProject().currentGrouping;
+                row = find(grouping.ranges == obj.ranges(1, i).object);
+                range = grouping.ranges(row);
+                grouping.setValue(answer, range);
+            end
+
+            grouping.updateColors();
+            obj.populateGroupingTable();
+            obj.populateGroupsTable(grouping);
+        end
+
     end
 end
